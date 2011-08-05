@@ -1,0 +1,29 @@
+
+/************** changes for the upcoming release *****/
+
+- improved Windows-compatibility when writing PGMs and PPMs (many thanks to Petter Strandmark)
+- added a variable-dimension storage class
+
+/************** changes for version 0.925 **********/
+
+- moved method set_constant() from Vector to Storage1D
+- added template for outputting std::pair<t1,t2>
+
+/************** changes for version 0.921 *********/
+- included some files that were accidentally forgotten in 0.92
+
+*************** changes for version 0.92 *********/
+- Introduced an operator-=() for the tensor classes
+- Introduced a class NamedStorage2D
+- The tensor class has now a sum(x,y) and a min(x,y) method
+- Improved Windows compatibility
+
+*************** changes for version 0.91 *********/
+- PGMs and PPMs are now written in binary mode as otherwise problems under Windows can occur.
+  Many thanks to Petter Strandmark for pointing this out.
+- The vector class has now template specializations of the copy constructor, based on memcpy
+- The matrix and tensor classes have now template specializations of the operator=(), based on memcpy
+- Introduced an operator-=() for the vector and matrix classes
+
+*************** version 0.9 *********/
+first released version

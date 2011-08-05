@@ -1,0 +1,35 @@
+This package contains the following features, all written in C++
+
+- template classes for 1, 2 and 3-dimensional containers,
+ optionally with bound checks and object names stored as strings.
+
+- template classes for matrices, vectors and tensors,
+as an extension of the above containers. Includes saving
+matrices and tensors as PGMs or PPMs. Furthermore, a basic
+matrix inversion is provided (matrix_inversion.hh)
+
+- template classes for gray-level and color images including
+loading PGMs and PPMs (extensions of the above mathematical objects). 
+
+- code for input-output of files (fileio.hh/cc) and standard objects
+such as vectors, sets and maps (stl_out.hh)
+
+- some basic string-processing routines including tokenization (stringprocessing.hh)
+and conversion of strings into arbitrary types (makros.hh)
+
+- a generic application class to ease the parsing of command line arguments.
+This includes the specification of mandatory parameters as well as default values.
+Filenames are checked for existence.
+
+- some basic typedefs and macros (makros.hh)
+
+
+
+Sample application files to illustrate the usage of the features may
+follow, sufficient interest provided. 
+Please contact tosch AT maths DOT lth DOT se
+
+
+Tested platforms:
+- 64 Bit Linux with g++-4.5
+- 64 Bit Windows 7 with Visual C++ 15.0
