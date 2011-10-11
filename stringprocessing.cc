@@ -74,9 +74,31 @@ void tokenize(const std::string& s, std::vector<std::string>& tokens, char separ
       last_sep = false;
     }
   }
-
 }
 
+void tokenize_with_stringsep(const std::string& org_s, std::vector<std::string>& tokens, std::string sep_string, bool empty_tokens) {
+
+  tokens.clear();
+
+  std::string s = org_s;
+
+  while (true) {
+
+    int pos = s.find(sep_string);
+
+    if (pos > s.size()) {
+      if (s != "")
+	tokens.push_back(s);
+      break;
+    }
+    else {
+      if (empty_tokens || pos != 0)
+	tokens.push_back(s.substr(0,pos));
+
+      s = s.substr(pos+sep_string.size());
+    }
+  }
+}
 
 bool string_ends_with(std::string s, std::string suffix) {
 
