@@ -82,6 +82,14 @@ protected:
   std::string name_;
 };
 
+template<typename T>
+std::ostream& operator<<(std::ostream& s, const Storage1D<T>& v);
+
+template<typename T>
+bool operator==(const Storage1D<T>& v1, const Storage1D<T>& v2);
+
+
+
 /********************************************** implementation ************************************/
 
 /******* implementation of Storage1D *********/
@@ -188,8 +196,8 @@ OPTINLINE T& Storage1D<T>::operator[](size_t i) const {
 #ifdef SAFE_MODE
   if (i >= size_) {
     INTERNAL_ERROR << "    invalid access on element " << i 
-	      << " for object \"" << this->name() << "\" with " 
-	      << size_ << " elements. exiting." << std::endl;
+		   << " for Storage1D " <<  "\"" << this->name() << "\" with " 
+		   << size_ << " elements. exiting." << std::endl;
     exit(1);  
   }
 #endif
@@ -324,6 +332,32 @@ inline void NamedStorage1D<T>::operator=(const NamedStorage1D<T>& toCopy) {
   Storage1D<T>::operator=(static_cast<const Storage1D<T>&>(toCopy));
 }
 
+
+template<typename T>
+std::ostream& operator<<(std::ostream& s, const Storage1D<T>& v) {
+
+  s << "[ ";
+  for (int i=0; i < ((int) v.size()) - 1; i++)
+    s << v[i] << ",";
+  if (v.size() > 0)
+    s << v[v.size()-1];
+  s << " ]";
+  
+  return s;
+}
+
+template<typename T>
+bool operator==(const Storage1D<T>& v1, const Storage1D<T>& v2) {
+
+  if (v1.size() != v2.size())
+    return false;
+  
+  for (size_t k=0; k < v1.size(); k++) {
+    if (v1[k] != v2[k])
+      return false;
+  }
+  return true;
+}
 
 
 #endif
