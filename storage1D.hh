@@ -196,8 +196,8 @@ OPTINLINE T& Storage1D<T>::operator[](size_t i) const {
 #ifdef SAFE_MODE
   if (i >= size_) {
     INTERNAL_ERROR << "    invalid access on element " << i 
-		   << " for Storage1D " <<  "\"" << this->name() << "\" with " 
-		   << size_ << " elements. exiting." << std::endl;
+		   << " for Storage1D " <<  "\"" << this->name() << "\" of type " << typeid(T).name()
+		   << " with " << size_ << " elements. exiting." << std::endl;
     exit(1);  
   }
 #endif

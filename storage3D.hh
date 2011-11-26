@@ -138,7 +138,7 @@ OPTINLINE T& Storage3D<T>::operator()(size_t x, size_t y, size_t z) const {
 #ifdef SAFE_MODE
   if (x >= xDim_ || y >= yDim_ || z >= zDim_) {
     INTERNAL_ERROR << "     invalid access on element (" << x << "," << y << "," << z << ") of 3D-storage \"" 
-		   << this->name() << "\":" << std::endl;
+		   << this->name() << "\" of type " << typeid(T).name() << ":" << std::endl;
     std::cerr << "     dimensions " << xDim_ << "x" << yDim_ << "x" << zDim_ << " exceeded. Exiting..." << std::endl;
     exit(1);
   }
