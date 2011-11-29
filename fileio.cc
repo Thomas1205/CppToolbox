@@ -69,4 +69,17 @@ char read_until(FILE* fptr, char* allowed_chars, size_t nCharsListed)
 }
 
 
+bool is_gzip_file(std::string filename) {
+
+  FILE* fp = fopen(filename.c_str(),"r");
+
+  ushort first;
+
+  fread((char*)  &first,2,1,fp);
+  
+  fclose(fp);
+
+  return (first == 35615);
+}
+
 
