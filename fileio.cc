@@ -73,13 +73,13 @@ bool is_gzip_file(std::string filename) {
 
   FILE* fp = fopen(filename.c_str(),"r");
 
-  ushort first;
+  uchar start[2];
+  fread((char*)  start,2,1,fp);
 
-  fread((char*)  &first,2,1,fp);
-  
   fclose(fp);
 
-  return (first == 35615);
+  //should give same results on little- and big endian systems
+  return (start[0] == 31 && start[1] == 139);
 }
 
 
