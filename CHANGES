@@ -1,8 +1,12 @@
 
 /************** changes for the upcoming release *****/
 
+- added FlexibleStorage1D, meant to replace std::vector with its push_back() functionality
+- can now output the type of a container (makes debugging much easier)
+- added operators for Storage1D
 - improved Windows-compatibility when writing PGMs and PPMs (many thanks to Petter Strandmark)
 - added a variable-dimension storage class
+- introduced NamedStorage3D
 
 /************** changes for version 0.925 **********/
 
