@@ -460,7 +460,7 @@ FlexibleStorage1D<T>::FlexibleStorage1D(size_t reserved_size)  : size_(0), reser
 template<typename T>
 FlexibleStorage1D<T>::FlexibleStorage1D(const FlexibleStorage1D<T>& toCopy) {
 
-  size_ = toCopy.reserved_size();
+  size_ = toCopy.size();
   reserved_size_ = toCopy.reserved_size();
   
   data_ = new T[reserved_size_];
@@ -471,7 +471,6 @@ FlexibleStorage1D<T>::FlexibleStorage1D(const FlexibleStorage1D<T>& toCopy) {
 template<typename T>
 void FlexibleStorage1D<T>::operator=(const FlexibleStorage1D<T>& toCopy) {
 
-  size_ = toCopy.reserved_size();
   uint new_res = toCopy.reserved_size();
   if (new_res != reserved_size_) {
     reserved_size_ = new_res;
@@ -481,7 +480,9 @@ void FlexibleStorage1D<T>::operator=(const FlexibleStorage1D<T>& toCopy) {
     data_ = new T[reserved_size_];
   }
 
-  for (uint k=0; k < toCopy.size(); k++)
+  size_ = toCopy.size();
+
+  for (uint k=0; k < size_; k++)
     data_[k] = toCopy[k];
 }
 
