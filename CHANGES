@@ -7,6 +7,7 @@
 - improved Windows-compatibility when writing PGMs and PPMs (many thanks to Petter Strandmark)
 - added a variable-dimension storage class
 - introduced NamedStorage3D
+- small smallish extensions
 
 /************** changes for version 0.925 **********/
 
