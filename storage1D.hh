@@ -89,6 +89,9 @@ std::ostream& operator<<(std::ostream& s, const Storage1D<T>& v);
 template<typename T>
 bool operator==(const Storage1D<T>& v1, const Storage1D<T>& v2);
 
+template<typename T>
+bool operator!=(const Storage1D<T>& v1, const Storage1D<T>& v2);
+
 
 /***********************/
 
@@ -128,6 +131,8 @@ public:
   size_t reserved_size() const;
 
   T* direct_access();
+
+  const T* direct_access() const;
 
 protected:
 
@@ -439,6 +444,11 @@ bool operator==(const Storage1D<T>& v1, const Storage1D<T>& v2) {
   return true;
 }
 
+template<typename T>
+bool operator!=(const Storage1D<T>& v1, const Storage1D<T>& v2) {
+  return !operator==(v1,v2);
+}
+
 
 /******* implementation of FlexibleStorage1D *********/
 
@@ -468,6 +478,9 @@ FlexibleStorage1D<T>::FlexibleStorage1D(const FlexibleStorage1D<T>& toCopy) {
     data_[k] = toCopy[k];
 }
 
+template<>
+FlexibleStorage1D<uint>::FlexibleStorage1D(const FlexibleStorage1D<uint>& toCopy);
+
 template<typename T>
 void FlexibleStorage1D<T>::operator=(const FlexibleStorage1D<T>& toCopy) {
 
@@ -485,6 +498,9 @@ void FlexibleStorage1D<T>::operator=(const FlexibleStorage1D<T>& toCopy) {
   for (uint k=0; k < size_; k++)
     data_[k] = toCopy[k];
 }
+
+template<>
+void FlexibleStorage1D<uint>::operator=(const FlexibleStorage1D<uint>& toCopy);
 
 template<typename T>
 /*virtual*/ const std::string& FlexibleStorage1D<T>::name() const {
@@ -623,6 +639,12 @@ OPTINLINE T& FlexibleStorage1D<T>::operator[](size_t i) const {
 
 template<typename T>
 T* FlexibleStorage1D<T>::direct_access() {
+
+  return data_;
+}
+
+template<typename T>
+const T* FlexibleStorage1D<T>::direct_access() const {
 
   return data_;
 }

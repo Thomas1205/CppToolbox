@@ -38,6 +38,15 @@ char downcase(char c) {
   return c;
 }
 
+std::string downcase(std::string s) {
+
+  std::string ls=s;
+  for (uint k=0; k < ls.size(); k++)
+    ls[k] = downcase(ls[k]);
+
+  return ls;
+}
+
 bool is_natural_number(const std::string s) {
 
   for (uint i=0; i < s.size(); i++) {

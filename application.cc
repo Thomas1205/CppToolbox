@@ -33,7 +33,7 @@ std::string Application::getParam(std::string name) {
   }
 
   if (param_value_.find(name) == param_value_.end()) {
-    INTERNAL_ERROR << "    no value for the parameter\"" << name 
+    INTERNAL_ERROR << "    no value for the parameter \"" << name 
 		   << "\" specified on command line. Exiting..." << std::endl;
     exit(1); 
   }

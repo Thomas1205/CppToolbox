@@ -12,6 +12,8 @@ bool is_uppercase(char c);
 
 char downcase(char c);
 
+std::string downcase(std::string s);
+
 bool is_natural_number(const std::string s);
 
 //to avoid the awkward strcmp routine
