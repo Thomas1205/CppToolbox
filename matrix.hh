@@ -285,7 +285,7 @@ namespace Math2D {
       INTERNAL_ERROR << "    dimension mismatch in matrix subtraction(-=): (" 
 		     << Storage2D<T>::xDim_ << "," << Storage2D<T>::yDim_ << ") vs. ("
 		     << toSub.xDim() << "," << toSub.yDim() << ")." << std::endl;
-      std::cerr << "     When subtracting matrix\"" << toSub.name() << "\" from  matrix \""
+      std::cerr << "     When subtracting matrix \"" << toSub.name() << "\" from  matrix \""
 		<< this->name() << "\". Exiting" << std::endl;
       exit(1);
     }
