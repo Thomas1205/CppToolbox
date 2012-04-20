@@ -267,7 +267,7 @@ namespace Math2D {
       INTERNAL_ERROR << "    dimension mismatch in matrix addition(+=): (" 
 		     << Storage2D<T>::xDim_ << "," << Storage2D<T>::yDim_ << ") vs. ("
 		     << toAdd.xDim() << "," << toAdd.yDim() << ")." << std::endl;
-      std::cerr << "     When adding matrix\"" << toAdd.name() << "\" to  matrix \""
+      std::cerr << "     When adding matrix \"" << toAdd.name() << "\" to  matrix \""
 		<< this->name() << "\". Exiting" << std::endl;
       exit(1);
     }

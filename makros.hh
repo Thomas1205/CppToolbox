@@ -14,7 +14,7 @@
 
 #ifdef WIN32
 namespace {
-bool isnan(double x) {
+inline bool isnan(double x) {
   return (x != x);
 }
 }
