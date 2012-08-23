@@ -146,12 +146,12 @@ namespace Math1D {
   template<typename T>
   T Vector<T>::max() const {
     
-//     T maxel = std::numeric_limits<T>::min();
-//     for (size_t i=0; i < Storage1D<T>::size_; i++) {
-//       if (Storage1D<T>::data_[i] > maxel)
-// 	maxel = Storage1D<T>::data_[i];
-//     }        
-//    return maxel;
+    //     T maxel = std::numeric_limits<T>::min();
+    //     for (size_t i=0; i < Storage1D<T>::size_; i++) {
+    //       if (Storage1D<T>::data_[i] > maxel)
+    // 	maxel = Storage1D<T>::data_[i];
+    //     }        
+    //    return maxel;
     return *std::max_element(Storage1D<T>::data_, Storage1D<T>::data_ + Storage1D<T>::size_);
   }
 
@@ -161,12 +161,12 @@ namespace Math1D {
   template<typename T>    
   T Vector<T>::min() const {
     
-//     T minel = std::numeric_limits<T>::max();
-//     for (size_t i=0; i < Storage1D<T>::size_; i++) {
-//       if (Storage1D<T>::data_[i] < minel)
-// 	minel = Storage1D<T>::data_[i];
-//     }        
-//     return minel;    
+    //     T minel = std::numeric_limits<T>::max();
+    //     for (size_t i=0; i < Storage1D<T>::size_; i++) {
+    //       if (Storage1D<T>::data_[i] < minel)
+    // 	minel = Storage1D<T>::data_[i];
+    //     }        
+    //     return minel;    
 
     return *std::min_element(Storage1D<T>::data_, Storage1D<T>::data_ + Storage1D<T>::size_);
   }
@@ -202,7 +202,7 @@ namespace Math1D {
         
     return sqrt(result);
   }
-    
+   
   template<typename T>   
   double Vector<T>::sqr_norm() const {
     
@@ -297,11 +297,11 @@ namespace Math1D {
     return Vector<T>::vector_name_;
   }   
 
-//   template<typename T>
-//   void Vector<T>::set_constant(T constant) {
+  //   template<typename T>
+  //   void Vector<T>::set_constant(T constant) {
 
-//     std::fill_n(Storage1D<T>::data_,Storage1D<T>::size_,constant); //experimental result: fill_n is usually faster
-//   }
+  //     std::fill_n(Storage1D<T>::data_,Storage1D<T>::size_,constant); //experimental result: fill_n is usually faster
+  //   }
 
   /************** implementation of NamedVector **********/
 
@@ -313,7 +313,7 @@ namespace Math1D {
         
   template<typename T>
   NamedVector<T>::NamedVector(size_t size, std::string name) : Vector<T>(size), name_(name) {}
-    
+   
   template<typename T>
   NamedVector<T>::NamedVector(size_t size, T default_value, std::string name) :
     Vector<T>(size,default_value), name_(name) {}
