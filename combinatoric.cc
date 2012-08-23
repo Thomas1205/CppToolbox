@@ -54,3 +54,33 @@ long double ldchoose(uint n, uint k) {
 
   return r;
 }
+
+// greatest common divisor via the Euclidean algorithm
+long long gcd64(unsigned long long n1, unsigned long long n2) {
+
+  if (n1 < n2)
+    std::swap(n1,n2);
+
+  while (n2 != 0) {
+    unsigned long t = n2;
+    n2 = n1 % n2;
+    n1 = t;
+  }
+
+  return n1;
+}
+
+// greatest common divisor via the Euclidean algorithm
+uint gcd(uint n1, uint n2) {
+
+  if (n1 < n2)
+    std::swap(n1,n2);
+
+  while (n2 != 0) {
+    uint t = n2;
+    n2 = n1 % n2;
+    n1 = t;
+  }
+
+  return n1;
+}

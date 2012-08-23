@@ -8,6 +8,7 @@
 - added a variable-dimension storage class
 - introduced NamedStorage3D
 - some smallish extensions
+- added routines for the greatest common divisor
 
 /************** changes for version 0.925 **********/
 
