@@ -21,6 +21,8 @@ bool strings_equal(std::string s1, std::string s2);
 
 bool string_ends_with(std::string s, std::string suffix);
 
+bool string_starts_with(std::string s, std::string suffix);
+
 void tokenize(const std::string& s, std::vector<std::string>& tokens, char separator, bool empty_tokens=false);
 
 void tokenize_with_stringsep(const std::string& s, std::vector<std::string>& tokens, std::string sep_string, bool empty_tokens=false);
