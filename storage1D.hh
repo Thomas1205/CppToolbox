@@ -332,7 +332,7 @@ void Storage1D<T>::resize(size_t new_size) {
   if (data_ == 0) {
     data_ = new T[new_size];
   }
-  else {
+  else if (size_ != new_size) {
     T* new_data = new T[new_size];
 
     for (size_t i=0; i < std::min(size_,new_size); i++)
@@ -359,7 +359,7 @@ void Storage1D<T>::resize(size_t new_size, T fill_value) {
     for (size_t i=0; i < new_size; i++)
       data_[i] = fill_value;
   }
-  else {
+  else if (size_ != new_size) {
     T* new_data = new T[new_size];
     for (size_t i=size_; i < new_size; i++)
       new_data[i] = fill_value;
@@ -379,10 +379,12 @@ void Storage1D<T>::resize(size_t new_size, T fill_value) {
 template<typename T>
 void Storage1D<T>::resize_dirty(size_t new_size) {
 
-  if (data_ != 0)
-    delete[] data_;
+  if (size_ != new_size) {
+    if (data_ != 0)
+      delete[] data_;
 
-  data_ = new T[new_size];
+    data_ = new T[new_size];
+  }
   size_ = new_size;
 }
 
@@ -605,7 +607,7 @@ void FlexibleStorage1D<T>::resize(size_t size, bool exact_fit) {
       new_data[k] = data_[k];
     
     delete[] data_;
-    data_ = new_data;    
+    data_ = new_data;
   }
 
   if (size < size_)
@@ -619,7 +621,7 @@ void FlexibleStorage1D<T>::resize(size_t size, bool exact_fit) {
       new_data[k] = data_[k];
     
     delete[] data_;
-    data_ = new_data;      
+    data_ = new_data;
   }
 }
 

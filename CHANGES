@@ -9,6 +9,8 @@
 - introduced NamedStorage3D
 - some smallish extensions
 - added routines for the greatest common divisor
+- extended stringprocessing, including handling of special characters when downcasing
+- optimizations when resizing a storage1D
 
 /************** changes for version 0.925 **********/
 
