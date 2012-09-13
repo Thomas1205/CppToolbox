@@ -1,4 +1,5 @@
-/*** written by Thomas Schoenemann as a private person without employment, September 2009 ***/
+/*** first version written by Thomas Schoenemann as a private person without employment, November 2009 ***/
+/*** refined at the University of Düsseldorf, Germany, 2012 ***/
 
 #ifndef STRINGPROCESSING_HH
 #define STRINGPROCESSING_HH

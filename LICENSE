@@ -1,8 +1,9 @@
 This is an open source library, written by Thomas Schoenemann in 2009
-and continued at Lund Univeristy, Sweden in 2010. It does not provide
-executable programs and is intended to ease software development.
+and continued at Lund Univeristy, Sweden in 2010. Some updates were also made
+at the University of Düsseldorf in 2012. 
 
-Copyright Thomas Schoenemann, 2010. All Rights Reserved.
+This compilation does not provide executable programs and is intended to ease
+software development.
 
 Permission to use [*] this software for academic purposes is hereby
 granted without fee or royalty, subject to the following conditions.
