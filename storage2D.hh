@@ -244,7 +244,7 @@ void Storage2D<T>::resize(size_t newxDim, size_t newyDim) {
   if (data_ == 0) {
     data_ = new T[newxDim*newyDim];
   }
-  else {
+  else if (newxDim != xDim_ || newyDim != yDim_) {
 
     T* new_data = new T[newxDim*newyDim];
 
@@ -273,7 +273,7 @@ void Storage2D<T>::resize(size_t newxDim, size_t newyDim, T fill_value) {
 
     std::fill_n(data_,newxDim*newyDim,fill_value);
   }
-  else {
+  else if (newxDim != xDim_ || newyDim != yDim_) {
 
     T* new_data = new T[newxDim*newyDim];
     for (size_t i=0; i < newxDim*newyDim; i++)
@@ -296,15 +296,17 @@ void Storage2D<T>::resize(size_t newxDim, size_t newyDim, T fill_value) {
 template<typename T>
 void Storage2D<T>::resize_dirty(size_t newxDim, size_t newyDim) {
 
-  if (data_ != 0) {
-    delete[] data_;
+  if (newxDim != xDim_ || newyDim != yDim_) {
+    if (data_ != 0) {
+      delete[] data_;
+    }
+  
+    xDim_ = newxDim;
+    yDim_ = newyDim;
+    size_ = xDim_*yDim_;
+    
+    data_ = new T[size_];
   }
-
-  xDim_ = newxDim;
-  yDim_ = newyDim;
-  size_ = xDim_*yDim_;
-
-  data_ = new T[size_];
 }
 
 /***** implementation of NamedStorage2D ********/
