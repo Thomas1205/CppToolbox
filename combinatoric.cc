@@ -57,7 +57,7 @@ long double ldchoose(uint n, uint k) {
 }
 
 // greatest common divisor via the Euclidean algorithm
-long long gcd64(unsigned long long n1, unsigned long long n2) {
+long gcd64(unsigned long n1, unsigned long n2) {
 
   if (n1 < n2)
     std::swap(n1,n2);
