@@ -88,6 +88,7 @@ double Rational64::toDouble() const {
   return double(num_) / double(denom_);
 }
 
+#ifdef USE_ASM
 inline void simple_save_mul(long& n, const long fac) {
 
   __asm__ volatile ("imulq %1 \n\t"
@@ -97,6 +98,7 @@ inline void simple_save_mul(long& n, const long fac) {
                     : "+&a"(n) : "g"(fac) : "rdx");
 
 }
+#endif
 
 void Rational64::operator*=(long fac) {
 
@@ -113,6 +115,7 @@ void Rational64::operator*=(long fac) {
 #endif
 }
 
+#ifdef USE_ASM
 inline void save_add2(const Rational64& r1, const Rational64& r2, long denom_gcd,
                       long& new_num, long& new_denom) {
   
@@ -147,7 +150,7 @@ inline void save_add2(const Rational64& r1, const Rational64& r2, long denom_gcd
                     : "rbx", "rdx", "cc"
                     );
 }
-
+#endif
 
 Rational64 operator+(const Rational64& r1, const Rational64& r2) {
 
@@ -213,6 +216,7 @@ void Rational64::operator+=(Rational64 r) {
   denom_ = new_denom;
 }
 
+#ifdef USE_ASM
 inline void save_sub2(const Rational64& r1, const Rational64& r2, long denom_gcd,
                       long& new_num, long& new_denom) {
 
@@ -248,7 +252,7 @@ inline void save_sub2(const Rational64& r1, const Rational64& r2, long denom_gcd
                     : "rbx", "rdx", "cc", "memory"
                     );
 }
-
+#endif
 
 Rational64 operator-(const Rational64& r1, const Rational64& r2) {
 
@@ -328,7 +332,7 @@ void Rational64::operator-=(Rational64 r) {
   assert(denom_ >= 0);
 }
 
-
+#ifdef USE_ASM
 inline  void save_mul2(long n1, long d1, long n2, long d2,
                       long& num, long& denom) {
 
@@ -350,7 +354,7 @@ inline  void save_mul2(long n1, long d1, long n2, long d2,
                     : "rdx", "cc"
                     );
 }
-
+#endif
 
 
 Rational64 operator*(const Rational64& r1, const Rational64& r2) {
