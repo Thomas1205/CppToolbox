@@ -1,5 +1,3 @@
-/*** written by Thomas Schoenemann at the University of Düsseldorf, 2012 ***/
-
 #ifndef RATIONAL_HH
 #define RATIONAL_HH
 
@@ -55,6 +53,10 @@ Rational64 operator+(const Rational64& r1, const Rational64& r2);
 Rational64 operator-(const Rational64& r1, const Rational64& r2);
 
 Rational64 operator*(const Rational64& r1, const Rational64& r2);
+
+Rational64 operator*(long r1, const Rational64& r2);
+
+Rational64 operator*(const Rational64& r1, long r2);
 
 //unary minus
 Rational64 operator-(const Rational64& r);

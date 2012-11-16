@@ -1,5 +1,3 @@
-/*** written by Thomas Schoenemann at the University of Düsseldorf, 2012 ***/
-
 #include "rational.hh"
 #include "makros.hh"
 #include "combinatoric.hh" //imports gcd
@@ -115,7 +113,70 @@ void Rational64::operator*=(long fac) {
 #endif
 }
 
+Rational64 operator*(long r1, const Rational64& r2) {
+
+  Rational64 result = r2;
+
+  long cur_gcd = gcd64(abs(r1),result.denom_);
+
+  if (cur_gcd != 1) {
+    r1 /= cur_gcd;
+    result.denom_ /= cur_gcd;
+  }
+  
+#ifndef USE_ASM
+  result.num_ *= r1;
+#else
+  simple_save_mul(result.num_, r1);
+#endif  
+  
+  return result;
+}
+
+Rational64 operator*(const Rational64& r1, long r2) {
+
+  return operator*(r2,r1);
+}
+
+
 #ifdef USE_ASM
+inline void save_add(const Rational64& r1, const Rational64& r2, long denom_gcd,
+                     long& new_num, long& new_denom) {
+  
+  long sdenom1 = r1.denom_;
+  long sdenom2 = r2.denom_;
+
+  if (denom_gcd != 1) {
+    sdenom1 /= denom_gcd;
+    sdenom2 /= denom_gcd;
+  }
+
+  //assembler implementation with local labels
+  __asm__ volatile ("movq %3,%%rax          \n\t"
+                    "imulq %6               \n\t"
+                    "jc 1f            \n\t"
+                    "movq %%rax,%%rbx       \n\t"
+                    "movq %5,%%rax          \n\t"
+                    "imulq %4               \n\t"
+                    "jc 1f            \n\t"
+                    "addq %%rbx,%%rax       \n\t"
+                    "movq %%rax,%1          \n\t" //numerator is done 
+                    "jo 1f            \n\t"
+                    "movq %7,%%rax          \n\t"
+                    "imulq %6               \n\t"
+                    "jc 1f            \n\t"
+                    "movq %%rax,%2          \n\t" //denominator is done 
+                    "jmp 2f            \n\t"
+                    "1:              \n\t"
+                    "movl $0,%0             \n\t"
+                    "2:               \n\t"
+                    : "+&g"(rational_res_is_save), "=&g"(new_num), "=&g"(new_denom) //0,1,2
+                    : "g"(r1.num_), "g"(sdenom1), "g"(r2.num_), "g"(sdenom2), "g"(r1.denom_) //3,4,5,6,7
+                    : "rax", "rbx", "rdx", "cc"
+                    );
+}
+
+
 inline void save_add2(const Rational64& r1, const Rational64& r2, long denom_gcd,
                       long& new_num, long& new_denom) {
   
@@ -170,6 +231,7 @@ Rational64 operator+(const Rational64& r1, const Rational64& r2) {
   long new_num;
   long new_denom;
 
+  //save_add(r1, r2, denom_gcd, new_num, new_denom);
   save_add2(r1, r2, denom_gcd, new_num, new_denom);
 
   assert(rational_res_is_save != 0);
@@ -202,6 +264,7 @@ void Rational64::operator+=(Rational64 r) {
   long new_num;
   long new_denom;
 
+  //save_add(*this, r, denom_gcd, new_num, new_denom);
   save_add2(*this, r, denom_gcd, new_num, new_denom);
   assert(rational_res_is_save != 0);
 #endif
@@ -217,6 +280,43 @@ void Rational64::operator+=(Rational64 r) {
 }
 
 #ifdef USE_ASM
+inline void save_sub(const Rational64& r1, const Rational64& r2, long denom_gcd,
+                     long& new_num, long& new_denom) {
+
+  long sdenom1 = r1.denom_;
+  long sdenom2 = r2.denom_;
+
+  if (denom_gcd != 1) {
+    sdenom1 /= denom_gcd;
+    sdenom2 /= denom_gcd;
+  }
+
+  //assembler implementation
+  __asm__ volatile ("movq %3,%%rax          \n\t"
+                    "imulq %6               \n\t"
+                    "jc 1f            \n\t"
+                    "movq %%rax,%%rbx       \n\t"
+                    "movq %5,%%rax          \n\t"
+                    "imulq %4               \n\t"
+                    "jc 1f            \n\t"
+                    "subq %%rax,%%rbx       \n\t"
+                    "movq %%rbx,%1          \n\t" //numerator is done 
+                    "jo 1f            \n\t"
+                    "movq %7,%%rax          \n\t"
+                    "imulq %6               \n\t"
+                    "jc 1f            \n\t"
+                    "movq %%rax,%2          \n\t" //denominator is done 
+                    "jmp 2f            \n\t"
+                    "1:              \n\t"
+                    "movl $0,%0             \n\t"
+                    "2:               \n\t"
+                    : "+&g"(rational_res_is_save), "=&g"(new_num), "=&g"(new_denom) //0,1,2
+                    : "g"(r1.num_), "g"(sdenom1), "g"(r2.num_), "g"(sdenom2), "g"(r1.denom_) //3,4,5,6,7
+                    : "rax", "rbx", "rdx", "cc", "memory"
+                    );
+}
+
+
 inline void save_sub2(const Rational64& r1, const Rational64& r2, long denom_gcd,
                       long& new_num, long& new_denom) {
 
@@ -272,6 +372,7 @@ Rational64 operator-(const Rational64& r1, const Rational64& r2) {
   long new_num;
   long new_denom;
   
+  //save_sub(r1, r2, denom_gcd, new_num, new_denom);
   save_sub2(r1, r2, denom_gcd, new_num, new_denom);
 
   //std::cerr << "new_num: " << new_num << std::endl;
@@ -310,6 +411,7 @@ void Rational64::operator-=(Rational64 r) {
   long new_num;
   long new_denom;
   
+  //save_sub(*this, r, denom_gcd, new_num, new_denom);
   save_sub2(*this, r, denom_gcd, new_num, new_denom);
 
 
@@ -333,6 +435,29 @@ void Rational64::operator-=(Rational64 r) {
 }
 
 #ifdef USE_ASM
+inline  void save_mul(long n1, long d1, long n2, long d2,
+                      long& num, long& denom) {
+
+
+  // with local labels
+
+  __asm__ volatile ("movq %3,%%rax          \n\t"
+                    "imulq %4               \n\t"
+                    "jc 1f            \n\t"
+                    "movq %%rax,%1          \n\t" //numerator done
+                    "movq %5,%%rax          \n\t"
+                    "imulq %6               \n\t"
+                    "movq %%rax,%2          \n\t" //denominator done
+                    "jmp 2f            \n\t"
+                    "1:              \n\t"
+                    "movl $0,%0             \n\t"
+                    "2:               \n\t"
+                    : "+&g"(rational_res_is_save), "=&g"(num), "=&g"(denom)
+                    : "g"(n1), "g"(n2), "g"(d1), "g"(d2)
+                    : "rax", "rdx", "cc"
+                    );
+}
+
 inline  void save_mul2(long n1, long d1, long n2, long d2,
                       long& num, long& denom) {
 
@@ -394,6 +519,7 @@ Rational64 operator*(const Rational64& r1, const Rational64& r2) {
 #else
 
   long inum,idenom;
+  //save_mul(rnum1,rdenom1,rnum2,rdenom2,inum,idenom);
   save_mul2(rnum1,rdenom1,rnum2,rdenom2,inum,idenom);
 
   assert(rational_res_is_save != 0);
@@ -448,6 +574,7 @@ void Rational64::operator*=(Rational64 r) {
 #else
 
   long inum,idenom;
+  //save_mul(rnum1,rdenom1,rnum2,rdenom2,inum,idenom);
   save_mul2(rnum1,rdenom1,rnum2,rdenom2,inum,idenom);
 
   assert(rational_res_is_save != 0);
@@ -603,6 +730,8 @@ Rational64 operator-(const Rational64& r) {
 Rational64 approx_r64(double d) {
 
   double df = floor(d);
+
+  //int sign = (d < 0) ? -1 : 1;
 
   if (d == df)
     return Rational64(long(df),1);
