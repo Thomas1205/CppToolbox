@@ -1,7 +1,8 @@
 This package contains the following features, all written in C++
 
 - template classes for 1, 2 and 3-dimensional containers,
- optionally with bound checks and object names stored as strings.
+ optionally with bound checks and object names stored as strings. 
+ Plus a container class for a variable dimension size.
 
 - template classes for matrices, vectors and tensors,
 as an extension of the above containers. Includes saving
@@ -14,7 +15,7 @@ loading PGMs and PPMs (extensions of the above mathematical objects).
 - code for input-output of files (fileio.hh/cc) and standard objects
 such as vectors, sets and maps (stl_out.hh)
 
-- some basic string-processing routines including tokenization (stringprocessing.hh)
+- some basic string-processing routines including tokenization and downcasing (stringprocessing.hh)
 and conversion of strings into arbitrary types (makros.hh)
 
 - a generic application class to ease the parsing of command line arguments.
@@ -22,6 +23,12 @@ This includes the specification of mandatory parameters as well as default value
 Filenames are checked for existence.
 
 - some basic typedefs and macros (makros.hh)
+
+- some routines for combinatorics (combinatoric.hh), including choose(n,k), factorial 
+   and greatest common divisor
+
+- a class for computations with Rational numbers (based on 64 bit integers for both 
+    numerator and denominator), with a check for overflow (if AT&T assembler is supported) 
 
 
 

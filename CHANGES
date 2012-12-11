@@ -11,6 +11,8 @@
 - added routines for the greatest common divisor
 - extended stringprocessing, including handling of special characters when downcasing
 - optimizations when resizing a storage1D
+- added class Rational64
+- size_t was replaced by a template parameter in 1/2/3-dimensional containers
 
 /************** changes for version 0.925 **********/
 
