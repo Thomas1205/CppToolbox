@@ -1,5 +1,5 @@
 
-/************** changes for the upcoming release *****/
+/************** changes for version 1.0 *****/
 
 - added FlexibleStorage1D, meant to replace std::vector with its push_back() functionality
 - can now output the type of a container (makes debugging much easier)
