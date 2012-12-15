@@ -28,7 +28,8 @@ Filenames are checked for existence.
    and greatest common divisor
 
 - a class for computations with Rational numbers (based on 64 bit integers for both 
-    numerator and denominator), with a check for overflow (if AT&T assembler is supported) 
+    numerator and denominator), with a check for overflow (on a 64 bit operating system 
+   and if x86-AT&T assembler is supported) 
 
 
 

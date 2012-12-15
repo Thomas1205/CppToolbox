@@ -1,4 +1,10 @@
 
+/****** changes for the upcoming release *****/
+
+- updated Makefile
+- amendmend to README
+
+
 /************** changes for version 1.0 *****/
 
 - added FlexibleStorage1D, meant to replace std::vector with its push_back() functionality
