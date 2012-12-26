@@ -1,6 +1,7 @@
 /*** first version written by Thomas Schoenemann as a private person without employment, November 2009 ***/
 /*** refined at the University of Düsseldorf, Germany, 2012 ***/
 
+
 #ifndef STRINGPROCESSING_HH
 #define STRINGPROCESSING_HH
 
@@ -22,7 +23,7 @@ bool strings_equal(std::string s1, std::string s2);
 
 bool string_ends_with(std::string s, std::string suffix);
 
-bool string_starts_with(std::string s, std::string suffix);
+bool string_starts_with(std::string s, std::string prefix);
 
 void tokenize(const std::string& s, std::vector<std::string>& tokens, char separator, bool empty_tokens=false);
 
