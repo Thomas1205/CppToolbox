@@ -1,9 +1,11 @@
 
-/****** changes for the upcoming release *****/
+/****** changes for the upcoming release (1.01?) *****/
 
 - updated Makefile
 - amendmend to README
-
+- bugfix for tokenization with string separator
+- improved handling of outputting typenames, including in convert<>
+- moved comparison operators from vector to storage1D
 
 /************** changes for version 1.0 *****/
 

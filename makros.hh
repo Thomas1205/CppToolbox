@@ -51,6 +51,10 @@ std::string toString(T obj, uint width=1) {
   return s.str();
 }
 
+void register_typename(const std::string& id, const std::string& fullname);
+
+std::string get_typename(const std::string& id);
+
 /***********************/
 template <typename T>
 T convert(const std::string s) {
@@ -60,7 +64,7 @@ T convert(const std::string s) {
   
   is >> result;
   if (is.bad() || is.fail()) {
-    std::cerr << "ERROR: conversion of \"" << s << "\" failed. exiting." << std::endl; 
+    std::cerr << "ERROR: conversion of \"" << s << "\" to " << get_typename(typeid(T).name()) << " failed. exiting." << std::endl; 
     exit(1);
   }
   if (!is.eof()) {

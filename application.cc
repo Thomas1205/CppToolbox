@@ -43,6 +43,18 @@ std::string Application::getParam(std::string name) {
 
 Application::Application(uint argc, char** argv, ParamDescr* param_list, uint nParams) {
 
+  register_typename(typeid(float).name(),"float");
+  register_typename(typeid(double).name(),"double");
+  register_typename(typeid(long double).name(),"long double");
+  register_typename(typeid(int).name(),"int");
+  register_typename(typeid(uint).name(),"uint");
+  register_typename(typeid(short).name(),"short");
+  register_typename(typeid(ushort).name(),"ushort");
+  register_typename(typeid(char).name(),"char");
+  register_typename(typeid(uchar).name(),"uchar");
+  register_typename(typeid(std::string).name(),"std::string");
+
+
   app_name_ = argv[0];
   nParams_ = nParams;
   param_list_ = new ParamDescr[nParams];
