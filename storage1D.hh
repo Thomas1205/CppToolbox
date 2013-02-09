@@ -291,7 +291,8 @@ OPTINLINE T& Storage1D<T,ST>::operator[](ST i) const {
 #ifdef SAFE_MODE
   if (i >= size_) {
     INTERNAL_ERROR << "    invalid access on element " << i 
-		   << " for Storage1D " <<  "\"" << this->name() << "\" of type " << get_typename(typeid(T).name())
+		   << " for Storage1D " <<  "\"" << this->name() << "\" of type " 
+		   << Makros::get_typename(typeid(T).name())
 		   << " with " << size_ << " elements. exiting." << std::endl;
     exit(1);  
   }
@@ -711,7 +712,8 @@ OPTINLINE T& FlexibleStorage1D<T,ST>::operator[](ST i) const {
 #ifdef SAFE_MODE
   if (i >= size_) {
     INTERNAL_ERROR << "    invalid access on element " << i 
-		   << " for FlexibleStorage1D " <<  "\"" << this->name() << "\" of type " << get_typename(typeid(T).name())
+		   << " for FlexibleStorage1D " <<  "\"" << this->name() << "\" of type " 
+		   << Makros::get_typename(typeid(T).name())
 		   << " with " << size_ << " (valid) elements. exiting." << std::endl;
     exit(1);  
   }
