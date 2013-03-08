@@ -1,4 +1,11 @@
 
+
+/****** changes for the upcoming release (1.02?) *****/
+
+- new system for output of typenames
+- made access to containers more rigorously restricted (regarding const-ness)
+- added stl_util.hh
+
 /****** changes for version 1.01 *****/
 
 - updated Makefile
