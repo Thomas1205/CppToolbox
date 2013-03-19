@@ -97,6 +97,16 @@ bool operator!=(const Storage3D<T,ST>& v1, const Storage3D<T,ST>& v2);
 
 namespace Makros {
 
+  template<typename T, typename ST>
+  class Typename<Storage3D<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "Storage3D<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
+    }
+  };
+
   template<typename T>
   class Typename<Storage3D<T> > {
   public:
@@ -104,6 +114,17 @@ namespace Makros {
     std::string name() const {
 
       return "Storage3D<" + Makros::Typename<T>() + "> ";
+    }
+  };
+
+
+  template<typename T, typename ST>
+  class Typename<NamedStorage3D<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "NamedStorage3D<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
     }
   };
 

@@ -106,6 +106,16 @@ bool operator!=(const Storage2D<T,ST>& v1, const Storage2D<T,ST>& v2);
 
 namespace Makros {
 
+  template<typename T, typename ST>
+  class Typename<Storage2D<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "Storage2D<" + Typename<T>() + "," + Typename<ST>() + "> ";
+    }
+  };
+
   template<typename T>
   class Typename<Storage2D<T> > {
   public:
@@ -113,6 +123,17 @@ namespace Makros {
     std::string name() const {
 
       return "Storage2D<" + Typename<T>() + "> ";
+    }
+  };
+
+
+  template<typename T, typename ST>
+  class Typename<NamedStorage2D<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "NamedStorage2D<" + Typename<T>() + "," + Typename<ST>() + "> ";
     }
   };
 

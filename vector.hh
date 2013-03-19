@@ -110,6 +110,16 @@ namespace Math1D {
 }
 
 namespace Makros {
+
+  template<typename T, typename ST>
+  class Typename<Math1D::Vector<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "Math1D::Vector<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
+    }
+  };
   
   template<typename T>
   class Typename<Math1D::Vector<T> > {
@@ -117,9 +127,20 @@ namespace Makros {
 
     std::string name() const {
 
-      return "Math1D::Vector<" + Makros::Typename<T>().name() + "> ";
+      return "Math1D::Vector<" + Makros::Typename<T>() + "> ";
     }
   };
+
+  template<typename T, typename ST>
+  class Typename<Math1D::NamedVector<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "Math1D::NamedVector<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
+    }
+  };
+
 
   template<typename T>
   class Typename<Math1D::NamedVector<T> > {
@@ -127,7 +148,7 @@ namespace Makros {
 
     std::string name() const {
 
-      return "Math1D::NamedVector<" + Makros::Typename<T>().name() + "> ";
+      return "Math1D::NamedVector<" + Makros::Typename<T>() + "> ";
     }
   };
 

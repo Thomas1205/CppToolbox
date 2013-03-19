@@ -1,10 +1,10 @@
 
 tidy:
-	rm *~
+	rm -f *~
 
 clean:
-	-rm $(DEBUGDIR)/*.o $(DEBUGDIR)/*.cu_o
-	-rm $(OPTDIR)/*.o $(OPTDIR)/*.cu_o
+	-rm -f $(DEBUGDIR)/*.o $(DEBUGDIR)/*.cu_o
+	-rm -f $(OPTDIR)/*.o $(OPTDIR)/*.cu_o
 
 $(DEBUGDIR)/%.o : %.cc
 	$(COMPILER) $(INCLUDE) -c $< $(DEBUGFLAGS) -o $@

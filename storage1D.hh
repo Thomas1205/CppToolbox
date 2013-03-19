@@ -110,14 +110,34 @@ bool operator>=(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2);
 
 namespace Makros {
 
+
+  template<typename T, typename ST>
+  class Typename<Storage1D<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "Storage1D<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
+    }
+  };
+
   template<typename T>
   class Typename<Storage1D<T> > {
   public:
 
     std::string name() const {
 
-      //return "Storage1D<" + Makros::Typename<T>().name() + " >";
       return "Storage1D<" + Makros::Typename<T>() + "> ";
+    }
+  };
+
+  template<typename T, typename ST>
+  class Typename<NamedStorage1D<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "NamedStorage1D<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
     }
   };
 
@@ -127,7 +147,6 @@ namespace Makros {
 
     std::string name() const {
 
-      //return "NamedStorage1D<" + Makros::Typename<T>().name() + " >";
       return "NamedStorage1D<" + Makros::Typename<T>() + "> ";
     }
   };

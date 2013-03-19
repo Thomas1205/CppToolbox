@@ -111,15 +111,35 @@ namespace Math3D {
 
 namespace Makros {
 
+  template<typename T, typename ST>
+  class Typename<Math3D::Tensor<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "Math3D::Tensor<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
+    }
+  };
+
   template<typename T>
   class Typename<Math3D::Tensor<T> > {
   public:
 
     std::string name() const {
 
-      return "Math3D::Tensor<" + Makros::Typename<T>().name() + "> ";
+      return "Math3D::Tensor<" + Makros::Typename<T>() + "> ";
     }
   };
+
+  template<typename T, typename ST>
+  class Typename<Math3D::NamedTensor<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "Math3D::NamedTensor<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
+    }
+  };  
 
   template<typename T>
   class Typename<Math3D::NamedTensor<T> > {
@@ -127,7 +147,7 @@ namespace Makros {
 
     std::string name() const {
 
-      return "Math3D::NamedTensor<" + Makros::Typename<T>().name() + "> ";
+      return "Math3D::NamedTensor<" + Makros::Typename<T>() + "> ";
     }
   };  
 }

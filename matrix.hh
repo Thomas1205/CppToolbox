@@ -120,15 +120,36 @@ namespace Math2D {
 
 namespace Makros {
 
+  template<typename T, typename ST>
+  class Typename<Math2D::Matrix<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "Math2D::Matrix<" + Typename<T>() + "," + Typename<ST>() + "> ";
+    }
+  };
+
   template<typename T>
   class Typename<Math2D::Matrix<T> > {
   public:
 
     std::string name() const {
 
-      return "Math2D::Matrix<" + Typename<T>().name() + "> ";
+      return "Math2D::Matrix<" + Typename<T>() + "> ";
     }
   };
+
+  template<typename T, typename ST>
+  class Typename<Math2D::NamedMatrix<T,ST> > {
+  public:
+
+    std::string name() const {
+
+      return "Math2D::NamedMatrix<" + Typename<T>() + "," + Typename<ST>() + "> ";
+    }
+  };
+
 
   template<typename T>
   class Typename<Math2D::NamedMatrix<T> > {
@@ -136,7 +157,7 @@ namespace Makros {
 
     std::string name() const {
 
-      return "Math2D::NamedMatrix<" + Typename<T>().name() + "> ";
+      return "Math2D::NamedMatrix<" + Typename<T>() + "> ";
     }
   };
   
