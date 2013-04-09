@@ -3,8 +3,9 @@ tidy:
 	rm -f *~
 
 clean:
-	-rm -f $(DEBUGDIR)/*.o $(DEBUGDIR)/*.cu_o
-	-rm -f $(OPTDIR)/*.o $(OPTDIR)/*.cu_o
+	rm -f $(DEBUGDIR)/*.o $(DEBUGDIR)/*.cu_o
+	rm -f $(OPTDIR)/*.o $(OPTDIR)/*.cu_o
+	rm -f $(LIB)/*
 
 $(DEBUGDIR)/%.o : %.cc
 	$(COMPILER) $(INCLUDE) -c $< $(DEBUGFLAGS) -o $@
