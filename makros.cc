@@ -13,7 +13,7 @@ uint convert<uint>(const std::string s) {
     c = s[i];
 
     if (c < '0' || c > '9') {
-      std::cerr << "ERROR: conversion of \"" << s << "\" to uint failed. exiting." << std::endl; 
+      std::cerr << "ERROR: conversion of \"" << s << "\" to uint failed. Exiting." << std::endl; 
       exit(1);
     }
     result = 10*result + (c - '0');

@@ -117,7 +117,7 @@ T convert(const std::string s) {
   is >> result;
   if (is.bad() || is.fail()) {
     std::cerr << "ERROR: conversion of \"" << s << "\" to " << Makros::Typename<T>().name() //Makros::get_typename(typeid(T).name()) 
-	      << " failed. exiting." << std::endl; 
+	      << " failed. Exiting." << std::endl; 
     exit(1);
   }
   if (!is.eof()) {
@@ -146,7 +146,7 @@ void operator+=(std::pair<T1,T2>& x, const std::pair<T1,T2>& y) {
 
 
 /********************* Code Macros ****************************/
-#define TODO(s) { std::cerr << "TODO ERROR[" << __FILE__ << ":" << __LINE__ << "]: feature \"" << (s) << "\" is currently not implemented. exiting..." << std::endl; exit(1); } 
+#define TODO(s) { std::cerr << "TODO ERROR[" << __FILE__ << ":" << __LINE__ << "]: feature \"" << (s) << "\" is currently not implemented. Exiting..." << std::endl; exit(1); } 
 #define EXIT(s) { std::cerr << s << std::endl; exit(1); }
 #define MAKENAME(s) std::string(#s) + std::string("[") + std::string(__FILE__) + std::string(":") + toString(__LINE__) + std::string("]")
 
