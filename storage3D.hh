@@ -45,6 +45,12 @@ public:
 
   void operator=(const Storage3D<T,ST>& toCopy);
 
+#ifdef SAFE_MODE
+  //for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
+  // => define this operator in safe mode, only to check that such an assignment is not made
+  void operator=(const T& invalid_object);
+#endif
+
   //existing positions are copied, new ones are uninitialized
   void resize(ST newxDim, ST newyDim, ST newzDim);
 
@@ -297,6 +303,17 @@ void Storage3D<T,ST>::operator=(const Storage3D<T,ST>& toCopy) {
   //this is faster for basic types but it fails for complex types where e.g. arrays have to be copied
   //memcpy(data_,toCopy.direct_access(),size_*sizeof(T));
 }
+
+#ifdef SAFE_MODE
+    //for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
+    // => define this operator in safe mode, only to check that such an assignment is not made
+template<typename T,typename ST>
+void Storage3D<T,ST>::operator=(const T& invalid_object) {
+  INTERNAL_ERROR << "assignment of an atomic entity to Storage1D \"" << this->name() << "\" of type " 
+		   << Makros::Typename<T>()
+		   << " with " << size_ << " elements. exiting." << std::endl;
+}
+#endif
 
 
 //existing positions are copied, new ones are uninitialized

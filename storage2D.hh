@@ -48,6 +48,12 @@ public:
 
   void operator=(const Storage2D<T,ST>& toCopy);
 
+#ifdef SAFE_MODE
+  //for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
+  // => define this operator in safe mode, only to check that such an assignment is not made
+  void operator=(const T& invalid_object);
+#endif
+
   inline T* direct_access();
 
   inline const T* direct_access() const;
@@ -301,6 +307,19 @@ void Storage2D<T,ST>::operator=(const Storage2D<T,ST>& toCopy) {
   //this is faster for basic types but it fails for complex types where e.g. arrays have to be copied
   //memcpy(data_,toCopy.direct_access(),size_*sizeof(T));
 }
+
+
+#ifdef SAFE_MODE
+    //for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
+    // => define this operator in safe mode, only to check that such an assignment is not made
+template<typename T,typename ST>
+void Storage2D<T,ST>::operator=(const T& invalid_object) {
+  INTERNAL_ERROR << "assignment of an atomic entity to Storage2D \"" << this->name() << "\" of type " 
+		 << Makros::Typename<T>()
+		 << " with " << size_ << " elements. exiting." << std::endl;
+}
+#endif
+
 
 template<>
 void Storage2D<int>::operator=(const Storage2D<int>& toCopy);
