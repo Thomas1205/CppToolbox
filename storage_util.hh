@@ -20,7 +20,7 @@ inline ST find_in_storage1D(const Storage1D<T,ST>& stor, T element) {
 }
 
 template<typename T, typename ST>
-inline contains(const Storage1D<T,ST>& stor, T element) {
+inline bool contains(const Storage1D<T,ST>& stor, T element) {
 
   T* end = stor.direct_access()+stor.size();
 
