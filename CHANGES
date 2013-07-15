@@ -1,4 +1,10 @@
+/*** changes for the upcomsing release (1.03) ***/
 
+- added operators in debug mode to check if a Storage1/2/3D is assigned a scalar
+- added storage_stl_interface for interchange between Storage1/2/3Ds of
+  different base types and between a Storage1D and an std::vector
+- added storage_util and stl_util to ease sorting vectors and provide some
+  find functionality
 
 /****** changes for version 1.02 *****/
 
