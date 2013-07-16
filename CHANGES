@@ -1,4 +1,4 @@
-/*** changes for the upcomsing release (1.03) ***/
+/***** changes for version 1.03 *****/
 
 - added operators in debug mode to check if a Storage1/2/3D is assigned a scalar
 - added storage_stl_interface for interchange between Storage1/2/3Ds of
