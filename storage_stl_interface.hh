@@ -5,6 +5,8 @@
 
 #include <vector>
 #include "storage1D.hh"
+#include "storage2D.hh"
+#include "storage3D.hh"
 
 template<typename T, typename ST>
 void assign(Storage1D<T,ST>& target, const std::vector<T>& source); 
