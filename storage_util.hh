@@ -5,7 +5,35 @@
 
 
 #include "storage1D.hh"
+#include "vector.hh"
+#include "matrix.hh"
+#include "tensor.hh"
 #include <algorithm>
+
+template<typename T>
+inline void negate(Math1D::Vector<T>& vec) {
+
+  const size_t size = vec.size();
+  for (size_t k=0; k < size; k++)
+    vec[k] = -vec[k];
+}
+
+template<typename T>
+inline void negate(Math2D::Matrix<T>& mat) {
+
+  const size_t size = mat.size();
+  for (size_t k=0; k < size; k++)
+    mat.direct_access(k) = -mat.direct_access(k);
+}
+
+template<typename T>
+inline void negate(Math3D::Tensor<T>& ten) {
+
+  const size_t size = ten.size();
+  for (size_t k=0; k < size; k++)
+    ten.direct_access(k) = -ten.direct_access(k);
+}
+
 
 template<typename T>
 inline void sort_storage1D(Storage1D<T>& stor) {

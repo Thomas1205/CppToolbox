@@ -52,6 +52,8 @@ namespace Math2D {
         
     /*** L1-norm of the matrix ***/
     double norm_l1() const;
+
+    void add_constant(T addon);
     
     //---- mathematical operators ----
 
@@ -181,7 +183,10 @@ namespace Math2D {
 
   template<typename T, typename ST>
   Matrix<T,ST>::Matrix(ST xDim, ST yDim, T default_value) : Storage2D<T,ST>(xDim, yDim) {
-    for (ST i=0; i < Storage2D<T,ST>::size_; i++)
+
+    const ST size = Storage2D<T,ST>::size_;
+
+    for (ST i=0; i < size; i++)
       Storage2D<T,ST>::data_[i] = default_value;
   }
   
@@ -195,15 +200,20 @@ namespace Math2D {
 
   template<typename T, typename ST>
   void Matrix<T,ST>::set_constant(T constant) {
-    for (ST i=0; i < Storage2D<T,ST>::size_; i++)
+
+    const ST size = Storage2D<T,ST>::size_;
+
+    for (ST i=0; i < size; i++)
       Storage2D<T,ST>::data_[i] = constant;
   }
 
   template<typename T, typename ST>
   T Matrix<T,ST>::sum() const {
 
+    const ST size = Storage2D<T,ST>::size_;
+
     T result = (T) 0;
-    for (ST i=0; i < Storage2D<T,ST>::size_; i++)
+    for (ST i=0; i < size; i++)
       result += Storage2D<T,ST>::data_[i];
 
     return result;
@@ -213,12 +223,12 @@ namespace Math2D {
   template<typename T, typename ST>
   T Matrix<T,ST>::max() const {
     
-//     T maxel = std::numeric_limits<T>::min();
-//     for (ST i=0; i < Storage2D<T>::size_; i++) {
-//       if (Storage2D<T>::data_[i] > maxel)
-// 	maxel = Storage2D<T>::data_[i];
-//     }
-//     return maxel;
+    //     T maxel = std::numeric_limits<T,ST>::min();
+    //     for (ST i=0; i < Storage2D<T,ST>::size_; i++) {
+    //       if (Storage2D<T,ST>::data_[i] > maxel)
+    // 	maxel = Storage2D<T,ST>::data_[i];
+    //     }
+    //     return maxel;
 
     return *std::max_element(Storage2D<T,ST>::data_,Storage2D<T,ST>::data_+Storage2D<T,ST>::size_);
   }
@@ -230,12 +240,12 @@ namespace Math2D {
   template<typename T, typename ST>    
   T Matrix<T,ST>::min() const {
     
-//     T minel = std::numeric_limits<T>::max();
-//     for (ST i=0; i < Storage2D<T>::size_; i++) {
-//       if (Storage2D<T>::data_[i] < minel)
-// 	minel = Storage2D<T>::data_[i];
-//     }
-//     return minel;    
+    //     T minel = std::numeric_limits<T,ST>::max();
+    //     for (ST i=0; i < Storage2D<T,ST>::size_; i++) {
+    //       if (Storage2D<T,ST>::data_[i] < minel)
+    // 	minel = Storage2D<T,ST>::data_[i];
+    //     }
+    //     return minel;    
 
     return *std::min_element(Storage2D<T,ST>::data_,Storage2D<T,ST>::data_+Storage2D<T,ST>::size_);
   }
@@ -251,9 +261,9 @@ namespace Math2D {
     for (ST i=0; i < Storage2D<T,ST>::size_; i++) {
       T candidate = Storage2D<T,ST>::data_[i];
       if (candidate < ((T) 0))
-	candidate *= (T) -1;
+        candidate *= (T) -1;
       if (candidate > maxel)
-	maxel = candidate;
+        maxel = candidate;
     }
         
     return maxel;
@@ -309,41 +319,56 @@ namespace Math2D {
   double Matrix<uchar>::norm_l1() const;
 
 
+  template<typename T, typename ST>
+  void Matrix<T,ST>::add_constant(T addon) {
+
+    const ST size = Storage2D<T,ST>::size_;
+
+    for (ST i=0; i < size; i++)
+      Storage2D<T,ST>::data_[i] += addon;
+  }
+
+
   //addition of another matrix of equal dimensions
   template<typename T, typename ST>
   void Matrix<T,ST>::operator+=(const Matrix<T,ST>& toAdd) {
     
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
     if (toAdd.xDim() != Storage2D<T,ST>::xDim_ || toAdd.yDim() != Storage2D<T,ST>::yDim_) {
       INTERNAL_ERROR << "    dimension mismatch in matrix addition(+=): (" 
-		     << Storage2D<T,ST>::xDim_ << "," << Storage2D<T,ST>::yDim_ << ") vs. ("
-		     << toAdd.xDim() << "," << toAdd.yDim() << ")." << std::endl;
+                     << Storage2D<T,ST>::xDim_ << "," << Storage2D<T,ST>::yDim_ << ") vs. ("
+                     << toAdd.xDim() << "," << toAdd.yDim() << ")." << std::endl;
       std::cerr << "     When adding matrix \"" << toAdd.name() << "\" to  matrix \""
-		<< this->name() << "\". Exiting" << std::endl;
+                << this->name() << "\". Exiting" << std::endl;
       exit(1);
     }
-    else {
-      //assert( Storage2D<T,ST>::size_ == Storage2D<T,ST>::xDim_*Storage2D<T,ST>::yDim_ );
-      for (ST i=0; i < Storage2D<T,ST>::size_; i++)
-	Storage2D<T,ST>::data_[i] += toAdd.direct_access(i);
-    }
+#endif
+
+    //assert( Storage2D<T,ST>::size_ == Storage2D<T,ST>::xDim_*Storage2D<T,ST>::yDim_ );
+    const ST size = Storage2D<T,ST>::size_;
+    for (ST i=0; i < size; i++)
+      Storage2D<T,ST>::data_[i] += toAdd.direct_access(i);
   }
 
   template<typename T, typename ST>
   void Matrix<T,ST>::operator-=(const Matrix<T,ST>& toSub) {
     
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
     if (toSub.xDim() != Storage2D<T,ST>::xDim_ || toSub.yDim() != Storage2D<T,ST>::yDim_) {
       INTERNAL_ERROR << "    dimension mismatch in matrix subtraction(-=): (" 
-		     << Storage2D<T,ST>::xDim_ << "," << Storage2D<T,ST>::yDim_ << ") vs. ("
-		     << toSub.xDim() << "," << toSub.yDim() << ")." << std::endl;
+                     << Storage2D<T,ST>::xDim_ << "," << Storage2D<T,ST>::yDim_ << ") vs. ("
+                     << toSub.xDim() << "," << toSub.yDim() << ")." << std::endl;
       std::cerr << "     When subtracting matrix \"" << toSub.name() << "\" from  matrix \""
-		<< this->name() << "\". Exiting" << std::endl;
+                << this->name() << "\". Exiting" << std::endl;
       exit(1);
     }
-    else {
-      //assert(Storage2D<T,ST>::size_ == Storage2D<T,ST>::xDim_*Storage2D<T,ST>::yDim_);
-      for (ST i=0; i < Storage2D<T,ST>::size_; i++)
-	Storage2D<T,ST>::data_[i] -= toSub.direct_access(i);
-    }
+#endif
+
+    const ST size = Storage2D<T,ST>::size_;
+
+    //assert(Storage2D<T,ST>::size_ == Storage2D<T,ST>::xDim_*Storage2D<T,ST>::yDim_);
+    for (ST i=0; i < size; i++)
+      Storage2D<T,ST>::data_[i] -= toSub.direct_access(i);
   }
 
   //@returns if the operation was successful
@@ -354,7 +379,7 @@ namespace Math2D {
 
     if (!of.is_open()) {
       IO_ERROR << " while saving PGM: could not write file \"" << filename 
-	       << "\". Please check if the path is correct." << std::endl;
+               << "\". Please check if the path is correct." << std::endl;
       return false;
     }
 
@@ -368,16 +393,16 @@ namespace Math2D {
     for (ST i=0; i < Storage2D<T,ST>::size_; i++) {
       
       if (max_intensity < 256) {
-	T cur_datum = Storage2D<T,ST>::data_[i];
-	if (fit_to_range) {
-	  cur_datum = std::max(cur_datum,(T) 0);
-	  cur_datum = std::min(cur_datum,(T) max_intensity);
-	}
-	uchar c = cur_datum;
-	of << c;
+        T cur_datum = Storage2D<T,ST>::data_[i];
+        if (fit_to_range) {
+          cur_datum = std::max(cur_datum,(T) 0);
+          cur_datum = std::min(cur_datum,(T) max_intensity);
+        }
+        uchar c = cur_datum;
+        of << c;
       }
       else {
-	TODO("handle max_intensity > 255 when saving PGMs");
+        TODO("handle max_intensity > 255 when saving PGMs");
       }
     }
 
@@ -447,16 +472,18 @@ namespace Math2D {
   template<typename T, typename ST>
   Matrix<T,ST> operator+(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2) {
 
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
     if (m1.xDim != m2.xDim || m1.yDim != m2.yDim) {
 
       INTERNAL_ERROR << "     dimension mismatch in matrix addition(+): (" 
-		     << m1.xDim() << "," << m1.yDim() << ") vs. ("
-		     << m2.xDim() << "," << m2.yDim() << ")." << std::endl;
+                     << m1.xDim() << "," << m1.yDim() << ") vs. ("
+                     << m2.xDim() << "," << m2.yDim() << ")." << std::endl;
       std::cerr << "     When adding matrices \"" << m1.name() << "\" and\"" 
-		<< m2.name() << "\". Exiting..." << std::endl;
+                << m2.name() << "\". Exiting..." << std::endl;
 
       exit(1);
     }
+#endif
 
     Matrix<T,ST> result(m1.xDim(),m1.yDim());
     ST i;
@@ -469,14 +496,16 @@ namespace Math2D {
   template<typename T, typename ST>
   Matrix<T,ST> operator*(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2) {
 
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
     if (m1.xDim() != m2.yDim()) {
       INTERNAL_ERROR << "     dimension mismatch in matrix multiplication(*): ("
-		     << m1.xDim() << "," << m1.yDim() << ") vs. ("
-		     << m2.xDim() << "," << m2.yDim() << ")." << std::endl;
+                     << m1.xDim() << "," << m1.yDim() << ") vs. ("
+                     << m2.xDim() << "," << m2.yDim() << ")." << std::endl;
       std::cerr << "     When multiplying matrices \"" << m1.name() << "\" and \"" 
-		<< m2.name() << "\". Exiting..." << std::endl;
+                << m2.name() << "\". Exiting..." << std::endl;
       exit(1);
     }
+#endif
     
     const ST xDim = m2.xDim();
     const ST yDim = m1.yDim();
@@ -489,14 +518,14 @@ namespace Math2D {
     for (y=0; y < yDim; y++) {
       for (x=0; x < xDim; x++) {
 	
-	sum = (T) 0;
-	for (z=0; z < zDim; z++) {
-	  //sum += m1(z,y) * m2(x,z);
-	  sum += m1.direct_access(y*zDim+z) * m2.direct_access(z*xDim+x);
-	}
+        sum = (T) 0;
+        for (z=0; z < zDim; z++) {
+          //sum += m1(z,y) * m2(x,z);
+          sum += m1.direct_access(y*zDim+z) * m2.direct_access(z*xDim+x);
+        }
 
-	//result(x,y) = sum;
-	result.direct_access(y*xDim+x) = sum;
+        //result(x,y) = sum;
+        result.direct_access(y*xDim+x) = sum;
       }
     }
 
@@ -515,16 +544,16 @@ namespace Math2D {
     else if (yDim == 1) {
       s << "(";
       for (ST x=0; x < xDim; x++) 
-	s << " " << m.direct_access(x); 
+        s << " " << m.direct_access(x); 
       s << " )";
     }
     else {
       s << "( " << std::endl;
       for (ST y=0; y < yDim; y++) {
-	for (ST x=0; x < xDim; x++) {
-	  s << " " << m.direct_access(y*xDim+x);
-	}
-	s << std::endl;
+        for (ST x=0; x < xDim; x++) {
+          s << " " << m.direct_access(y*xDim+x);
+        }
+        s << std::endl;
       }
       s << ")";
     }
@@ -543,8 +572,8 @@ namespace Math2D {
     ST x,y;
     for (x=0; x < xDim; x++) {
       for (y=0; y < yDim; y++) {
-	result.direct_access(x*yDim+y) = m.direct_access(y*xDim+x);
-	//result(y,x) = m(x,y);
+        result.direct_access(x*yDim+y) = m.direct_access(y*xDim+x);
+        //result(y,x) = m(x,y);
       }
     }
 
@@ -558,13 +587,15 @@ namespace Math2D {
     const ST xDim = m.xDim();
     const ST yDim = m.yDim();
 
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
     if (xDim != v.size()) {
       INTERNAL_ERROR << "     cannot multiply matrix \"" << m.name() << "\" with vector \""
-		     << v.name() << "\":" << std::endl
-		     << "     dimensions " << xDim << "x" << yDim << " and " << v.size() 
-		     << " mismatch. Exiting..." << std::endl;
+                     << v.name() << "\":" << std::endl
+                     << "     dimensions " << xDim << "x" << yDim << " and " << v.size() 
+                     << " mismatch. Exiting..." << std::endl;
       exit(1);
     }
+#endif
 
     Math1D::Vector<T,ST> result(yDim);
     ST y,x;
@@ -572,7 +603,7 @@ namespace Math2D {
     for (y=0; y < yDim; y++) {
       sum = (T) 0;
       for (x=0; x < xDim; x++)
-	sum += m(x,y) * v[x];
+        sum += m(x,y) * v[x];
       result[y] = sum;
     }
 

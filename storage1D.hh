@@ -345,9 +345,9 @@ OPTINLINE const T& Storage1D<T,ST>::operator[](ST i) const {
   if (i >= size_) {
 
     INTERNAL_ERROR << "    invalid access on element " << i 
-		   << " for Storage1D " <<  "\"" << this->name() << "\" of type " 
-		   << Makros::Typename<T>()
-		   << " with " << size_ << " elements. exiting." << std::endl;
+                   << " for Storage1D " <<  "\"" << this->name() << "\" of type " 
+                   << Makros::Typename<T>()
+                   << " with " << size_ << " elements. exiting." << std::endl;
     exit(1);  
   }
 #endif
@@ -361,9 +361,9 @@ OPTINLINE T& Storage1D<T,ST>::operator[](ST i) {
   if (i >= size_) {
 
     INTERNAL_ERROR << "    invalid access on element " << i 
-		   << " for Storage1D \"" << this->name() << "\" of type " 
-		   << Makros::Typename<T>()
-		   << " with " << size_ << " elements. exiting." << std::endl;
+                   << " for Storage1D \"" << this->name() << "\" of type " 
+                   << Makros::Typename<T>()
+                   << " with " << size_ << " elements. exiting." << std::endl;
     exit(1);  
   }
 #endif
@@ -382,9 +382,10 @@ void Storage1D<T,ST>::operator=(const Storage1D<T,ST>& toCopy) {
     size_ = toCopy.size();
     data_ = new T[size_];
   }
-    
-  for (ST i=0; i < size_; i++) {
-     data_[i] = toCopy.direct_access(i);
+
+  const ST size = size_;
+  for (ST i=0; i < size; i++) {
+    data_[i] = toCopy.direct_access(i);
   }
 
   //this is faster for basic types but it fails for complex types where e.g. arrays have to be copied
@@ -392,13 +393,13 @@ void Storage1D<T,ST>::operator=(const Storage1D<T,ST>& toCopy) {
 }
 
 #ifdef SAFE_MODE
-    //for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
-    // => define this operator in safe mode, only to check that such an assignment is not made
+//for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
+// => define this operator in safe mode, only to check that such an assignment is not made
 template<typename T,typename ST>
 void Storage1D<T,ST>::operator=(const T& invalid_object) {
   INTERNAL_ERROR << "assignment of an atomic entity to Storage1D \"" << this->name() << "\" of type " 
-		   << Makros::Typename<T>()
-		   << " with " << size_ << " elements. exiting." << std::endl;
+                 << Makros::Typename<T>()
+                 << " with " << size_ << " elements. exiting." << std::endl;
 }
 #endif
 
@@ -432,7 +433,9 @@ void Storage1D<T,ST>::resize(ST new_size) {
   else if (size_ != new_size) {
     T* new_data = new T[new_size];
 
-    for (ST i=0; i < std::min(size_,new_size); i++)
+    const ST size = std::min(size_,new_size);
+
+    for (ST i=0; i < size; i++)
       new_data[i] = data_[i];
     
     //this is faster for basic types but it fails for complex types where e.g. arrays have to be copied
@@ -478,7 +481,8 @@ void Storage1D<T,ST>::resize(ST new_size, T fill_value) {
     if (new_size > size_)
       std::fill_n(new_data+size_,new_size-size_,fill_value);
 
-    for (size_t i=0; i < std::min(size_,new_size); i++)
+    const ST size = std::min(size_,new_size);
+    for (size_t i=0; i < size; i++)
       new_data[i] = data_[i];
 
     
@@ -795,9 +799,9 @@ OPTINLINE T& FlexibleStorage1D<T,ST>::operator[](ST i) const {
 #ifdef SAFE_MODE
   if (i >= size_) {
     INTERNAL_ERROR << "    invalid access on element " << i 
-		   << " for FlexibleStorage1D " <<  "\"" << this->name() << "\" of type " 
-		   << Makros::Typename<T>()
-		   << " with " << size_ << " (valid) elements. exiting." << std::endl;
+                   << " for FlexibleStorage1D " <<  "\"" << this->name() << "\" of type " 
+                   << Makros::Typename<T>()
+                   << " with " << size_ << " (valid) elements. exiting." << std::endl;
     exit(1);  
   }
 #endif

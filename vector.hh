@@ -45,6 +45,8 @@ namespace Math1D {
         
     /*** L1-norm of the vector ***/
     double norm_l1() const;
+
+    void add_constant(T addon);
         
     void operator+=(const Vector<T,ST>& v);
 
@@ -155,7 +157,7 @@ namespace Makros {
 }
 
 
-  /******************************************** implementation *****************************************************/
+/******************************************** implementation *****************************************************/
 
 namespace Math1D {
 
@@ -180,9 +182,11 @@ namespace Math1D {
   template<typename T,typename ST>
   T Vector<T,ST>::sum() const {
 
+    const ST size = Storage1D<T,ST>::size();
+
     T result = 0.0;
-    for (ST i=0; i < Storage1D<T>::size(); i++) {
-      result += Storage1D<T>::data_[i];
+    for (ST i=0; i < size; i++) {
+      result += Storage1D<T,ST>::data_[i];
     }
 
     return result;
@@ -192,13 +196,13 @@ namespace Math1D {
   template<typename T,typename ST>
   T Vector<T,ST>::max() const {
     
-    //     T maxel = std::numeric_limits<T>::min();
-    //     for (size_t i=0; i < Storage1D<T>::size_; i++) {
-    //       if (Storage1D<T>::data_[i] > maxel)
-    // 	maxel = Storage1D<T>::data_[i];
+    //     T maxel = std::numeric_limits<T,ST>::min();
+    //     for (size_t i=0; i < Storage1D<T,ST>::size_; i++) {
+    //       if (Storage1D<T,ST>::data_[i] > maxel)
+    // 	maxel = Storage1D<T,ST>::data_[i];
     //     }        
     //    return maxel;
-    return *std::max_element(Storage1D<T>::data_, Storage1D<T>::data_ + Storage1D<T>::size_);
+    return *std::max_element(Storage1D<T,ST>::data_, Storage1D<T,ST>::data_ + Storage1D<T,ST>::size_);
   }
 
   template<>
@@ -207,14 +211,14 @@ namespace Math1D {
   template<typename T,typename ST>    
   T Vector<T,ST>::min() const {
     
-    //     T minel = std::numeric_limits<T>::max();
-    //     for (size_t i=0; i < Storage1D<T>::size_; i++) {
-    //       if (Storage1D<T>::data_[i] < minel)
-    // 	minel = Storage1D<T>::data_[i];
+    //     T minel = std::numeric_limits<T,ST>::max();
+    //     for (size_t i=0; i < Storage1D<T,ST>::size_; i++) {
+    //       if (Storage1D<T,ST>::data_[i] < minel)
+    // 	minel = Storage1D<T,ST>::data_[i];
     //     }        
     //     return minel;    
 
-    return *std::min_element(Storage1D<T>::data_, Storage1D<T>::data_ + Storage1D<T>::size_);
+    return *std::min_element(Storage1D<T,ST>::data_, Storage1D<T,ST>::data_ + Storage1D<T,ST>::size_);
   }
 
   template<>
@@ -223,14 +227,16 @@ namespace Math1D {
   /*** maximal absolute element = l-infinity norm ***/
   template<typename T,typename ST>    
   T Vector<T,ST>::max_abs() const {
+
+    const ST size = Storage1D<T,ST>::size();
     
     T maxel = (T) 0;
-    for (ST i=0; i < Storage1D<T,ST>::size_; i++) {
+    for (ST i=0; i < size; i++) {
       T candidate = Storage1D<T,ST>::data_[i];
       if (candidate < ((T) 0))
-	candidate *= (T) -1;
+        candidate *= (T) -1;
       if (candidate > maxel)
-	maxel = candidate;
+        maxel = candidate;
     }
         
     return maxel;
@@ -240,9 +246,11 @@ namespace Math1D {
   template<typename T,typename ST>   
   double Vector<T,ST>::norm() const {
     
+    const ST size = Storage1D<T,ST>::size();
+
     double result = 0.0;
-    for (ST i=0; i < Storage1D<T,ST>::size_; i++) {
-      const double cur = (double) Storage1D<T>::data_[i];
+    for (ST i=0; i < size; i++) {
+      const double cur = (double) Storage1D<T,ST>::data_[i];
       result += cur*cur;
     }
         
@@ -252,9 +260,11 @@ namespace Math1D {
   template<typename T,typename ST>   
   double Vector<T,ST>::sqr_norm() const {
     
+    const ST size = Storage1D<T,ST>::size();
+
     double result = 0.0;
-    for (ST i=0; i < Storage1D<T,ST>::size_; i++) {
-      const double cur = (double) Storage1D<T>::data_[i];
+    for (ST i=0; i < size; i++) {
+      const double cur = (double) Storage1D<T,ST>::data_[i];
       result += cur*cur;
     }
         
@@ -265,9 +275,11 @@ namespace Math1D {
   template<typename T,typename ST>
   double Vector<T,ST>::norm_l1() const {
     
+    const ST size = Storage1D<T,ST>::size();
+
     double result = 0.0;
-    for (ST i=0; i < Storage1D<T>::size_; i++) {
-      result += std::abs(Storage1D<T>::data_[i]);
+    for (ST i=0; i < size; i++) {
+      result += std::abs(Storage1D<T,ST>::data_[i]);
     }
     
     return result;    
@@ -285,23 +297,32 @@ namespace Math1D {
   template<>
   double Vector<ushort>::norm_l1() const;
 
+  template<typename T,typename ST>
+  void Vector<T,ST>::add_constant(T addon) {
+    
+    const ST size = Storage1D<T,ST>::size_;
+    for (ST i=0; i < size; i++)
+      Storage1D<T,ST>::data_[i] += addon;
+  }
         
-  template<typename T,typename ST>       
+  template<typename T,typename ST>
   void Vector<T,ST>::operator+=(const Vector<T,ST>& v) {
     
     const ST size = Storage1D<T,ST>::size_;
 
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
     if (v.size() != size) {
       INTERNAL_ERROR << "   cannot add vector \"" << v.name() << "\" to vector \"" 
-		     << this->name() << "\":" << std::endl
-		     << "   sizes " << v.size() << " and " << this->size() << " mismatch. Exiting..."
-		     << std::endl;   
+                     << this->name() << "\":" << std::endl
+                     << "   sizes " << v.size() << " and " << this->size() << " mismatch. Exiting..."
+                     << std::endl;   
       exit(0);
     }
+#endif
     
     ST i;
     for (i=0; i < size; i++)
-      Storage1D<T>::data_[i] += v.direct_access(i);
+      Storage1D<T,ST>::data_[i] += v.direct_access(i);
   }
 
   template<typename T,typename ST>
@@ -309,23 +330,25 @@ namespace Math1D {
     
     const ST size = Storage1D<T,ST>::size_;
 
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
     if (v.size() != size) {
       INTERNAL_ERROR << "   cannot subtract vector \"" << v.name() << "\" from vector \"" 
-		     << this->name() << "\":" << std::endl
-		     << "   sizes " << v.size() << " and " << this->size() << " mismatch. Exiting..."
-		     << std::endl;   
+                     << this->name() << "\":" << std::endl
+                     << "   sizes " << v.size() << " and " << this->size() << " mismatch. Exiting..."
+                     << std::endl;   
       exit(0);
     }
+#endif
     
     ST i;
     for (i=0; i < size; i++)
-      Storage1D<T>::data_[i] -= v.direct_access(i);
+      Storage1D<T,ST>::data_[i] -= v.direct_access(i);
   }
         
   template<typename T,typename ST>
   void Vector<T,ST>::operator*=(T constant) {
     
-    const ST size = Storage1D<T>::size_;
+    const ST size = Storage1D<T,ST>::size_;
     
     ST i;
     for (i=0; i < size; i++)
@@ -343,11 +366,6 @@ namespace Math1D {
     return Vector<T,ST>::vector_name_;
   }   
 
-  //   template<typename T>
-  //   void Vector<T>::set_constant(T constant) {
-
-  //     std::fill_n(Storage1D<T>::data_,Storage1D<T>::size_,constant); //experimental result: fill_n is usually faster
-  //   }
 
   /************** implementation of NamedVector **********/
 
@@ -395,13 +413,15 @@ namespace Math1D {
 
     const ST size = v1.size();
 
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
     if (size != v2.size()) {
       INTERNAL_ERROR << "     cannot add vectors \"" << v1.name() << "\" and \""
-		     << v2.name() << "\":" << std::endl
-		     << "    sizes " << v1.size() << " and " << v2.size() << " mismatch. Exiting..."
-		     << std::endl;
+                     << v2.name() << "\":" << std::endl
+                     << "    sizes " << v1.size() << " and " << v2.size() << " mismatch. Exiting..."
+                     << std::endl;
       exit(1);
     }
+#endif
         
     Vector<T,ST> result(size);
     ST i;
@@ -416,13 +436,15 @@ namespace Math1D {
 
     const ST size = v1.size();
 
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
     if (size != v2.size()) {
       INTERNAL_ERROR << "     cannot subtract vector \"" << v2.name() << "\" from \""
-		     << v1.name() << "\":" << std::endl
-		     << "    sizes " << v2.size() << " and " << v1.size() << " mismatch. Exiting..."
-		     << std::endl;
+                     << v1.name() << "\":" << std::endl
+                     << "    sizes " << v2.size() << " and " << v1.size() << " mismatch. Exiting..."
+                     << std::endl;
       exit(1);
     }
+#endif
         
     Vector<T,ST> result(size);
     ST i;
@@ -437,13 +459,15 @@ namespace Math1D {
     
     const ST size = v1.size();
 
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
     if (size != v2.size()) {
       INTERNAL_ERROR << "     cannot compute scalar product of vectors \"" 
-		     << v1.name() << "\" and \"" << v2.name() << "\":" << std::endl
-		     << "      sizes " << v1.size() << " and " << v2.size() << " mismatch. exiting." 
-		     << std::endl;
+                     << v1.name() << "\" and \"" << v2.name() << "\":" << std::endl
+                     << "      sizes " << v1.size() << " and " << v2.size() << " mismatch. exiting." 
+                     << std::endl;
       exit(1); 
     }
+#endif
         
     T result = (T) 0;
     ST i;
@@ -470,13 +494,15 @@ namespace Math1D {
 
   template<typename T,typename ST>
   Vector<T,ST> cross(const Vector<T,ST>& v1, const Vector<T,ST>& v2) {
-    
+
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC    
     if (v1.size() != 3 || v2.size() != 3) {
       INTERNAL_ERROR << "      the cross product is only defined for vectors of size 3." << std::endl
-		     << "                  here applied for vectors of size " << v1.size() << " and "
-		     << v2.size() << ". exiting." << std::endl;
+                     << "                  here applied for vectors of size " << v1.size() << " and "
+                     << v2.size() << ". exiting." << std::endl;
       exit(1);    
-    } 
+    }
+#endif
     
     Vector<T,ST> result(3);
     result[0] = v1[1]*v2[2] - v1[2]*v2[1];

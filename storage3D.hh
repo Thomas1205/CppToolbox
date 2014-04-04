@@ -7,7 +7,6 @@
 #ifndef STORAGE_3D_HH
 #define STORAGE_3D_HH
 
-
 #include "makros.hh"
 
 template<typename T, typename ST=size_t>
@@ -211,10 +210,10 @@ OPTINLINE const T& Storage3D<T,ST>::operator()(ST x, ST y, ST z) const {
   if (x >= xDim_ || y >= yDim_ || z >= zDim_) {
       
     INTERNAL_ERROR << "     invalid access on element (" << x << "," << y << "," << z << ") of 3D-storage \"" 
-		   << this->name() << "\" of type " 
-		   << Makros::Typename<T>()
+                   << this->name() << "\" of type " 
+                   << Makros::Typename<T>()
       //<< Makros::get_typename(typeid(T).name()) 
-		   << ":" << std::endl;
+                   << ":" << std::endl;
     std::cerr << "     dimensions " << xDim_ << "x" << yDim_ << "x" << zDim_ << " exceeded. Exiting..." << std::endl;
     exit(1);
   }
@@ -228,10 +227,10 @@ OPTINLINE T& Storage3D<T,ST>::operator()(ST x, ST y, ST z) {
   if (x >= xDim_ || y >= yDim_ || z >= zDim_) {
 
     INTERNAL_ERROR << "     invalid access on element (" << x << "," << y << "," << z << ") of 3D-storage \"" 
-		   << this->name() << "\" of type " 
-		   << Makros::Typename<T>()
+                   << this->name() << "\" of type " 
+                   << Makros::Typename<T>()
       //<< Makros::get_typename(typeid(T).name()) 
-		   << ":" << std::endl;
+                   << ":" << std::endl;
     std::cerr << "     dimensions " << xDim_ << "x" << yDim_ << "x" << zDim_ << " exceeded. Exiting..." << std::endl;
     exit(1);
   }
@@ -309,13 +308,13 @@ void Storage3D<T,ST>::operator=(const Storage3D<T,ST>& toCopy) {
 }
 
 #ifdef SAFE_MODE
-    //for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
-    // => define this operator in safe mode, only to check that such an assignment is not made
+//for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
+// => define this operator in safe mode, only to check that such an assignment is not made
 template<typename T,typename ST>
 void Storage3D<T,ST>::operator=(const T& invalid_object) {
   INTERNAL_ERROR << "assignment of an atomic entity to Storage1D \"" << this->name() << "\" of type " 
-		   << Makros::Typename<T>()
-		   << " with " << size_ << " elements. exiting." << std::endl;
+                 << Makros::Typename<T>()
+                 << " with " << size_ << " elements. exiting." << std::endl;
 }
 #endif
 

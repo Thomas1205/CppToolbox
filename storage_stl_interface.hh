@@ -4,12 +4,19 @@
 #define STORAGE_STL_INTERFACE
 
 #include <vector>
+#include <map>
 #include "storage1D.hh"
 #include "storage2D.hh"
 #include "storage3D.hh"
 
 template<typename T, typename ST>
 void assign(Storage1D<T,ST>& target, const std::vector<T>& source); 
+
+template<typename T, typename ST, typename X>
+void assign(Storage1D<std::pair<X,T>,ST>& target, const std::map<X,T>& source); 
+
+template<typename T, typename ST, typename X>
+void assign(Storage1D<X,ST>& target1, Storage1D<T,ST>& target2, const std::map<X,T>& source); 
 
 template<typename T, typename ST>
 void assign(std::vector<T>& target, const Storage1D<T,ST>& source); 
@@ -34,6 +41,32 @@ void assign(Storage1D<T,ST>& target, const std::vector<T>& source) {
   target.resize_dirty(source.size());
   for (uint k=0; k < source.size(); k++)
     target[k] = source[k];
+}
+
+template<typename T, typename ST, typename X>
+void assign(Storage1D<std::pair<X,T>,ST>& target, const std::map<X,T>& source) {
+  
+  //TODO: think about std::copy()
+  target.resize_dirty(source.size());
+  uint k=0;
+  for (typename std::map<X,T>::const_iterator it = source.begin(); it != source.end(); it++) {
+    target[k] = *it;
+    k++;
+  } 
+}
+
+template<typename T, typename ST, typename X>
+void assign(Storage1D<X,ST>& target1, Storage1D<T,ST>& target2, const std::map<X,T>& source) {
+
+  target1.resize_dirty(source.size());
+  target2.resize_dirty(source.size());
+
+  uint k=0;
+  for (typename std::map<X,T>::const_iterator it = source.begin(); it != source.end(); it++) {
+    target1[k] = it->first;
+    target2[k] = it->second;
+    k++;
+  } 
 }
 
 template<typename T, typename ST>

@@ -376,7 +376,7 @@ FlexibleStorage1D<uint>::FlexibleStorage1D(const FlexibleStorage1D<uint>& toCopy
 template<>
 void FlexibleStorage1D<uint>::operator=(const FlexibleStorage1D<uint>& toCopy) {
   
-    uint new_res = toCopy.reserved_size();
+  uint new_res = toCopy.reserved_size();
   if (new_res != reserved_size_) {
     reserved_size_ = new_res;
 

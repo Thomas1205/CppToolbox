@@ -1,3 +1,15 @@
+/***** changes for the upcoming version (1.05?) ****/
+
+- fixed a few lines where the template parameter ST was missing
+- added a member add_constant() for vectors, matrices and tensors
+- slighlty improved speed of a few routines where the size of the data_-array
+  remains constant
+- in vector arithmetic, the dimension check is now skipped if a certain
+  preprocessor definition is set
+- adapted indentation
+
+
+
 /***** changes for version 1.03 *****/
 
 - added operators in debug mode to check if a Storage1/2/3D is assigned a scalar

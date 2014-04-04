@@ -255,11 +255,11 @@ OPTINLINE const T& Storage2D<T,ST>::operator()(ST x, ST y) const {
 #ifdef SAFE_MODE
   if (x >= xDim_ || y >= yDim_) {
     INTERNAL_ERROR << "    access on element(" << x << "," << y 
-		   << ") exceeds storage dimensions of (" << xDim_ << "," << yDim_ << ")" << std::endl;
-    std::cerr << "   in 2Dstorage \"" << this->name() << "\" of type " 
-	      << Makros::Typename<T>()
+                   << ") exceeds storage dimensions of (" << xDim_ << "," << yDim_ << ")" << std::endl;
+    std::cerr << "      in 2Dstorage \"" << this->name() << "\" of type " 
+              << Makros::Typename<T>()
       //<< Makros::get_typename(typeid(T).name()) 
-	      << ". exiting." << std::endl;
+              << ". Exiting." << std::endl;
     exit(1);
   }
 #endif
@@ -272,11 +272,11 @@ OPTINLINE T& Storage2D<T,ST>::operator()(ST x, ST y) {
 #ifdef SAFE_MODE
   if (x >= xDim_ || y >= yDim_) {
     INTERNAL_ERROR << "    access on element(" << x << "," << y 
-		   << ") exceeds storage dimensions of (" << xDim_ << "," << yDim_ << ")" << std::endl;
+                   << ") exceeds storage dimensions of (" << xDim_ << "," << yDim_ << ")" << std::endl;
     std::cerr << "   in 2Dstorage \"" << this->name() << "\" of type " 
-	      << Makros::Typename<T>()
+              << Makros::Typename<T>()
       //<< Makros::get_typename(typeid(T).name()) 
-	      << ". exiting." << std::endl;
+              << ". exiting." << std::endl;
     exit(1);
   }
 #endif
@@ -310,13 +310,13 @@ void Storage2D<T,ST>::operator=(const Storage2D<T,ST>& toCopy) {
 
 
 #ifdef SAFE_MODE
-    //for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
-    // => define this operator in safe mode, only to check that such an assignment is not made
+//for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
+// => define this operator in safe mode, only to check that such an assignment is not made
 template<typename T,typename ST>
 void Storage2D<T,ST>::operator=(const T& invalid_object) {
   INTERNAL_ERROR << "assignment of an atomic entity to Storage2D \"" << this->name() << "\" of type " 
-		 << Makros::Typename<T>()
-		 << " with " << size_ << " elements. exiting." << std::endl;
+                 << Makros::Typename<T>()
+                 << " with " << size_ << " elements. exiting." << std::endl;
 }
 #endif
 
@@ -350,7 +350,7 @@ void Storage2D<T,ST>::resize(ST newxDim, ST newyDim) {
     /* copy data */
     for (ST y=0; y < std::min(yDim_,newyDim); y++)
       for (ST x=0; x < std::min(xDim_,newxDim); x++)
-	new_data[y*newxDim+x] = data_[y*xDim_+x];
+        new_data[y*newxDim+x] = data_[y*xDim_+x];
 
     delete[] data_;
     data_ = new_data;
@@ -367,8 +367,8 @@ void Storage2D<T,ST>::resize(ST newxDim, ST newyDim, T fill_value) {
   if (data_ == 0) {
     data_ = new T[newxDim*newyDim];
 
-//     for (ST i=0; i < newxDim*newyDim; i++)
-//       data_[i] = fill_value;
+    //     for (ST i=0; i < newxDim*newyDim; i++)
+    //       data_[i] = fill_value;
 
     std::fill_n(data_,newxDim*newyDim,fill_value);
   }
@@ -381,7 +381,7 @@ void Storage2D<T,ST>::resize(ST newxDim, ST newyDim, T fill_value) {
     /* copy data */
     for (ST y=0; y < std::min(yDim_,newyDim); y++)
       for (ST x=0; x < std::min(xDim_,newxDim); x++)
-	new_data[y*newxDim+x] = data_[y*xDim_+x];
+        new_data[y*newxDim+x] = data_[y*xDim_+x];
 
     delete[] data_;
     data_ = new_data;
