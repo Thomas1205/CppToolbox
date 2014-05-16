@@ -3,6 +3,7 @@
 #ifndef VECTOR_HH
 #define VECTOR_HH
 
+#include <cassert>
 #include <cmath>
 #include <limits>
 
@@ -47,6 +48,8 @@ namespace Math1D {
     double norm_l1() const;
 
     void add_constant(T addon);
+
+    void add_vector_multiple(const Math1D::Vector<T,ST>& vec, T alpha);
         
     void operator+=(const Vector<T,ST>& v);
 
@@ -195,14 +198,18 @@ namespace Math1D {
   /*** maximal element ***/
   template<typename T,typename ST>
   T Vector<T,ST>::max() const {
-    
-    //     T maxel = std::numeric_limits<T,ST>::min();
+
+    //     T maxel = std::numeric_limits<T>::min();
     //     for (size_t i=0; i < Storage1D<T,ST>::size_; i++) {
     //       if (Storage1D<T,ST>::data_[i] > maxel)
     // 	maxel = Storage1D<T,ST>::data_[i];
     //     }        
     //    return maxel;
-    return *std::max_element(Storage1D<T,ST>::data_, Storage1D<T,ST>::data_ + Storage1D<T,ST>::size_);
+
+    if (Storage1D<T,ST>::size_ > 0)
+      return *std::max_element(Storage1D<T,ST>::data_, Storage1D<T,ST>::data_ + Storage1D<T,ST>::size_);
+    else
+      return std::numeric_limits<T>::min();
   }
 
   template<>
@@ -210,15 +217,18 @@ namespace Math1D {
     
   template<typename T,typename ST>    
   T Vector<T,ST>::min() const {
-    
-    //     T minel = std::numeric_limits<T,ST>::max();
+
+    //     T minel = std::numeric_limits<T>::max();
     //     for (size_t i=0; i < Storage1D<T,ST>::size_; i++) {
     //       if (Storage1D<T,ST>::data_[i] < minel)
     // 	minel = Storage1D<T,ST>::data_[i];
     //     }        
     //     return minel;    
 
-    return *std::min_element(Storage1D<T,ST>::data_, Storage1D<T,ST>::data_ + Storage1D<T,ST>::size_);
+    if (Storage1D<T,ST>::size_)
+      return *std::min_element(Storage1D<T,ST>::data_, Storage1D<T,ST>::data_ + Storage1D<T,ST>::size_);
+    else
+      return std::numeric_limits<T>::max();
   }
 
   template<>
@@ -304,6 +314,27 @@ namespace Math1D {
     for (ST i=0; i < size; i++)
       Storage1D<T,ST>::data_[i] += addon;
   }
+
+  template<typename T,typename ST>
+  void Vector<T,ST>::add_vector_multiple(const Math1D::Vector<T,ST>& v, T alpha) {
+
+    const ST size = Storage1D<T,ST>::size_;
+
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
+    if (v.size() != size) {
+      INTERNAL_ERROR << "   cannot add multiple of vector \"" << v.name() << "\" to vector \"" 
+                     << this->name() << "\":" << std::endl
+                     << "   sizes " << v.size() << " and " << this->size() << " mismatch. Exiting..."
+                     << std::endl;   
+      exit(0);
+    }
+#endif
+
+    ST i;
+    for (i=0; i < size; i++)
+      Storage1D<T,ST>::data_[i] += alpha * v.direct_access(i);
+  }
+
         
   template<typename T,typename ST>
   void Vector<T,ST>::operator+=(const Vector<T,ST>& v) {
