@@ -31,6 +31,8 @@ namespace Math3D {
 
     void add_const(T addon);
 
+    void add_tensor_multiple(const Tensor<T,ST>& toAdd, T alpha);
+
     void operator+=(const Tensor<T,ST>& toAdd);
 
     void operator-=(const Tensor<T,ST>& toSub);
@@ -190,6 +192,29 @@ namespace Math3D {
       Storage3D<T,ST>::data_[i] += addon;
   }
 
+  template<typename T, typename ST>
+  void Tensor<T,ST>::add_tensor_multiple(const Tensor<T,ST>& toAdd, T alpha) {
+
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
+    if (toAdd.xDim() != Storage3D<T,ST>::xDim_ 
+        || toAdd.yDim() != Storage3D<T,ST>::yDim_ 
+        || toAdd.zDim() != Storage3D<T,ST>::zDim_) {
+      INTERNAL_ERROR << "    cannot add multiple of tensor \"" << toAdd.name() << "\" to tensor \"" 
+                     << this->name() << "\":" << std::endl
+                     << "    sizes " << toAdd.xDim() << "x" << toAdd.yDim() << "x" << toAdd.zDim()
+                     << " and " << Storage3D<T,ST>::xDim_ << "x" << Storage3D<T,ST>::yDim_ << "x" 
+                     << Storage3D<T,ST>::zDim_ << " are incompatible. Exiting..."
+                     << std::endl;
+      exit(1);
+    }
+#endif
+
+    const ST size = Storage3D<T,ST>::size_;
+
+    ST i;
+    for (i=0; i < size; i++)
+      Storage3D<T,ST>::data_[i] += alpha * toAdd.direct_access(i);
+  }
 
   template<typename T, typename ST>
   void Tensor<T,ST>::operator+=(const Tensor<T,ST>& toAdd) {

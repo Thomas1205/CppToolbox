@@ -54,6 +54,8 @@ namespace Math2D {
     double norm_l1() const;
 
     void add_constant(T addon);
+
+    void add_matrix_multiple(const Matrix<T,ST>& toAdd, T alpha);
     
     //---- mathematical operators ----
 
@@ -328,6 +330,25 @@ namespace Math2D {
       Storage2D<T,ST>::data_[i] += addon;
   }
 
+  template<typename T, typename ST>
+  void Matrix<T,ST>::add_matrix_multiple(const Matrix<T,ST>& toAdd, T alpha) {
+
+#ifndef DONT_CHECK_VECTOR_ARITHMITIC
+    if (toAdd.xDim() != Storage2D<T,ST>::xDim_ || toAdd.yDim() != Storage2D<T,ST>::yDim_) {
+      INTERNAL_ERROR << "    dimension mismatch (" 
+                     << Storage2D<T,ST>::xDim_ << "," << Storage2D<T,ST>::yDim_ << ") vs. ("
+                     << toAdd.xDim() << "," << toAdd.yDim() << ")." << std::endl;
+      std::cerr << "     When multiple of adding matrix \"" << toAdd.name() << "\" to  matrix \""
+                << this->name() << "\". Exiting" << std::endl;
+      exit(1);
+    }
+#endif
+
+    //assert( Storage2D<T,ST>::size_ == Storage2D<T,ST>::xDim_*Storage2D<T,ST>::yDim_ );
+    const ST size = Storage2D<T,ST>::size_;
+    for (ST i=0; i < size; i++)
+      Storage2D<T,ST>::data_[i] += alpha * toAdd.direct_access(i);
+  }
 
   //addition of another matrix of equal dimensions
   template<typename T, typename ST>
