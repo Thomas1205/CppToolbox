@@ -21,6 +21,12 @@ inline bool isnan(double x) {
 #define M_PI 3.1415926535897931
 #endif
 
+#ifdef GNU_COMPILER
+#define attr_restrict __restrict
+#else
+#define attr_restrict
+#endif
+
 
 /******************** Data Macros *****************************/
 typedef unsigned int uint;
@@ -38,7 +44,12 @@ typedef unsigned char uchar;
 #define MAX_UINT std::numeric_limits<uint>::max()
 #define MAX_USHORT std::numeric_limits<ushort>::max()
 
-enum NormType {L1,L2};
+enum NormType {L1,L2,L0_5};
+
+enum DifferenceType {SquaredDiffs,AbsDiffs};
+
+enum RegularityType {SquaredDiffReg,AbsDiffReg,TVReg};
+
 
 /**** helpful routines ****/
 
@@ -116,7 +127,7 @@ T convert(const std::string s) {
   
   is >> result;
   if (is.bad() || is.fail()) {
-    std::cerr << "ERROR: conversion of \"" << s << "\" to " << Makros::Typename<T>().name() //Makros::get_typename(typeid(T).name()) 
+    std::cerr << "ERROR: conversion of \"" << s << "\" to " << Makros::Typename<T>().name() 
 	      << " failed. Exiting." << std::endl; 
     exit(1);
   }
@@ -201,7 +212,7 @@ inline void prefetcht2(const T* ptr) {
 
 namespace Makros {
 
-  inline float max(float* data, size_t nData) {
+  inline float max(const float* data, size_t nData) {
     float max_val=MIN_FLOAT;
     float cur_datum;
     size_t i;
@@ -211,13 +222,13 @@ namespace Makros {
     for (i=0; i < nData; i++) {
       cur_datum = data[i];
       if (cur_datum > max_val)
-	max_val = cur_datum;
+        max_val = cur_datum;
     }
 #else
     //movups is part of SSE2
 
     float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT};
-    float* fptr;
+    const float* fptr;
 
     asm __volatile__ ("movups %[tmp], %%xmm6" : : [tmp] "m" (tmp[0]) : "xmm6");
     for (i=0; (i+4) <= nData; i += 4) {
@@ -240,7 +251,7 @@ namespace Makros {
     return max_val;
   }
 
-  inline float min(float* data, size_t nData) {
+  inline float min(const float* data, size_t nData) {
     float min_val=MAX_FLOAT;
     float cur_datum;
     size_t i;
@@ -249,13 +260,13 @@ namespace Makros {
     for (i=0; i < nData; i++) {
       cur_datum = data[i];
       if (cur_datum < min_val)
-	min_val = cur_datum;
+        min_val = cur_datum;
     }
 #else
     //movups is part of SSE2
 
     float tmp[4] = {MAX_FLOAT,MAX_FLOAT,MAX_FLOAT,MAX_FLOAT};
-    float* fptr;
+    const float* fptr;
 
     asm __volatile__ ("movups %[tmp], %%xmm6" : : [tmp] "m" (tmp[0]) : "xmm6");
     for (i=0; (i+4) <= nData; i += 4) {
@@ -278,7 +289,7 @@ namespace Makros {
   }
 
   
-  inline void find_max_and_argmax(float* data, size_t nData, float& max_val, size_t& arg_max) {
+  inline void find_max_and_argmax(const float* data, size_t nData, float& max_val, size_t& arg_max) {
 
     max_val = MIN_FLOAT;
     arg_max = MAX_UINT; 
@@ -290,8 +301,8 @@ namespace Makros {
       cur_val = data[i];
       
       if (cur_val > max_val) {
-	max_val = cur_val;
-	arg_max = i;
+        max_val = cur_val;
+        arg_max = i;
       }
     }
 #else
@@ -300,7 +311,7 @@ namespace Makros {
     assert(nData <= 17179869183);
 
     float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT};
-    float* fptr;
+    const float* fptr;
     
     wchar_t itemp[4] = {1,1,1,1}; 
 
@@ -344,7 +355,82 @@ namespace Makros {
 #endif  
   }
 
-  inline void find_min_and_argmin(float* data, size_t nData, float& min_val, size_t& arg_min) {
+  inline void find_max_and_argmax(const double* data, size_t nData, double& max_val, size_t& arg_max) {
+
+    max_val = MIN_DOUBLE;
+    arg_max = MAX_UINT; 
+    size_t i;
+    double cur_val;
+
+#if !defined(USE_SSE) || USE_SSE < 4
+    for (i=0; i < nData; i++) {
+      cur_val = data[i];
+      
+      if (cur_val > max_val) {
+        max_val = cur_val;
+        arg_max = i;
+      }
+    }
+#else
+
+    assert(nData < 8589934592);
+
+    volatile double tmp[2] = {MIN_DOUBLE,MIN_DOUBLE};
+    const double* dptr;
+    
+    volatile wchar_t itemp[4] = {0,1,0,1}; 
+
+
+   asm __volatile__ ("movupd %[tmp], %%xmm6 \n\t"
+                      "xorpd %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmin) to zero
+                      "movupd %[itemp], %%xmm4 \n\t"
+                      "xorpd %%xmm3, %%xmm3 \n\t" //contains candidate argmin
+                      : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3" , "xmm4" , "xmm5", "xmm6");
+
+    for (i=0; (i+4) <= nData; i += 4) {
+      dptr = data+i;
+
+      asm __volatile__ ("movupd %[dptr], %%xmm7 \n\t"
+                        "movapd %%xmm7, %%xmm0 \n\t"
+                        "cmpnlepd %%xmm6, %%xmm0 \n\t"
+                        "blendvpd %%xmm7, %%xmm6 \n\t"
+                        "blendvpd %%xmm3, %%xmm5 \n\t"
+                        "paddd %%xmm4, %%xmm3 \n\t"
+                        : : [dptr] "m" (dptr[0]) : "xmm0", "xmm3", "xmm5", "xmm6", "xmm7");
+    }
+
+    asm __volatile__ ("movupd %%xmm6, %[tmp] \n\t"
+                      "movupd %%xmm5, %[itemp] \n\t"
+                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "xmm5", "xmm6");
+
+    assert(itemp[0] == 0);
+    assert(itemp[2] == 0);
+
+    for (i=0; i < 2; i++) {
+      cur_val = tmp[i];
+      //std::cerr << "cur val: " << cur_val << std::endl;
+      if (cur_val > max_val) {
+        max_val = cur_val;
+        arg_max = 2*itemp[2*i+1] + i;
+      }
+    }
+
+    //std::cerr << "minval: " << min_val << std::endl;
+
+    if ((nData % 2) == 1) {
+      cur_val = data[nData-1];
+      if (cur_val > max_val) {
+        max_val = cur_val;
+        arg_max = nData-1;
+      }
+    }
+
+
+#endif
+  }
+
+
+  inline void find_min_and_argmin(const float* data, size_t nData, float& min_val, size_t& arg_min) {
 
     min_val = MAX_FLOAT;
     arg_min = MAX_UINT; 
@@ -352,13 +438,13 @@ namespace Makros {
     float cur_val;
 
 #if !defined(USE_SSE) || USE_SSE < 4
-    //#if 1
+     //#if 1
     for (i=0; i < nData; i++) {
       cur_val = data[i];
       
       if (cur_val < min_val) {
-	min_val = cur_val;
-	arg_min = i;
+        min_val = cur_val;
+        arg_min = i;
       }
     }
 #else
@@ -367,7 +453,7 @@ namespace Makros {
     assert(nData <= 17179869183);
 
     volatile float tmp[4] = {MAX_FLOAT,MAX_FLOAT,MAX_FLOAT,MAX_FLOAT};
-    float* fptr;
+    const float* fptr;
     
     volatile wchar_t itemp[4] = {1,1,1,1}; 
 
@@ -399,8 +485,8 @@ namespace Makros {
       cur_val = tmp[i];
       //std::cerr << "cur val: " << cur_val << std::endl;
       if (cur_val < min_val) {
-	min_val = cur_val;
-	arg_min = 4*itemp[i] + i;
+        min_val = cur_val;
+        arg_min = 4*itemp[i] + i;
       }
     }
 
@@ -409,12 +495,86 @@ namespace Makros {
     for (i= nData - (nData % 4); i < nData; i++) {
       cur_val = data[i];
       if (cur_val < min_val) {
-	min_val = cur_val;
-	arg_min = i;
+        min_val = cur_val;
+        arg_min = i;
       }
     }
 #endif  
   }
+
+  inline void find_min_and_argmin(const double* data, size_t nData, double& min_val, size_t& arg_min) {
+
+    min_val = MAX_DOUBLE;
+    arg_min = MAX_UINT; 
+    size_t i;
+    double cur_val;
+
+#if !defined(USE_SSE) || USE_SSE < 4
+    for (i=0; i < nData; i++) {
+      cur_val = data[i];
+      
+      if (cur_val < min_val) {
+        min_val = cur_val;
+        arg_min = i;
+      }
+    }
+#else
+
+    assert(nData < 8589934592);
+
+    volatile double tmp[2] = {MAX_DOUBLE,MAX_DOUBLE};
+    const double* dptr;
+    
+    volatile wchar_t itemp[4] = {0,1,0,1}; 
+
+
+   asm __volatile__ ("movupd %[tmp], %%xmm6 \n\t"
+                      "xorpd %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmin) to zero
+                      "movupd %[itemp], %%xmm4 \n\t"
+                      "xorpd %%xmm3, %%xmm3 \n\t" //contains candidate argmin
+                      : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3" , "xmm4" , "xmm5", "xmm6");
+
+    for (i=0; (i+4) <= nData; i += 4) {
+      dptr = data+i;
+
+      asm __volatile__ ("movupd %[dptr], %%xmm7 \n\t"
+                        "movapd %%xmm7, %%xmm0 \n\t"
+                        "cmpltpd %%xmm6, %%xmm0 \n\t"
+                        "blendvpd %%xmm7, %%xmm6 \n\t"
+                        "blendvpd %%xmm3, %%xmm5 \n\t"
+                        "paddd %%xmm4, %%xmm3 \n\t"
+                        : : [dptr] "m" (dptr[0]) : "xmm0", "xmm3", "xmm5", "xmm6", "xmm7");
+    }
+
+    asm __volatile__ ("movupd %%xmm6, %[tmp] \n\t"
+                      "movupd %%xmm5, %[itemp] \n\t"
+                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "xmm5", "xmm6");
+
+    assert(itemp[0] == 0);
+    assert(itemp[2] == 0);
+
+    for (i=0; i < 2; i++) {
+      cur_val = tmp[i];
+      //std::cerr << "cur val: " << cur_val << std::endl;
+      if (cur_val < min_val) {
+        min_val = cur_val;
+        arg_min = 2*itemp[2*i+1] + i;
+      }
+    }
+
+    //std::cerr << "minval: " << min_val << std::endl;
+
+    if ((nData % 2) == 1) {
+      cur_val = data[nData-1];
+      if (cur_val < min_val) {
+        min_val = cur_val;
+        arg_min = nData-1;
+      }
+    }
+
+#endif
+  }
+
 
   inline void mul_array(float* data, size_t nData, const float constant) {
 
@@ -475,8 +635,8 @@ namespace Makros {
 
   //performs data[i] -= factor*data2[i] for each i
   //this is a frequent operation in the conjugate gradient algorithm
-  inline void array_subtract_multiple(double* data, size_t nData, double factor, 
-				      const double* data2) {
+  inline void array_subtract_multiple(double* attr_restrict data, size_t nData, double factor, 
+                                      const double* attr_restrict data2) {
 
     size_t i;
 #if !defined(USE_SSE) || USE_SSE < 2
