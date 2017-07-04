@@ -35,8 +35,11 @@ typedef unsigned char uchar;
 
 #define MIN_DOUBLE -1.0*std::numeric_limits<double>::max()
 #define MAX_DOUBLE std::numeric_limits<double>::max()
+#define MIN_LONGDOUBLE -1.0*std::numeric_limits<long double>::max()
+#define MAX_LONGDOUBLE std::numeric_limits<long double>::max()
 #define HIGH_DOUBLE (0.1*MAX_DOUBLE)
 #define EPS_DOUBLE std::numeric_limits<double>::epsilon()
+#define EPS_LONGDOUBLE std::numeric_limits<long double>::epsilon()
 #define MIN_FLOAT  -1.0f*std::numeric_limits<float>::max()
 #define MAX_FLOAT  std::numeric_limits<float>::max()
 #define HIGH_FLOAT (0.1f*MAX_FLOAT)
@@ -170,6 +173,7 @@ void operator+=(std::pair<T1,T2>& x, const std::pair<T1,T2>& y) {
 #define INTERNAL_ERROR std::cerr << "INTERNAL ERROR[" << __FILE__ << ":" << __LINE__ << "]:" << std::endl
 #define USER_ERROR std::cerr << "ERROR: "
 #define IO_ERROR std::cerr << "I/O ERROR[" << __FILE__ << ":" << __LINE__ << "]:" << std::endl
+#define WARNING std::cerr << "WARNING[" << __FILE__ << ":" << __LINE__ << "]:" << std::endl
 
 template<typename T>
 inline T sign(T arg) {
@@ -673,6 +677,15 @@ namespace Makros {
       return (p1.first < p2.first);
     } 
   };
+
+  template<typename T1, typename T2>
+  class first_higher {
+  public:
+    bool operator()(const std::pair<T1,T2>& p1, const std::pair<T1,T2>& p2) {
+      return (p1.first > p2.first);
+    } 
+  };
+
 
 } //end of namespace Makros
 

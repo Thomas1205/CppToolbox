@@ -166,8 +166,8 @@ TriStorage2D<T,ST>::TriStorage2D(ST dim, T default_value) : dim_(dim) {
 
   size_ = dim_*(dim_+1) / 2;
   data_ = new T[size_];
-  for (ST i=0; i < size_; i++)
-    data_[i] = default_value;
+
+  std::fill(data_, data_+size_, default_value); //fill and fill_n are of equal speed
 }
 
 //copy constructor

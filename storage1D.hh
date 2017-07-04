@@ -346,7 +346,8 @@ OPTINLINE const T& Storage1D<T,ST>::operator[](ST i) const {
 
     INTERNAL_ERROR << "    invalid access on element " << i 
                    << " for Storage1D " <<  "\"" << this->name() << "\" of type " 
-                   << Makros::Typename<T>()
+		   << Makros::Typename<T>()
+      //<< typeid(T).name()
                    << " with " << size_ << " elements. exiting." << std::endl;
     exit(1);  
   }
@@ -470,8 +471,8 @@ void Storage1D<T,ST>::resize(ST new_size, T fill_value) {
 
   if (data_ == 0) {
     data_ = new T[new_size];
-    for (size_t i=0; i < new_size; i++)
-      data_[i] = fill_value;
+
+    std::fill(data_, data_+new_size, fill_value); //fill and fill_n are of equal speed
   }
   else if (size_ != new_size) {
     T* new_data = new T[new_size];
@@ -800,7 +801,8 @@ OPTINLINE T& FlexibleStorage1D<T,ST>::operator[](ST i) const {
   if (i >= size_) {
     INTERNAL_ERROR << "    invalid access on element " << i 
                    << " for FlexibleStorage1D " <<  "\"" << this->name() << "\" of type " 
-                   << Makros::Typename<T>()
+      //<< Makros::Typename<T>()
+                   << typeid(T).name()
                    << " with " << size_ << " (valid) elements. exiting." << std::endl;
     exit(1);  
   }

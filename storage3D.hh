@@ -54,6 +54,8 @@ public:
   void operator=(const T& invalid_object);
 #endif
 
+  void set_constant(T new_constant);
+
   //existing positions are copied, new ones are uninitialized
   void resize(ST newxDim, ST newyDim, ST newzDim);
 
@@ -228,7 +230,8 @@ OPTINLINE T& Storage3D<T,ST>::operator()(ST x, ST y, ST z) {
 
     INTERNAL_ERROR << "     invalid access on element (" << x << "," << y << "," << z << ") of 3D-storage \"" 
                    << this->name() << "\" of type " 
-                   << Makros::Typename<T>()
+      //<< Makros::Typename<T>()
+                   << typeid(T).name()
       //<< Makros::get_typename(typeid(T).name()) 
                    << ":" << std::endl;
     std::cerr << "     dimensions " << xDim_ << "x" << yDim_ << "x" << zDim_ << " exceeded. Exiting..." << std::endl;
@@ -348,6 +351,14 @@ void Storage3D<T,ST>::resize(ST newxDim, ST newyDim, ST newzDim) {
     zDim_ = newzDim;
   }
 }
+
+
+template<typename T, typename ST>
+void Storage3D<T,ST>::set_constant(T new_constant) {
+
+  std::fill_n(data_,size_,new_constant); //experimental result: fill_n is usually faster
+}
+
 
 //existing positions are copied, new ones are uninitialized
 template<typename T, typename ST>

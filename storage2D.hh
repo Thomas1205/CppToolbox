@@ -178,8 +178,8 @@ Storage2D<T,ST>::Storage2D(ST xDim, ST yDim, T default_value) : xDim_(xDim), yDi
 
   size_ = xDim_*yDim_;
   data_ = new T[size_];
-  for (ST i=0; i < size_; i++)
-    data_[i] = default_value;
+  
+  std::fill(data_, data_+size_, default_value); //fill and fill_n are of equal speed
 }
 
 //copy constructor
@@ -215,8 +215,7 @@ Storage2D<T,ST>::~Storage2D() {
 template <typename T, typename ST>
 void Storage2D<T,ST>::set_constant(T new_constant) {
 
-  for (ST i=0; i < size_; i++)
-    data_[i] = new_constant;
+  std::fill_n(data_,size_,new_constant); //experimental result: fill_n is usually faster
 }
 
 template<typename T, typename ST>
@@ -274,7 +273,8 @@ OPTINLINE T& Storage2D<T,ST>::operator()(ST x, ST y) {
     INTERNAL_ERROR << "    access on element(" << x << "," << y 
                    << ") exceeds storage dimensions of (" << xDim_ << "," << yDim_ << ")" << std::endl;
     std::cerr << "   in 2Dstorage \"" << this->name() << "\" of type " 
-              << Makros::Typename<T>()
+      << Makros::Typename<T>()
+      //<< typeid(T).name()
       //<< Makros::get_typename(typeid(T).name()) 
               << ". exiting." << std::endl;
     exit(1);
