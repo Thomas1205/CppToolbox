@@ -3,9 +3,7 @@
 #ifndef MATRIX_HH
 #define MATRIX_HH
 
-#include <cmath>
 #include <fstream>
-#include <cassert>
 
 #include "storage2D.hh"
 #include "vector.hh"
@@ -19,21 +17,26 @@ namespace Math2D {
   class Matrix : public ::Storage2D<T,ST> {
   public:
 
+    typedef T ALIGNED16 T_A16;
+
     /*---- constructors -----*/
     Matrix();
 
     Matrix(ST xDim, ST yDim);
 
-    Matrix(ST xDim, ST yDim, T default_value);
+    Matrix(ST xDim, ST yDim, const T default_value);
 
     /*---- destructor ----*/
     ~Matrix();
 
     virtual const std::string& name() const;
 
-    void set_constant(T constant);
+    //note: with g++-4.8.5 it is a lot faster to used set_constant(0.0)
+    void set_zeros();
 
-    T sum() const;
+    inline T sum() const;
+
+    inline T row_sum(ST y) const;
     
     /*** maximal element ***/
     T max() const;
@@ -45,17 +48,17 @@ namespace Math2D {
     T max_abs() const;
         
     /*** L2-norm of the matrix ***/
-    double norm() const;
+    inline double norm() const;
  
     /*** squared L2-norm ***/
-    double sqr_norm() const;
+    inline double sqr_norm() const;
         
     /*** L1-norm of the matrix ***/
-    double norm_l1() const;
+    inline double norm_l1() const;
 
-    void add_constant(T addon);
+    inline void add_constant(const T addon);
 
-    void add_matrix_multiple(const Matrix<T,ST>& toAdd, T alpha);
+    void add_matrix_multiple(const Matrix<T,ST>& toAdd, const T alpha);
     
     //---- mathematical operators ----
 
@@ -122,6 +125,7 @@ namespace Math2D {
 
 }
 
+
 namespace Makros {
 
   template<typename T, typename ST>
@@ -184,12 +188,11 @@ namespace Math2D {
   Matrix<T,ST>::Matrix(ST xDim, ST yDim) : Storage2D<T,ST>(xDim, yDim)  {}
 
   template<typename T, typename ST>
-  Matrix<T,ST>::Matrix(ST xDim, ST yDim, T default_value) : Storage2D<T,ST>(xDim, yDim) {
+  Matrix<T,ST>::Matrix(ST xDim, ST yDim, const T default_value) : Storage2D<T,ST>(xDim, yDim, default_value) {}
 
-    const ST size = Storage2D<T,ST>::size_;
-
-    for (ST i=0; i < size; i++)
-      Storage2D<T,ST>::data_[i] = default_value;
+  template<typename T,typename ST>
+  void Matrix<T,ST>::set_zeros() {
+    memset(Storage2D<T,ST>::data_,0,Storage2D<T,ST>::size_*sizeof(T));
   }
   
   template<typename T, typename ST>
@@ -201,24 +204,29 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  void Matrix<T,ST>::set_constant(T constant) {
+  inline T Matrix<T,ST>::sum() const {
 
     const ST size = Storage2D<T,ST>::size_;
+    const T_A16* data = Storage2D<T,ST>::data_;
 
-    for (ST i=0; i < size; i++)
-      Storage2D<T,ST>::data_[i] = constant;
+    assertAligned16(data);
+
+    return std::accumulate(data,data+size,(T)0);
+
+    // T result = (T) 0;
+    // for (ST i=0; i < size; i++)
+    //   result += Storage2D<T,ST>::data_[i];
+
+    // return result;
   }
 
   template<typename T, typename ST>
-  T Matrix<T,ST>::sum() const {
-
-    const ST size = Storage2D<T,ST>::size_;
-
-    T result = (T) 0;
-    for (ST i=0; i < size; i++)
-      result += Storage2D<T,ST>::data_[i];
-
-    return result;
+  inline T Matrix<T,ST>::row_sum(ST y) const {
+    const ST yDim = Storage2D<T,ST>::yDim_;
+    const ST xDim = Storage2D<T,ST>::xDim_;
+    assert(y < yDim);
+    const T_A16* data = Storage2D<T,ST>::data_;
+    return std::accumulate(data+y*xDim,data+(y+1)*xDim,(T)0);
   }
 
   /*** maximal element ***/
@@ -232,7 +240,12 @@ namespace Math2D {
     //     }
     //     return maxel;
 
-    return *std::max_element(Storage2D<T,ST>::data_,Storage2D<T,ST>::data_+Storage2D<T,ST>::size_);
+    const T_A16* data = Storage2D<T,ST>::data_;
+    const ST size = Storage2D<T,ST>::size_;
+
+    assertAligned16(data);
+
+    return *std::max_element(data,data+size);
   }
 
   template<>
@@ -249,7 +262,12 @@ namespace Math2D {
     //     }
     //     return minel;    
 
-    return *std::min_element(Storage2D<T,ST>::data_,Storage2D<T,ST>::data_+Storage2D<T,ST>::size_);
+    const T_A16* data = Storage2D<T,ST>::data_;
+    const ST size = Storage2D<T,ST>::size_;
+
+    assertAligned16(data);
+
+    return *std::min_element(data,data+size);
   }
 
   template<>
@@ -261,11 +279,8 @@ namespace Math2D {
     
     T maxel = (T) 0;
     for (ST i=0; i < Storage2D<T,ST>::size_; i++) {
-      T candidate = Storage2D<T,ST>::data_[i];
-      if (candidate < ((T) 0))
-        candidate *= (T) -1;
-      if (candidate > maxel)
-        maxel = candidate;
+      const T candidate = Makros::abs<T>(Storage2D<T,ST>::data_[i]);
+      maxel = std::max(maxel,candidate);
     }
         
     return maxel;
@@ -273,11 +288,11 @@ namespace Math2D {
         
   /*** L2-norm of the matrix ***/
   template<typename T, typename ST>   
-  double Matrix<T,ST>::norm() const {
+  inline double Matrix<T,ST>::norm() const {
     
     double result = 0.0;
     for (ST i=0; i < Storage2D<T,ST>::size_; i++) {
-      double cur = (double) Storage2D<T,ST>::data_[i];
+      const double cur = (double) Storage2D<T,ST>::data_[i];
       result += cur*cur;
     }
         
@@ -285,11 +300,11 @@ namespace Math2D {
   }
     
   template<typename T, typename ST>   
-  double Matrix<T,ST>::sqr_norm() const {
+  inline double Matrix<T,ST>::sqr_norm() const {
     
     double result = 0.0;
     for (ST i=0; i < Storage2D<T,ST>::size_; i++) {
-      double cur = (double) Storage2D<T,ST>::data_[i];
+      const double cur = (double) Storage2D<T,ST>::data_[i];
       result += cur*cur;
     }
         
@@ -298,42 +313,32 @@ namespace Math2D {
         
   /*** L1-norm of the matrix ***/
   template<typename T, typename ST>   
-  double Matrix<T,ST>::norm_l1() const {
+  inline double Matrix<T,ST>::norm_l1() const {
     
     double result = 0.0;
     for (ST i=0; i < Storage2D<T,ST>::size_; i++) {
-      result += std::abs(Storage2D<T,ST>::data_[i]);
+      result += Makros::abs<T>(Storage2D<T,ST>::data_[i]);
     }
     
     return result;    
   }
 
-  //template specialization (note that uints are never negative, so there is no need to call abs())
-  template<>   
-  double Matrix<uint>::norm_l1() const;
-
-  //template specialization (note that ushorts are never negative, so there is no need to call abs())
-  template<>   
-  double Matrix<ushort>::norm_l1() const;
-
-  //template specialization (note that uchars are never negative, so there is no need to call abs())
-  template<>   
-  double Matrix<uchar>::norm_l1() const;
-
-
   template<typename T, typename ST>
-  void Matrix<T,ST>::add_constant(T addon) {
+  inline void Matrix<T,ST>::add_constant(const T addon) {
 
+    T_A16* data = Storage2D<T,ST>::data_;
     const ST size = Storage2D<T,ST>::size_;
 
+    assertAligned16(data);
+
     for (ST i=0; i < size; i++)
-      Storage2D<T,ST>::data_[i] += addon;
+      data[i] += addon;
   }
 
   template<typename T, typename ST>
-  void Matrix<T,ST>::add_matrix_multiple(const Matrix<T,ST>& toAdd, T alpha) {
+  void Matrix<T,ST>::add_matrix_multiple(const Matrix<T,ST>& toAdd, const T alpha) {
 
-#ifndef DONT_CHECK_VECTOR_ARITHMITIC
+#ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (toAdd.xDim() != Storage2D<T,ST>::xDim_ || toAdd.yDim() != Storage2D<T,ST>::yDim_) {
       INTERNAL_ERROR << "    dimension mismatch (" 
                      << Storage2D<T,ST>::xDim_ << "," << Storage2D<T,ST>::yDim_ << ") vs. ("
@@ -345,16 +350,23 @@ namespace Math2D {
 #endif
 
     //assert( Storage2D<T,ST>::size_ == Storage2D<T,ST>::xDim_*Storage2D<T,ST>::yDim_ );
+
+    T_A16* attr_restrict data = Storage2D<T,ST>::data_;
+    const T_A16* attr_restrict data2 = toAdd.direct_access();
     const ST size = Storage2D<T,ST>::size_;
+
+    assertAligned16(data);
+    assertAligned16(data2);
+
     for (ST i=0; i < size; i++)
-      Storage2D<T,ST>::data_[i] += alpha * toAdd.direct_access(i);
+      data[i] += alpha * data2[i]; //toAdd.direct_access(i);
   }
 
   //addition of another matrix of equal dimensions
   template<typename T, typename ST>
   void Matrix<T,ST>::operator+=(const Matrix<T,ST>& toAdd) {
     
-#ifndef DONT_CHECK_VECTOR_ARITHMITIC
+#ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (toAdd.xDim() != Storage2D<T,ST>::xDim_ || toAdd.yDim() != Storage2D<T,ST>::yDim_) {
       INTERNAL_ERROR << "    dimension mismatch in matrix addition(+=): (" 
                      << Storage2D<T,ST>::xDim_ << "," << Storage2D<T,ST>::yDim_ << ") vs. ("
@@ -365,16 +377,22 @@ namespace Math2D {
     }
 #endif
 
-    //assert( Storage2D<T,ST>::size_ == Storage2D<T,ST>::xDim_*Storage2D<T,ST>::yDim_ );
+    T_A16* attr_restrict data = Storage2D<T,ST>::data_;
+    const T_A16* attr_restrict data2 = toAdd.direct_access();
     const ST size = Storage2D<T,ST>::size_;
+
+    assertAligned16(data);
+    assertAligned16(data2);
+
+    //assert( Storage2D<T,ST>::size_ == Storage2D<T,ST>::xDim_*Storage2D<T,ST>::yDim_ );
     for (ST i=0; i < size; i++)
-      Storage2D<T,ST>::data_[i] += toAdd.direct_access(i);
+      data[i] += data2[i]; //toAdd.direct_access(i);
   }
 
   template<typename T, typename ST>
   void Matrix<T,ST>::operator-=(const Matrix<T,ST>& toSub) {
     
-#ifndef DONT_CHECK_VECTOR_ARITHMITIC
+#ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (toSub.xDim() != Storage2D<T,ST>::xDim_ || toSub.yDim() != Storage2D<T,ST>::yDim_) {
       INTERNAL_ERROR << "    dimension mismatch in matrix subtraction(-=): (" 
                      << Storage2D<T,ST>::xDim_ << "," << Storage2D<T,ST>::yDim_ << ") vs. ("
@@ -385,12 +403,39 @@ namespace Math2D {
     }
 #endif
 
+    T_A16* attr_restrict data = Storage2D<T,ST>::data_;
+    const T_A16* attr_restrict data2 = toSub.direct_access();
     const ST size = Storage2D<T,ST>::size_;
+
+    assertAligned16(data);
+    assertAligned16(data2);
 
     //assert(Storage2D<T,ST>::size_ == Storage2D<T,ST>::xDim_*Storage2D<T,ST>::yDim_);
     for (ST i=0; i < size; i++)
-      Storage2D<T,ST>::data_[i] -= toSub.direct_access(i);
+      data[i] -= data2[i]; //toSub.direct_access(i);
   }
+
+  //multiplication with a scalar
+  template<typename T, typename ST>
+  void Matrix<T,ST>::operator*=(const T scalar) {
+
+    T_A16* data = Storage2D<T,ST>::data_;
+    const ST size = Storage2D<T,ST>::size_;
+
+    assertAligned16(data);
+
+    //assert(Storage2D<T,ST>::size_ == Storage2D<T,ST>::xDim_*Storage2D<T,ST>::yDim_);
+    ST i;
+    for (i=0; i < size; i++)
+      data[i] *= scalar;    
+  }
+
+  template<>
+  void Matrix<float>::operator*=(const float scalar);
+
+  template<>
+  void Matrix<double>::operator*=(const double scalar);
+
 
   //@returns if the operation was successful
   template<typename T, typename ST>
@@ -473,28 +518,12 @@ namespace Math2D {
 
   /***************** implementation of stand-alone operators **************/
 
-  //multiplication with a scalar
-  template<typename T, typename ST>
-  void Matrix<T,ST>::operator*=(const T scalar) {
-
-    //assert(Storage2D<T,ST>::size_ == Storage2D<T,ST>::xDim_*Storage2D<T,ST>::yDim_);
-    ST i;
-    for (i=0; i < Storage2D<T,ST>::size_; i++)
-      Storage2D<T,ST>::data_[i] *= scalar;    
-  }
-
-  template<>
-  void Matrix<float>::operator*=(const float scalar);
-
-  template<>
-  void Matrix<double>::operator*=(const double scalar);
-
   //implementation of stand-alone operators
   template<typename T, typename ST>
   Matrix<T,ST> operator+(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2) {
 
-#ifndef DONT_CHECK_VECTOR_ARITHMITIC
-    if (m1.xDim != m2.xDim || m1.yDim != m2.yDim) {
+#ifndef DONT_CHECK_VECTOR_ARITHMETIC
+    if (m1.xDim() != m2.xDim() || m1.yDim() != m2.yDim()) {
 
       INTERNAL_ERROR << "     dimension mismatch in matrix addition(+): (" 
                      << m1.xDim() << "," << m1.yDim() << ") vs. ("
@@ -508,7 +537,8 @@ namespace Math2D {
 
     Matrix<T,ST> result(m1.xDim(),m1.yDim());
     ST i;
-    for (i=0; i < m1.size(); i++)
+    const ST size = m1.size();
+    for (i=0; i < size; i++)
       result.direct_access(i) = m1.value(i) + m2.value(i);
 
     return result;
@@ -517,7 +547,10 @@ namespace Math2D {
   template<typename T, typename ST>
   Matrix<T,ST> operator*(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2) {
 
-#ifndef DONT_CHECK_VECTOR_ARITHMITIC
+    //there is room for optimization here
+    // but if you want efficient code you should never call a routine that returns a matrix - except if most of your run-time lies elsewhere
+
+#ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (m1.xDim() != m2.yDim()) {
       INTERNAL_ERROR << "     dimension mismatch in matrix multiplication(*): ("
                      << m1.xDim() << "," << m1.yDim() << ") vs. ("
@@ -605,10 +638,14 @@ namespace Math2D {
   template<typename T, typename ST>
   Math1D::Vector<T,ST> operator*(const Matrix<T,ST>& m, const Math1D::Vector<T,ST>& v) {
 
+    //there is room for optimization here
+    // but if you want efficient code you should never call a routine that returns a vector - except if most of your run-time lies elsewhere
+
+
     const ST xDim = m.xDim();
     const ST yDim = m.yDim();
 
-#ifndef DONT_CHECK_VECTOR_ARITHMITIC
+#ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (xDim != v.size()) {
       INTERNAL_ERROR << "     cannot multiply matrix \"" << m.name() << "\" with vector \""
                      << v.name() << "\":" << std::endl

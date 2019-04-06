@@ -8,7 +8,6 @@
 #include "vector.hh"
 #include "matrix.hh"
 #include "tensor.hh"
-#include <algorithm>
 
 template<typename T>
 inline void negate(Math1D::Vector<T>& vec) {

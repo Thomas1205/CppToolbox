@@ -14,6 +14,8 @@ public:
 
   Rational64();
 
+  Rational64(long num);
+
   Rational64(long num, long denom);
 
   Rational64 inverse() const;

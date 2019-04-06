@@ -25,6 +25,7 @@ long double ldfac(uint n) {
 uint choose(uint n, uint k) {
 
   assert(k <= n);
+  assert(n >= 1);
 
   if (k == n || k == 0)
     return 1;
@@ -42,6 +43,7 @@ uint choose(uint n, uint k) {
 long double ldchoose(uint n, uint k) {
 
   assert(k <= n);
+  assert(n >= 1);
 
   if (k == n || k == 0)
     return 1;
@@ -56,20 +58,39 @@ long double ldchoose(uint n, uint k) {
   return r;
 }
 
-// greatest common divisor via the Euclidean algorithm
-long gcd64(unsigned long n1, unsigned long n2) {
+long double ldchoose(uint n, uint k, const Math1D::Vector<long double>& ld_fac) {
 
-  if (n1 < n2)
-    std::swap(n1,n2);
+  assert(k <= n);
+  assert(n >= 1);
+  assert(k < ld_fac.size());
 
-  while (n2 != 0) {
-    unsigned long t = n2;
-    n2 = n1 % n2;
-    n1 = t;
-  }
+  if (k == n || k == 0)
+    return 1;
 
-  return n1;
+  long double r = n;
+  for (uint i=n-1; i > (n-k); i--)
+    r *= i;
+
+  r /= ld_fac[k];
+
+  return r;
 }
+
+
+//greatest common divisor via the Euclidean algorithm
+// inline long gcd64(unsigned long n1, unsigned long n2) {
+
+//   if (n1 < n2)
+//     std::swap(n1,n2);
+
+//   while (n2 != 0) {
+//     unsigned long t = n2;
+//     n2 = n1 % n2;
+//     n1 = t;
+//   }
+
+//   return n1;
+// }
 
 // greatest common divisor via the Euclidean algorithm
 uint gcd(uint n1, uint n2) {

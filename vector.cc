@@ -5,41 +5,6 @@
 namespace Math1D {
 
   template<>
-  double Vector<uint>::norm_l1() const {
-    
-    uint result = 0;
-    for (size_t i=0; i < Storage1D<uint>::size_; i++) {
-      result += Storage1D<uint>::data_[i];
-    }
-    
-    return result;    
-  }
-
-
-  template<>
-  double Vector<uchar>::norm_l1() const {
-    
-    uint result = 0;
-    for (size_t i=0; i < Storage1D<uchar>::size_; i++) {
-      result += Storage1D<uchar>::data_[i];
-    }
-    
-    return result;    
-  }
-
-
-  template<>
-  double Vector<ushort>::norm_l1() const {
-    
-    uint result = 0;
-    for (size_t i=0; i < Storage1D<ushort>::size_; i++) {
-      result += Storage1D<ushort>::data_[i];
-    }
-    
-    return result;    
-  }
-
-  template<>
   float Vector<float>::max() const {
     return Makros::max(Storage1D<float>::data_, Storage1D<float>::size_);
   }

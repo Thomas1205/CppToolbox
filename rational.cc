@@ -26,6 +26,8 @@ Rational64::Rational64(long num, long denom)
   assert(denom_ > 0);
 }
 
+Rational64::Rational64(long num) : num_(num), denom_(1) {}
+
 Rational64 Rational64::inverse() const {
 
   assert(num_ != 0);
@@ -38,8 +40,8 @@ void Rational64::invert() {
 
   assert(num_ != 0);
   if (num_ < 0) {
-    num_ *= -1;
-    denom_ *= -1;
+    num_ = - num_;
+    denom_ *= -denom_;
   }
 
   std::swap(num_,denom_);
@@ -47,7 +49,7 @@ void Rational64::invert() {
 
 
 void Rational64::negate() {
-  num_ *= -1;
+  num_ = - num_;
 }
 
 void Rational64::normalize() {

@@ -239,12 +239,13 @@ void Storage1D<uint>::resize(size_t new_size) {
 
 //maintains the values of existing positions, new ones are filled with <code> fill_value </code>
 template<>
-void Storage1D<float>::resize(size_t new_size, float fill_value) {
+void Storage1D<float>::resize(size_t new_size, const float fill_value) {
 
   if (data_ == 0) {
     data_ = new float[new_size];
-    for (size_t i=0; i < new_size; i++)
-      data_[i] = fill_value;
+    // for (size_t i=0; i < new_size; i++)
+    //   data_[i] = fill_value;
+    std::fill_n(data_,new_size,fill_value);
   }
   else if (size_ != new_size) {
     float* new_data = new float[new_size];
@@ -264,12 +265,13 @@ void Storage1D<float>::resize(size_t new_size, float fill_value) {
 }
 
 template<>
-void Storage1D<double>::resize(size_t new_size, double fill_value) {
+void Storage1D<double>::resize(size_t new_size, const double fill_value) {
 
   if (data_ == 0) {
     data_ = new double[new_size];
-    for (size_t i=0; i < new_size; i++)
-      data_[i] = fill_value;
+    // for (size_t i=0; i < new_size; i++)
+    //   data_[i] = fill_value;
+    std::fill_n(data_,new_size,fill_value);
   }
   else if (size_ != new_size) {
     double* new_data = new double[new_size];
@@ -289,12 +291,13 @@ void Storage1D<double>::resize(size_t new_size, double fill_value) {
 }
 
 template<>
-void Storage1D<long double>::resize(size_t new_size, long double fill_value) {
+void Storage1D<long double>::resize(size_t new_size, const long double fill_value) {
 
   if (data_ == 0) {
     data_ = new long double[new_size];
-    for (size_t i=0; i < new_size; i++)
-      data_[i] = fill_value;
+    // for (size_t i=0; i < new_size; i++)
+    //   data_[i] = fill_value;
+    std::fill_n(data_,new_size,fill_value);
   }
   else if (size_ != new_size) {
     long double* new_data = new long double[new_size];
@@ -313,12 +316,13 @@ void Storage1D<long double>::resize(size_t new_size, long double fill_value) {
 }
 
 template<>
-void Storage1D<int>::resize(size_t new_size, int fill_value) {
+void Storage1D<int>::resize(size_t new_size, const int fill_value) {
 
   if (data_ == 0) {
     data_ = new int[new_size];
-    for (size_t i=0; i < new_size; i++)
-      data_[i] = fill_value;
+    // for (size_t i=0; i < new_size; i++)
+    //   data_[i] = fill_value;
+    std::fill_n(data_,new_size,fill_value);
   }
   else if (size_ != new_size) {
     int* new_data = new int[new_size];
@@ -337,12 +341,13 @@ void Storage1D<int>::resize(size_t new_size, int fill_value) {
 }
 
 template<>
-void Storage1D<uint>::resize(size_t new_size, uint fill_value) {
+void Storage1D<uint>::resize(size_t new_size, const uint fill_value) {
 
   if (data_ == 0) {
     data_ = new uint[new_size];
-    for (size_t i=0; i < new_size; i++)
-      data_[i] = fill_value;
+    // for (size_t i=0; i < new_size; i++)
+    //   data_[i] = fill_value;
+    std::fill_n(data_,new_size,fill_value);
   }
   else if (size_ != new_size) {
     uint* new_data = new uint[new_size];

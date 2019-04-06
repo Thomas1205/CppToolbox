@@ -7,9 +7,7 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <algorithm>
-#include <limits>
-
+#include <numeric>
 
 template <typename T>
 T vec_sum(const std::vector<T>& vec);
@@ -40,6 +38,9 @@ inline void vec_sort(std::vector<T>& vec);
 
 template <typename T>
 inline void vec_erase(std::vector<T>& vec, T toErase);
+
+template <typename T>
+inline void vec_replace(std::vector<T>& vec, T toErase, T toInsert);
 
 template<typename T1, typename T2>
 class ComparePairByFirst {
@@ -113,23 +114,27 @@ namespace Makros {
 template <typename T>
 T vec_sum(const std::vector<T>& vec) {
 
-  T sum = T();
+  return std::accumulate(vec.begin(),vec.end(),T());
 
-  for (typename std::vector<T>::const_iterator it = vec.begin(); it != vec.end(); it++)
-    sum += *it;
+  // T sum = T();
 
-  return sum;
+  // for (typename std::vector<T>::const_iterator it = vec.begin(); it != vec.end(); it++)
+  //   sum += *it;
+
+  // return sum;
 }
 
 template <typename T>
 T set_sum(const std::set<T>& s) {
 
-  T sum = T();
+  return std::accumulate(s.begin(),s.end(),T());
 
-  for (typename std::set<T>::const_iterator it = s.begin(); it != s.end(); it++)
-    sum += *it;
+  // T sum = T();
 
-  return sum;
+  // for (typename std::set<T>::const_iterator it = s.begin(); it != s.end(); it++)
+  //   sum += *it;
+
+  // return sum;
 }
 
 template <typename T> 
@@ -177,6 +182,24 @@ template <typename T>
 inline void vec_sort(std::vector<T>& vec) {
 
   std::sort(vec.begin(),vec.end());
+}
+
+template <typename T>
+inline void vec_erase(std::vector<T>& vec, T toErase) {
+#ifdef SAFE_MODE
+  assert(vec_find(vec,toErase) != vec.end());
+#endif
+  vec.erase(vec_find(vec,toErase));
+}
+
+
+template <typename T>
+inline void vec_replace(std::vector<T>& vec, T toErase, T toInsert) {
+
+#ifdef SAFE_MODE
+  assert(vec_find(vec,toErase) != vec.end());
+#endif
+  *(vec_find(vec,toErase)) = toInsert;  
 }
 
 template<typename T1, typename T2>
@@ -228,15 +251,5 @@ size_t binsearch_keyvalue(const std::vector<std::pair<TK,TV> >& vec, TK key) {
 
   return MAX_UINT;
 }
-
-
-template <typename T>
-inline void vec_erase(std::vector<T>& vec, T toErase) {
-#ifdef SAFE_MODE
-  assert(vec_find(vec,toErase) != vec.end());
-#endif
-  vec.erase(vec_find(vec,toErase));
-}
-
 
 #endif

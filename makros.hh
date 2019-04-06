@@ -11,6 +11,8 @@
 #include <iomanip>
 #include <cstdlib> //includes the exit-function
 #include <typeinfo>
+#include <cmath>
+#include <algorithm>
 
 #ifdef WIN32
 namespace {
@@ -23,8 +25,14 @@ inline bool isnan(double x) {
 
 #ifdef GNU_COMPILER
 #define attr_restrict __restrict
+//pointers returned by new are guaranteed to have an address that is divisible by 16
+//it is convenient to give the compiler this hint so that he need not handle unaligned cases
+#define ALIGNED16 __attribute__ ((aligned (16)))
+#define assertAligned16(p) assert( ((size_t)p) % 16 == 0);
 #else
 #define attr_restrict
+#define ALIGNED16
+#define assertAligned16(p)
 #endif
 
 
@@ -32,6 +40,8 @@ inline bool isnan(double x) {
 typedef unsigned int uint;
 typedef unsigned short ushort;
 typedef unsigned char uchar;
+typedef double ALIGNED16 double_A16;
+typedef float ALIGNED16 float_A16;
 
 #define MIN_DOUBLE -1.0*std::numeric_limits<double>::max()
 #define MAX_DOUBLE std::numeric_limits<double>::max()
@@ -55,6 +65,118 @@ enum RegularityType {SquaredDiffReg,AbsDiffReg,TVReg};
 
 
 /**** helpful routines ****/
+
+namespace Makros {
+
+  //making log, exp, pow and abs a template is convenient when you want to call the proper function inside your own template
+
+  template<typename T> 
+  inline T log(T arg) {
+    return T(::log(double(arg)));
+  }
+
+  //specializations:
+  template<>
+  inline float log(float arg) {
+    return logf(arg);
+  }
+
+  template<>
+  inline double log(double arg) {
+    return ::log(arg);
+  }
+
+  template<>
+  inline long double log(long double arg) {
+    return logl(arg);
+  }
+
+  template<typename T> 
+  inline T exp(T arg) {
+    return T(::exp(double(arg)));
+  }
+  
+  //specializations:
+  template<>
+  inline float exp(float arg) {
+    return expf(arg);
+  }
+
+  template<>
+  inline double exp(double arg) {
+    return ::exp(arg);
+  }
+
+  template<>
+  inline long double exp(long double arg) {
+    return expl(arg);
+  }
+
+  template<typename T> 
+  inline T pow(T base, T exponent) {
+    return T(::pow(double(base),double(exponent)));
+  }
+
+  //specializations:
+  template<>
+  inline float pow(float base, float exponent) {
+    return powf(base,exponent);
+  }
+
+  template<>
+  inline double pow(double base, double exponent) {
+    return ::pow(base,exponent);
+  }
+
+  template<>
+  inline long double pow(long double base, long double exponent) {
+    return powl(base,exponent);
+  }
+
+  template<typename T>
+  inline T abs(T arg) {
+    return std::abs(arg);
+  }
+
+  template<>
+  inline uchar abs(uchar arg) {
+    return arg;
+  }
+
+  template<>
+  inline ushort abs(ushort arg) {
+    return arg;
+  }
+
+  template<>
+  inline uint abs(uint arg) {
+    return arg;
+  }
+
+#ifndef _32BIT_OS
+  template<>
+  inline size_t abs(size_t arg) {
+    return arg;
+  }
+#endif
+
+  template<>
+  inline float abs(float arg) {
+    return fabsf(arg);
+  }
+
+  template<>
+  inline double abs(double arg) {
+    return fabs(arg);
+  }
+
+  template<>
+  inline long double abs(long double arg) {
+    return fabsl(arg);
+  }
+
+  
+}
 
 template<typename T>
 std::string toString(T obj, uint width=1) {
@@ -123,7 +245,7 @@ std::string operator+(std::string s, const Makros::Typename<T>& t) {
 /***********************/
 
 template <typename T>
-T convert(const std::string s) {
+inline T convert(const std::string s) {
   
   std::istringstream is(s);
   T result;
@@ -150,7 +272,23 @@ T convert(const std::string s) {
 }
 
 template<>
-uint convert<uint>(const std::string s); 
+inline uint convert<uint>(const std::string s) {
+
+  uint result = 0;
+  char c;
+  uint i=0;
+  for (; i < s.size(); i++) {
+    c = s[i];
+
+    if (c < '0' || c > '9') {
+      std::cerr << "ERROR: conversion of \"" << s << "\" to uint failed. Exiting." << std::endl; 
+      exit(1);
+    }
+    result = 10*result + (c - '0');
+  }
+
+  return result;
+}
 
 template<typename T1, typename T2>
 void operator+=(std::pair<T1,T2>& x, const std::pair<T1,T2>& y) {
@@ -161,7 +299,7 @@ void operator+=(std::pair<T1,T2>& x, const std::pair<T1,T2>& y) {
 
 /********************* Code Macros ****************************/
 #define TODO(s) { std::cerr << "TODO ERROR[" << __FILE__ << ":" << __LINE__ << "]: feature \"" << (s) << "\" is currently not implemented. Exiting..." << std::endl; exit(1); } 
-#define EXIT(s) { std::cerr << s << std::endl; exit(1); }
+#define EXIT(s) { std::cerr << __FILE__ << ":" << __LINE__ << ": " <<  s << std::endl; exit(1); }
 #define MAKENAME(s) std::string(#s) + std::string("[") + std::string(__FILE__) + std::string(":") + toString(__LINE__) + std::string("]")
 
 #ifdef SAFE_MODE
@@ -216,17 +354,16 @@ inline void prefetcht2(const T* ptr) {
 
 namespace Makros {
 
-  inline float max(const float* data, size_t nData) {
+  inline float max(const float_A16* data, size_t nData) {
     float max_val=MIN_FLOAT;
     float cur_datum;
     size_t i;
 
-#if !defined(USE_SSE) || USE_SSE < 2 
-
+    //#if !defined(USE_SSE) || USE_SSE < 2 
+#if 1 // g++ 4.8.5 uses avx instructions automatically
     for (i=0; i < nData; i++) {
       cur_datum = data[i];
-      if (cur_datum > max_val)
-        max_val = cur_datum;
+      max_val = std::max(max_val,cur_datum);
     }
 #else
     //movups is part of SSE2
@@ -255,16 +392,16 @@ namespace Makros {
     return max_val;
   }
 
-  inline float min(const float* data, size_t nData) {
+  inline float min(const float_A16* data, size_t nData) {
     float min_val=MAX_FLOAT;
     float cur_datum;
     size_t i;
 
-#if !defined(USE_SSE) || USE_SSE < 2 
+    //#if !defined(USE_SSE) || USE_SSE < 2 
+#if 1 // g++ 4.8.5 uses avx instructions automatically
     for (i=0; i < nData; i++) {
       cur_datum = data[i];
-      if (cur_datum < min_val)
-        min_val = cur_datum;
+      min_val = std::min(min_val,cur_datum);
     }
 #else
     //movups is part of SSE2
@@ -297,20 +434,28 @@ namespace Makros {
 
     max_val = MIN_FLOAT;
     arg_max = MAX_UINT; 
-    size_t i;
-    float cur_val;
 
 #if !defined(USE_SSE) || USE_SSE < 4
-    for (i=0; i < nData; i++) {
-      cur_val = data[i];
-      
-      if (cur_val > max_val) {
-        max_val = cur_val;
-        arg_max = i;
-      }
+
+    if (nData > 0) {
+      const float* ptr = std::max_element(data,data+nData);
+      max_val = *ptr;
+      arg_max = ptr - data;
     }
+
+    // for (i=0; i < nData; i++) {
+    //   cur_val = data[i];
+      
+    //   if (cur_val > max_val) {
+    //     max_val = cur_val;
+    //     arg_max = i;
+    //   }
+    // }
 #else
     //blendvps is part of SSE4
+
+    size_t i;
+    float cur_val;
 
     assert(nData <= 17179869183);
 
@@ -363,19 +508,26 @@ namespace Makros {
 
     max_val = MIN_DOUBLE;
     arg_max = MAX_UINT; 
-    size_t i;
-    double cur_val;
 
 #if !defined(USE_SSE) || USE_SSE < 4
-    for (i=0; i < nData; i++) {
-      cur_val = data[i];
-      
-      if (cur_val > max_val) {
-        max_val = cur_val;
-        arg_max = i;
-      }
+    if (nData > 0) {
+      const double* ptr = std::max_element(data,data+nData);
+      max_val = *ptr;
+      arg_max = ptr - data;
     }
+
+    // for (i=0; i < nData; i++) {
+    //   cur_val = data[i];
+      
+    //   if (cur_val > max_val) {
+    //     max_val = cur_val;
+    //     arg_max = i;
+    //   }
+    // }
 #else
+
+    size_t i;
+    double cur_val;
 
     assert(nData < 8589934592);
 
@@ -438,21 +590,28 @@ namespace Makros {
 
     min_val = MAX_FLOAT;
     arg_min = MAX_UINT; 
-    size_t i;
-    float cur_val;
 
 #if !defined(USE_SSE) || USE_SSE < 4
-     //#if 1
-    for (i=0; i < nData; i++) {
-      cur_val = data[i];
-      
-      if (cur_val < min_val) {
-        min_val = cur_val;
-        arg_min = i;
-      }
+
+    if (nData > 0) {
+      const float* ptr = std::min_element(data,data+nData);
+      min_val = *ptr;
+      arg_min = ptr - data;
     }
+
+    // for (i=0; i < nData; i++) {
+    //   cur_val = data[i];
+      
+    //   if (cur_val < min_val) {
+    //     min_val = cur_val;
+    //     arg_min = i;
+    //   }
+    // }
 #else
     //blendvps is part of SSE4
+
+    size_t i;
+    float cur_val;
     
     assert(nData <= 17179869183);
 
@@ -510,19 +669,27 @@ namespace Makros {
 
     min_val = MAX_DOUBLE;
     arg_min = MAX_UINT; 
-    size_t i;
-    double cur_val;
 
 #if !defined(USE_SSE) || USE_SSE < 4
-    for (i=0; i < nData; i++) {
-      cur_val = data[i];
-      
-      if (cur_val < min_val) {
-        min_val = cur_val;
-        arg_min = i;
-      }
+
+    if (nData > 0) {
+      const double* ptr = std::min_element(data,data+nData);
+      min_val = *ptr;
+      arg_min = ptr - data;
     }
+
+    // for (i=0; i < nData; i++) {
+    //   cur_val = data[i];
+      
+    //   if (cur_val < min_val) {
+    //     min_val = cur_val;
+    //     arg_min = i;
+    //   }
+    // }
 #else
+
+    size_t i;
+    double cur_val;
 
     assert(nData < 8589934592);
 

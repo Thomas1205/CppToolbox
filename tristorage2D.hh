@@ -6,7 +6,6 @@
 #define TRISTORAGE2D_HH
 
 #include "makros.hh"
-#include <algorithm>
 
 //two-dimensional container class for objects of any type T, where only have the pattern can be filled/defined
 //you can use this either for a triangular pattern or for a symmetric one 
@@ -30,17 +29,16 @@ public:
 
   virtual const std::string& name() const;
 
-
   //existing elements are preserved, new ones are uninitialized
   void resize(ST newDim);
 
   //existing elements are preserved, new ones are filled with the second argument
-  void resize(ST newDim, T fill_value);
+  void resize(ST newDim, const T fill_value);
 
   //all elements are uninitialized after this operation
   void resize_dirty(ST newDim);
 
-  void set_constant(T new_constant);
+  void set_constant(const T new_constant);
 
   //access on an element (handling is symmetric, i.e. accessing (x,y) is equivalent to accessing (y,x) )
   OPTINLINE const T& operator()(ST x, ST y) const;
@@ -221,10 +219,12 @@ template <typename T, typename ST>
 }
 
 template <typename T, typename ST>
-void TriStorage2D<T,ST>::set_constant(T new_constant) {
+void TriStorage2D<T,ST>::set_constant(const T new_constant) {
 
-  for (ST i=0; i < size_; i++)
-    data_[i] = new_constant;
+  std::fill_n(data_,size_,new_constant);
+
+  // for (ST i=0; i < size_; i++)
+  //   data_[i] = new_constant;
 }
 
 
@@ -314,7 +314,7 @@ void TriStorage2D<T,ST>::resize(ST newDim) {
 
 //existing elements are preserved, new ones are filled with the second argument
 template<typename T, typename ST>
-void TriStorage2D<T,ST>::resize(ST newDim, T fill_value) {
+void TriStorage2D<T,ST>::resize(ST newDim, const T fill_value) {
 
   if (newDim != dim_) {
 
@@ -326,8 +326,9 @@ void TriStorage2D<T,ST>::resize(ST newDim, T fill_value) {
       new_data[i] = data_[i];
 
     //fill new values
-    for (ST i=std::min(size_,new_size); i < new_size; i++)
-      new_data[i] = fill_value;
+    std::fill_n(data_+std::min(size_,new_size),new_size-std::min(size_,new_size),fill_value);
+    // for (ST i=std::min(size_,new_size); i < new_size; i++)
+    //   new_data[i] = fill_value;
 
     if (data_ != 0)
       delete[] data_;

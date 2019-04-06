@@ -8,7 +8,6 @@
 #define STORAGE2D_HH
 
 #include "makros.hh"
-#include <algorithm>
 
 //two-dimensional container class for objects of any type T
 //(i.e. neither mathematical nor streaming operations need to be defined on T)
@@ -34,17 +33,17 @@ public:
   void resize(ST newxDim, ST newyDim);
 
   //saves all existing entries, new positions are filled with <code> fill_value </code>
-  void resize(ST newxDim, ST newyDim, T fill_value);
+  void resize(ST newxDim, ST newyDim, const T fill_value);
 
   //all elements are uninitialized after this operation
   void resize_dirty(ST newxDim, ST newyDim);
 
-  void set_constant(T new_constant);
+  inline void set_constant(const T new_constant);
 
   //access on an element
-  OPTINLINE const T& operator()(ST x, ST y) const;
+  inline const T& operator()(ST x, ST y) const;
 
-  OPTINLINE T& operator()(ST x, ST y);
+  inline T& operator()(ST x, ST y);
 
   void operator=(const Storage2D<T,ST>& toCopy);
 
@@ -174,7 +173,7 @@ Storage2D<T,ST>::Storage2D(ST xDim, ST yDim) : xDim_(xDim), yDim_(yDim) {
 }
 
 template<typename T, typename ST>
-Storage2D<T,ST>::Storage2D(ST xDim, ST yDim, T default_value) : xDim_(xDim), yDim_(yDim) {
+Storage2D<T,ST>::Storage2D(ST xDim, ST yDim, const T default_value) : xDim_(xDim), yDim_(yDim) {
 
   size_ = xDim_*yDim_;
   data_ = new T[size_];
@@ -213,7 +212,7 @@ Storage2D<T,ST>::~Storage2D() {
 }
 
 template <typename T, typename ST>
-void Storage2D<T,ST>::set_constant(T new_constant) {
+inline void Storage2D<T,ST>::set_constant(const T new_constant) {
 
   std::fill_n(data_,size_,new_constant); //experimental result: fill_n is usually faster
 }
@@ -362,21 +361,21 @@ void Storage2D<T,ST>::resize(ST newxDim, ST newyDim) {
 }
 
 template <typename T, typename ST>
-void Storage2D<T,ST>::resize(ST newxDim, ST newyDim, T fill_value) {
+void Storage2D<T,ST>::resize(ST newxDim, ST newyDim, const T fill_value) {
+
+  const uint newsize = newxDim*newyDim;
 
   if (data_ == 0) {
-    data_ = new T[newxDim*newyDim];
-
-    //     for (ST i=0; i < newxDim*newyDim; i++)
-    //       data_[i] = fill_value;
-
-    std::fill_n(data_,newxDim*newyDim,fill_value);
+    data_ = new T[newsize];
+    std::fill_n(data_,newsize,fill_value);
   }
   else if (newxDim != xDim_ || newyDim != yDim_) {
 
-    T* new_data = new T[newxDim*newyDim];
-    for (ST i=0; i < newxDim*newyDim; i++)
-      new_data[i] = fill_value;
+    T* new_data = new T[newsize];
+    std::fill_n(new_data,newsize,fill_value);
+
+    //for (ST i=0; i < newsize; i++)
+    //  new_data[i] = fill_value;
 
     /* copy data */
     for (ST y=0; y < std::min(yDim_,newyDim); y++)
@@ -389,7 +388,7 @@ void Storage2D<T,ST>::resize(ST newxDim, ST newyDim, T fill_value) {
     
   xDim_ = newxDim;
   yDim_ = newyDim;
-  size_ = xDim_*yDim_;
+  size_ = newsize;
 }
 
 template<typename T, typename ST>

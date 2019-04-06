@@ -9,19 +9,20 @@
 #define STORAGE1D_HH
 
 #include "makros.hh"
-#include <string>
 #include <cstring>
-#include <algorithm>
 
 template<typename T, typename ST=size_t>
 class Storage1D {
 public:
 
+  //NOTE: for non-math types new does not return 16-byte multiples!!!
+  //typedef T ALIGNED16 T_A16;
+
   Storage1D();
     
   Storage1D(ST size);
   
-  Storage1D(ST size, T default_value);
+  Storage1D(ST size, const T default_value);
 
   //copy constructor
   Storage1D(const Storage1D<T,ST>& toCopy);
@@ -30,9 +31,9 @@ public:
   
   virtual const std::string& name() const;
   
-  OPTINLINE const T& operator[](ST i) const;
+  inline const T& operator[](ST i) const;
 
-  OPTINLINE T& operator[](ST i);
+  inline T& operator[](ST i);
 
   void operator=(const Storage1D<T,ST>& toCopy);
 
@@ -46,7 +47,7 @@ public:
   void resize(ST new_size);
 
   //maintains the values of exisitng positions, new ones are filled with <code> fill_value </code>
-  void resize(ST new_size, T fill_value);
+  void resize(ST new_size, const T fill_value);
 
   //all elements are undefined after this operation
   void resize_dirty(ST new_size);
@@ -61,11 +62,13 @@ public:
   
   inline T direct_access(ST i) const;
 
-  void set_constant(T constant);
+  inline void set_constant(const T constant);
   
+  inline void range_set_constant(const T constant, ST start, ST length);
+
 protected:
   
-  T* data_;
+  T* data_; //pointers returned by new are guaranteed to have an address that is divisible by 16
   ST size_;
   static const std::string stor1D_name_;
 };
@@ -178,7 +181,7 @@ public:
 
   virtual const std::string& name() const;
   
-  OPTINLINE T& operator[](ST i) const;
+  inline T& operator[](ST i) const;
 
   void resize(ST size, bool exact_fit = false);
 
@@ -253,11 +256,28 @@ Storage1D<T,ST>::Storage1D(): data_(0), size_(0) {}
 
 template<typename T,typename ST>
 Storage1D<T,ST>::Storage1D(ST size): size_(size) {
-  data_ = new T[size];    
+
+  //DEBUG
+  // T* ptr = new T[size];   
+  // if (((size_t)((void*)ptr)) % 16 != 0) {
+  //   WARNING << " pointer does not satisfy alignment boundary of 16!!: " << ptr << std::endl;
+  //   std::cerr << "type "  << Makros::Typename<T>() << std::endl;
+  // } 
+  // data_ = ptr;   
+  //END_DEBUG
+  data_ = new T[size];   
 }
 
 template<typename T,typename ST>
-Storage1D<T,ST>::Storage1D(ST size, T default_value): size_(size) {
+Storage1D<T,ST>::Storage1D(ST size, const T default_value): size_(size) {
+
+  //DEBUG
+  // T* ptr = new T[size];   
+  // if (((size_t)((void*)ptr)) % 16 != 0) {
+  //   WARNING << " pointer does not satisfy alignment boundary of 16!!: " << ptr << std::endl;
+  // } 
+  // data_ = ptr;   
+  //END_DEBUG
   data_ = new T[size_];    
 
   std::fill(data_, data_+size, default_value); //fill and fill_n are of equal speed
@@ -268,6 +288,14 @@ template<typename T,typename ST>
 Storage1D<T,ST>::Storage1D(const Storage1D<T,ST>& toCopy) {
 
   size_ = toCopy.size();
+
+  //DEBUG
+  // T* ptr = new T[size_];   
+  // if (((size_t)((void*)ptr)) % 16 != 0) {
+  //   WARNING << " pointer does not satisfy alignment boundary of 16!!: " << ptr << std::endl;
+  // } 
+  // data_ = ptr;   
+  //END_DEBUG
   data_ = new T[size_];
  
   const ST size = size_;
@@ -297,14 +325,27 @@ Storage1D<ushort>::Storage1D(const Storage1D<ushort>& toCopy);
 
 
 template<typename T,typename ST>
-void Storage1D<T,ST>::set_constant(T constant) {
+inline void Storage1D<T,ST>::set_constant(const T constant) {
   
   std::fill_n(data_,size_,constant); //experimental result: fill_n is usually faster
 }
 
+template<typename T,typename ST>
+inline void Storage1D<T,ST>::range_set_constant(const T constant, ST start, ST length) {
+
+  assert(start < size_);
+  assert(start+length <= size_);
+  
+  std::fill_n(data_+start,length,constant); //experimental result: fill_n is usually faster
+}
 
 template<typename T,typename ST>
 Storage1D<T,ST>::~Storage1D() {
+
+  // std::cerr << "freeing data ptr " << data_ << " for Storage1D \"" << this->name() << "\" of type " 
+  //                  << Makros::Typename<T>()
+  //                  << " with " << size_ << " elements. exiting." << std::endl;
+
   if (data_ != 0)
     delete[] data_;     
 }
@@ -340,7 +381,7 @@ inline T Storage1D<T,ST>::direct_access(ST i) const {
 }
 
 template<typename T,typename ST>
-OPTINLINE const T& Storage1D<T,ST>::operator[](ST i) const {
+inline const T& Storage1D<T,ST>::operator[](ST i) const {
 #ifdef SAFE_MODE
   if (i >= size_) {
 
@@ -357,7 +398,7 @@ OPTINLINE const T& Storage1D<T,ST>::operator[](ST i) const {
 
 
 template<typename T,typename ST>
-OPTINLINE T& Storage1D<T,ST>::operator[](ST i) {
+inline T& Storage1D<T,ST>::operator[](ST i) {
 #ifdef SAFE_MODE
   if (i >= size_) {
 
@@ -381,6 +422,14 @@ void Storage1D<T,ST>::operator=(const Storage1D<T,ST>& toCopy) {
       delete[] data_;
 
     size_ = toCopy.size();
+
+    //DEBUG
+    // T* ptr = new T[size_];   
+    // if (((size_t)((void*)ptr)) % 16 != 0) {
+    //   WARNING << " pointer does not satisfy alignment boundary of 16!!: " << ptr << std::endl;
+    // } 
+    // data_ = ptr;   
+    //END_DEBUG
     data_ = new T[size_];
   }
 
@@ -429,9 +478,25 @@ template<typename T,typename ST>
 void Storage1D<T,ST>::resize(ST new_size) {
 
   if (data_ == 0) {
+    //DEBUG
+    // T* ptr = new T[new_size];   
+    // if (((size_t)((void*)ptr)) % 16 != 0) {
+    //   WARNING << " pointer does not satisfy alignment boundary of 16!!: " << ptr << std::endl;
+    //   std::cerr << "type "  << Makros::Typename<T>() << std::endl;
+    // } 
+    // data_ = ptr;   
+    //END_DEBUG
     data_ = new T[new_size];
   }
   else if (size_ != new_size) {
+
+    //DEBUG
+    // T* ptr = new T[new_size];   
+    // if (((size_t)((void*)ptr)) % 16 != 0) {
+    //   WARNING << " pointer does not satisfy alignment boundary of 16!!: " << ptr << std::endl;
+    // } 
+    // T_A16* new_data = ptr;   
+    //END_DEBUG
     T* new_data = new T[new_size];
 
     const ST size = std::min(size_,new_size);
@@ -467,9 +532,17 @@ void Storage1D<uint>::resize(size_t new_size);
 
 //maintains the values of existing positions, new ones are filled with <code> fill_value </code>
 template<typename T,typename ST>
-void Storage1D<T,ST>::resize(ST new_size, T fill_value) {
+void Storage1D<T,ST>::resize(ST new_size, const T fill_value) {
 
   if (data_ == 0) {
+
+    //DEBUG
+    // T* ptr = new T[new_size];   
+    // if (((size_t)((void*)ptr)) % 16 != 0) {
+    //   WARNING << " pointer does not satisfy alignment boundary of 16!!: " << ptr << std::endl;
+    // } 
+    // data_ = ptr;   
+    //END_DEBUG
     data_ = new T[new_size];
 
     std::fill(data_, data_+new_size, fill_value); //fill and fill_n are of equal speed
@@ -495,19 +568,19 @@ void Storage1D<T,ST>::resize(ST new_size, T fill_value) {
 }
 
 template<>
-void Storage1D<float>::resize(size_t new_size, float fill_value);
+void Storage1D<float>::resize(size_t new_size, const float fill_value);
 
 template<>
-void Storage1D<double>::resize(size_t new_size, double fill_value);
+void Storage1D<double>::resize(size_t new_size, const double fill_value);
 
 template<>
-void Storage1D<long double>::resize(size_t new_size, long double fill_value);
+void Storage1D<long double>::resize(size_t new_size, const long double fill_value);
 
 template<>
-void Storage1D<int>::resize(size_t new_size, int fill_value);
+void Storage1D<int>::resize(size_t new_size, const int fill_value);
 
 template<>
-void Storage1D<uint>::resize(size_t new_size, uint fill_value);
+void Storage1D<uint>::resize(size_t new_size, const uint fill_value);
 
 
 
@@ -519,6 +592,13 @@ void Storage1D<T,ST>::resize_dirty(ST new_size) {
     if (data_ != 0)
       delete[] data_;
 
+    //DEBUG
+    // T* ptr = new T[new_size];   
+    // if (((size_t)((void*)ptr)) % 16 != 0) {
+    //   WARNING << " pointer does not satisfy alignment boundary of 16!!: " << ptr << std::endl;
+    // } 
+    // data_ = ptr;   
+    //END_DEBUG
     data_ = new T[new_size];
   }
   size_ = new_size;
@@ -795,7 +875,7 @@ void FlexibleStorage1D<T,ST>::resize(ST size, bool exact_fit) {
 }
 
 template<typename T, typename ST>
-OPTINLINE T& FlexibleStorage1D<T,ST>::operator[](ST i) const {
+inline T& FlexibleStorage1D<T,ST>::operator[](ST i) const {
 
 #ifdef SAFE_MODE
   if (i >= size_) {

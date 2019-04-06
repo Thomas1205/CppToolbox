@@ -20,13 +20,13 @@ public:
 
   Storage3D(ST xDim, ST yDim, ST zDim);
 
-  Storage3D(ST xDim, ST yDim, ST zDim, T default_value);
+  Storage3D(ST xDim, ST yDim, ST zDim, const T default_value);
 
   ~Storage3D();
 
-  OPTINLINE const T& operator()(ST x, ST y, ST z) const;
+  inline const T& operator()(ST x, ST y, ST z) const;
 
-  OPTINLINE T& operator()(ST x, ST y, ST z);
+  inline T& operator()(ST x, ST y, ST z);
 
   virtual const std::string& name() const;
 
@@ -54,13 +54,13 @@ public:
   void operator=(const T& invalid_object);
 #endif
 
-  void set_constant(T new_constant);
+  inline void set_constant(const T new_constant);
 
   //existing positions are copied, new ones are uninitialized
   void resize(ST newxDim, ST newyDim, ST newzDim);
 
   //existing positions are copied, new ones are uninitialized
-  void resize(ST newxDim, ST newyDim, ST newzDim, T default_value);
+  void resize(ST newxDim, ST newyDim, ST newzDim, const T default_value);
   
   //all elements are uninitialized after this operation
   void resize_dirty(ST newxDim, ST newyDim, ST newzDim);
@@ -184,12 +184,11 @@ Storage3D<T,ST>::Storage3D(ST xDim, ST yDim, ST zDim) : xDim_(xDim), yDim_(yDim)
 }
 
 template<typename T, typename ST>
-Storage3D<T,ST>::Storage3D(ST xDim, ST yDim, ST zDim, T default_value) :
+Storage3D<T,ST>::Storage3D(ST xDim, ST yDim, ST zDim, const T default_value) :
   xDim_(xDim), yDim_(yDim), zDim_(zDim) {
 
   size_ = xDim_*yDim_*zDim_;
   data_ = new T[size_];
-
 
   std::fill_n(data_,size_,default_value);
 
@@ -354,7 +353,7 @@ void Storage3D<T,ST>::resize(ST newxDim, ST newyDim, ST newzDim) {
 
 
 template<typename T, typename ST>
-void Storage3D<T,ST>::set_constant(T new_constant) {
+inline void Storage3D<T,ST>::set_constant(const T new_constant) {
 
   std::fill_n(data_,size_,new_constant); //experimental result: fill_n is usually faster
 }
@@ -362,15 +361,16 @@ void Storage3D<T,ST>::set_constant(T new_constant) {
 
 //existing positions are copied, new ones are uninitialized
 template<typename T, typename ST>
-void Storage3D<T,ST>::resize(ST newxDim, ST newyDim, ST newzDim, T default_value) {
+void Storage3D<T,ST>::resize(ST newxDim, ST newyDim, ST newzDim, const T default_value) {
 
-  ST new_size = newxDim*newyDim*newzDim;
+  const ST new_size = newxDim*newyDim*newzDim;
 
   if (newxDim != xDim_ || newyDim != yDim_ || newzDim != zDim_) {
 
     T* new_data = new T[new_size];
-    for (ST i=0; i < new_size; i++)
-      new_data[i] = default_value;
+    std::fill_n(new_data,new_size,default_value);
+    //for (ST i=0; i < new_size; i++)
+    //  new_data[i] = default_value;
     
     if (data_ != 0) {
       
