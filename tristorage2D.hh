@@ -326,7 +326,7 @@ void TriStorage2D<T,ST>::resize(ST newDim, const T fill_value) {
       new_data[i] = data_[i];
 
     //fill new values
-    std::fill_n(data_+std::min(size_,new_size),new_size-std::min(size_,new_size),fill_value);
+    std::fill_n(new_data+std::min(size_,new_size),new_size-std::min(size_,new_size),fill_value);
     // for (ST i=std::min(size_,new_size); i < new_size; i++)
     //   new_data[i] = fill_value;
 
