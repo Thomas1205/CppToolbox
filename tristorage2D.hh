@@ -220,7 +220,7 @@ template <typename T, typename ST>
 
 template <typename T, typename ST>
 void TriStorage2D<T,ST>::set_constant(const T new_constant) {
-
+  
   std::fill_n(data_,size_,new_constant);
 
   // for (ST i=0; i < size_; i++)
@@ -326,7 +326,8 @@ void TriStorage2D<T,ST>::resize(ST newDim, const T fill_value) {
       new_data[i] = data_[i];
 
     //fill new values
-    std::fill_n(new_data+std::min(size_,new_size),new_size-std::min(size_,new_size),fill_value);
+    if (new_size > size_)
+      std::fill_n(new_data+size_,new_size-size_,fill_value);
     // for (ST i=std::min(size_,new_size); i < new_size; i++)
     //   new_data[i] = fill_value;
 
