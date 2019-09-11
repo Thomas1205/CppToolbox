@@ -23,7 +23,7 @@ namespace Math1D {
     Vector();
 
     Vector(ST size);
-    
+
     Vector(ST size, const T default_value);
 
     Vector(const Vector<T,ST>& toCopy);
@@ -41,7 +41,7 @@ namespace Math1D {
     inline const T_A16* direct_access() const;
 
     inline T& direct_access(ST i);
-  
+
     inline T direct_access(ST i) const;
 
     //redefining the set_constant method because for basic types we can indicate 16-byte alignment
@@ -50,21 +50,21 @@ namespace Math1D {
     inline T sum() const;
 
     inline T range_sum(ST start, ST end) const;
-        
+
     /*** maximal element ***/
     T max() const;
-        
+
     /*** minimal element ***/
     T min() const;
-        
+
     /*** maximal absolute element = l-infinity norm ***/
     T max_abs() const;
-        
+
     /*** L2-norm of the vector ***/
     inline double norm() const;
- 
+
     inline double sqr_norm() const;
-        
+
     /*** L1-norm of the vector ***/
     inline double norm_l1() const;
 
@@ -74,19 +74,19 @@ namespace Math1D {
     void set_zeros();
 
     inline void add_vector_multiple(const Math1D::Vector<T,ST>& vec, const T alpha);
-        
+
     void operator+=(const Vector<T,ST>& v);
 
     void operator-=(const Vector<T,ST>& v);
-        
+
     void operator*=(const T constant);
-        
+
     virtual const std::string& name() const;
-        
+
   protected:
     static const std::string vector_name_;
   };
-    
+
   /**********************************************/
   /***************** named vector ****************/
   /**********************************************/
@@ -94,21 +94,21 @@ namespace Math1D {
   class NamedVector : public Vector<T,ST> {
   public:
     NamedVector();
-        
+
     NamedVector(std::string name);
-        
+
     NamedVector(ST size, std::string name);
-    
+
     NamedVector(ST size, T default_value, std::string name);
-    
+
     ~NamedVector();
-        
+
     void set_name(std::string new_name);
-    
-    virtual const std::string& name() const;   
+
+    virtual const std::string& name() const;
 
     inline void operator=(const Vector<T,ST>& v);
-    
+
     //NOTE: the name is NOT copied
     inline void operator=(const NamedVector<T,ST>& v);
 
@@ -116,8 +116,8 @@ namespace Math1D {
   protected:
     std::string name_;
   };
-    
-  /***********************************************/    
+
+  /***********************************************/
   /*************** operators *********************/
   /***********************************************/
   template<typename T,typename ST>
@@ -125,13 +125,13 @@ namespace Math1D {
 
   template<typename T,typename ST>
   Vector<T,ST> operator-(const Vector<T,ST>& v1, const Vector<T,ST>& v2);
-    
+
   //scalar product of two vectors
   template<typename T,typename ST>
   inline T operator%(const Vector<T,ST>& v1, const Vector<T,ST>& v2);
 
   template<typename T,typename ST>
-  Vector<T,ST> cross(const Vector<T,ST>& v1, const Vector<T,ST>& v2); 
+  Vector<T,ST> cross(const Vector<T,ST>& v1, const Vector<T,ST>& v2);
 
   //streaming
   template<typename T,typename ST>
@@ -144,17 +144,19 @@ namespace Makros {
   class Typename<Math1D::Vector<T,ST> > {
   public:
 
-    std::string name() const {
+    std::string name() const
+    {
 
       return "Math1D::Vector<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
     }
   };
-  
+
   template<typename T>
   class Typename<Math1D::Vector<T> > {
   public:
 
-    std::string name() const {
+    std::string name() const
+    {
 
       return "Math1D::Vector<" + Makros::Typename<T>() + "> ";
     }
@@ -164,7 +166,8 @@ namespace Makros {
   class Typename<Math1D::NamedVector<T,ST> > {
   public:
 
-    std::string name() const {
+    std::string name() const
+    {
 
       return "Math1D::NamedVector<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
     }
@@ -175,7 +178,8 @@ namespace Makros {
   class Typename<Math1D::NamedVector<T> > {
   public:
 
-    std::string name() const {
+    std::string name() const
+    {
 
       return "Math1D::NamedVector<" + Makros::Typename<T>() + "> ";
     }
@@ -191,25 +195,22 @@ namespace Math1D {
   template<typename T,typename ST>
   /*static*/ const std::string Vector<T,ST>::vector_name_ = "unnamed vector";
 
-  template<typename T,typename ST>
-  Vector<T,ST>::Vector() : Storage1D<T,ST>() {}
+  template<typename T,typename ST> Vector<T,ST>::Vector() : Storage1D<T,ST>() {}
 
-  template<typename T,typename ST>
-  Vector<T,ST>::Vector(ST size) : Storage1D<T,ST>(size) {}
+  template<typename T,typename ST> Vector<T,ST>::Vector(ST size) : Storage1D<T,ST>(size) {}
 
-  template<typename T,typename ST>
-  Vector<T,ST>::Vector(ST size, const T default_value) : Storage1D<T,ST>(size) {
+  template<typename T,typename ST> Vector<T,ST>::Vector(ST size, const T default_value) : Storage1D<T,ST>(size)
+  {
     set_constant(default_value);
   }
 
-  template<typename T,typename ST>
-  Vector<T,ST>::Vector(const Vector<T,ST>& toCopy) : Storage1D<T,ST>(static_cast<const Storage1D<T,ST>&>(toCopy)) {}
+  template<typename T,typename ST> Vector<T,ST>::Vector(const Vector<T,ST>& toCopy) : Storage1D<T,ST>(static_cast<const Storage1D<T,ST>&>(toCopy)) {}
+
+  template<typename T,typename ST> Vector<T,ST>::~Vector() {}
 
   template<typename T,typename ST>
-  Vector<T,ST>::~Vector() {}
-
-  template<typename T,typename ST>
-  inline T Vector<T,ST>::sum() const {
+  inline T Vector<T,ST>::sum() const
+  {
 
     const ST size = Storage1D<T,ST>::size_;
     const T_A16* data = Storage1D<T,ST>::data_;
@@ -228,7 +229,8 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline T Vector<T,ST>::range_sum(ST start, ST end) const {
+  inline T Vector<T,ST>::range_sum(ST start, ST end) const
+  {
 
     const ST size = Storage1D<T,ST>::size_;
     const T_A16* data = Storage1D<T,ST>::data_;
@@ -249,35 +251,40 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  void Vector<T,ST>::set_zeros() {
+  void Vector<T,ST>::set_zeros()
+  {
     memset(Storage1D<T,ST>::data_,0,Storage1D<T,ST>::size_*sizeof(T));
   }
 
   template<typename T,typename ST>
-  inline typename Vector<T,ST>::T_A16* Vector<T,ST>::direct_access() {
+  inline typename Vector<T,ST>::T_A16* Vector<T,ST>::direct_access()
+  {
     T_A16* data = Storage1D<T,ST>::data_;
     assertAligned16(data);
     return data;
   }
-  
+
   template<typename T,typename ST>
-  inline const typename Vector<T,ST>::T_A16* Vector<T,ST>::direct_access() const {
+  inline const typename Vector<T,ST>::T_A16* Vector<T,ST>::direct_access() const
+  {
     const T_A16* data = Storage1D<T,ST>::data_;
     assertAligned16(data);
     return data;
   }
 
   template<typename T,typename ST>
-  inline T& Vector<T,ST>::direct_access(ST i) {
+  inline T& Vector<T,ST>::direct_access(ST i)
+  {
 
     T_A16* data = Storage1D<T,ST>::data_;
     assertAligned16(data);
 
     return data[i];
   }
-  
+
   template<typename T,typename ST>
-  inline T Vector<T,ST>::direct_access(ST i) const {
+  inline T Vector<T,ST>::direct_access(ST i) const
+  {
 
     const T_A16* data = Storage1D<T,ST>::data_;
     assertAligned16(data);
@@ -287,7 +294,8 @@ namespace Math1D {
 
   //redefining the set_constant method because for basic types we can indicate 16-byte alignment
   template<typename T,typename ST>
-  inline void Vector<T,ST>::set_constant(const T constant) {
+  inline void Vector<T,ST>::set_constant(const T constant)
+  {
     T_A16* data = Storage1D<T,ST>::data_;
     const ST size = Storage1D<T,ST>::size_;
     assertAligned16(data);
@@ -297,7 +305,8 @@ namespace Math1D {
 
   /*** maximal element ***/
   template<typename T,typename ST>
-  inline T Vector<T,ST>::max() const {
+  inline T Vector<T,ST>::max() const
+  {
 
     const ST size = Storage1D<T,ST>::size_;
 
@@ -314,9 +323,10 @@ namespace Math1D {
 
   template<>
   float Vector<float>::max() const;
-    
-  template<typename T,typename ST>    
-  T Vector<T,ST>::min() const {
+
+  template<typename T,typename ST>
+  T Vector<T,ST>::min() const
+  {
 
     const ST size = Storage1D<T,ST>::size_;
 
@@ -333,26 +343,28 @@ namespace Math1D {
 
   template<>
   float Vector<float>::min() const;
-        
+
   /*** maximal absolute element = l-infinity norm ***/
-  template<typename T,typename ST>    
-  T Vector<T,ST>::max_abs() const {
+  template<typename T,typename ST>
+  T Vector<T,ST>::max_abs() const
+  {
 
     const ST size = Storage1D<T,ST>::size_;
-    
+
     T maxel = (T) 0;
     for (ST i=0; i < size; i++) {
       const T candidate = Makros::abs<T>(Storage1D<T,ST>::data_[i]);
       maxel = std::max(maxel,candidate);
     }
-        
+
     return maxel;
   }
-        
+
   /*** L2-norm of the vector ***/
-  template<typename T,typename ST>   
-  inline double Vector<T,ST>::norm() const {
-    
+  template<typename T,typename ST>
+  inline double Vector<T,ST>::norm() const
+  {
+
     const ST size = Storage1D<T,ST>::size_;
 
     const T_A16* data = Storage1D<T,ST>::data_;
@@ -363,13 +375,14 @@ namespace Math1D {
       const double cur = (double) data[i];
       result += cur*cur;
     }
-        
+
     return sqrt(result);
   }
-   
-  template<typename T,typename ST>   
-  inline double Vector<T,ST>::sqr_norm() const {
-    
+
+  template<typename T,typename ST>
+  inline double Vector<T,ST>::sqr_norm() const
+  {
+
     const ST size = Storage1D<T,ST>::size_;
 
     const T_A16* data = Storage1D<T,ST>::data_;
@@ -380,14 +393,15 @@ namespace Math1D {
       const double cur = (double) data[i];
       result += cur*cur;
     }
-        
+
     return result;
   }
-        
+
   /*** L1-norm of the vector ***/
   template<typename T,typename ST>
-  inline double Vector<T,ST>::norm_l1() const {
-    
+  inline double Vector<T,ST>::norm_l1() const
+  {
+
     const ST size = Storage1D<T,ST>::size_;
 
     const T_A16* data = Storage1D<T,ST>::data_;
@@ -397,13 +411,14 @@ namespace Math1D {
     for (ST i=0; i < size; i++) {
       result += Makros::abs<T>(data[i]);
     }
-    
-    return result;    
+
+    return result;
   }
 
   template<typename T,typename ST>
-  inline void Vector<T,ST>::add_constant(const T addon) {
-    
+  inline void Vector<T,ST>::add_constant(const T addon)
+  {
+
     T_A16* data = Storage1D<T,ST>::data_;
     assertAligned16(data);
 
@@ -413,16 +428,17 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline void Vector<T,ST>::add_vector_multiple(const Math1D::Vector<T,ST>& v, const T alpha) {
+  inline void Vector<T,ST>::add_vector_multiple(const Math1D::Vector<T,ST>& v, const T alpha)
+  {
 
     const ST size = Storage1D<T,ST>::size_;
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (v.size() != size) {
-      INTERNAL_ERROR << "   cannot add multiple of vector \"" << v.name() << "\" to vector \"" 
+      INTERNAL_ERROR << "   cannot add multiple of vector \"" << v.name() << "\" to vector \""
                      << this->name() << "\":" << std::endl
                      << "   sizes " << v.size() << " and " << this->size() << " mismatch. Exiting..."
-                     << std::endl;   
+                     << std::endl;
       exit(0);
     }
 #endif
@@ -442,22 +458,23 @@ namespace Math1D {
       dptr[i] += alpha * vptr[i];
   }
 
-        
+
   template<typename T,typename ST>
-  void Vector<T,ST>::operator+=(const Vector<T,ST>& v) {
-    
+  void Vector<T,ST>::operator+=(const Vector<T,ST>& v)
+  {
+
     const ST size = Storage1D<T,ST>::size_;
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (v.size() != size) {
-      INTERNAL_ERROR << "   cannot add vector \"" << v.name() << "\" to vector \"" 
+      INTERNAL_ERROR << "   cannot add vector \"" << v.name() << "\" to vector \""
                      << this->name() << "\":" << std::endl
                      << "   sizes " << v.size() << " and " << this->size() << " mismatch. Exiting..."
-                     << std::endl;   
+                     << std::endl;
       exit(0);
     }
 #endif
-    
+
     ST i;
 
     // for (i=0; i < size; i++)
@@ -474,20 +491,21 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  void Vector<T,ST>::operator-=(const Vector<T,ST>& v) {
-    
+  void Vector<T,ST>::operator-=(const Vector<T,ST>& v)
+  {
+
     const ST size = Storage1D<T,ST>::size_;
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (v.size() != size) {
-      INTERNAL_ERROR << "   cannot subtract vector \"" << v.name() << "\" from vector \"" 
+      INTERNAL_ERROR << "   cannot subtract vector \"" << v.name() << "\" from vector \""
                      << this->name() << "\":" << std::endl
                      << "   sizes " << v.size() << " and " << this->size() << " mismatch. Exiting..."
-                     << std::endl;   
+                     << std::endl;
       exit(0);
     }
 #endif
-    
+
     ST i;
     // for (i=0; i < size; i++)
     //   Storage1D<T,ST>::data_[i] -= v.direct_access(i);
@@ -498,10 +516,11 @@ namespace Math1D {
     for (i=0; i < size; i++)
       dptr[i] -= vptr[i];
   }
-        
+
   template<typename T,typename ST>
-  void Vector<T,ST>::operator*=(const T constant) {
-    
+  void Vector<T,ST>::operator*=(const T constant)
+  {
+
     const ST size = Storage1D<T,ST>::size_;
     T_A16* data = Storage1D<T,ST>::data_;
 
@@ -517,56 +536,57 @@ namespace Math1D {
 
   template<>
   void Vector<double>::operator*=(const double scalar);
- 
+
   template<typename T,typename ST>
-  /*virtual*/ const std::string& Vector<T,ST>::name() const {
+  /*virtual*/ const std::string& Vector<T,ST>::name() const
+  {
     return Vector<T,ST>::vector_name_;
-  }   
+  }
 
 
   /************** implementation of NamedVector **********/
 
-  template<typename T,typename ST>
-  NamedVector<T,ST>::NamedVector() : Vector<T,ST>(), name_("yyy") {}
-       
-  template<typename T,typename ST>
-  NamedVector<T,ST>::NamedVector(std::string name) : Vector<T,ST>(), name_(name) {}
-        
-  template<typename T,typename ST>
-  NamedVector<T,ST>::NamedVector(ST size, std::string name) : Vector<T,ST>(size), name_(name) {}
-   
-  template<typename T,typename ST>
-  NamedVector<T,ST>::NamedVector(ST size, T default_value, std::string name) :
+  template<typename T,typename ST> NamedVector<T,ST>::NamedVector() : Vector<T,ST>(), name_("yyy") {}
+
+  template<typename T,typename ST> NamedVector<T,ST>::NamedVector(std::string name) : Vector<T,ST>(), name_(name) {}
+
+  template<typename T,typename ST> NamedVector<T,ST>::NamedVector(ST size, std::string name) : Vector<T,ST>(size), name_(name) {}
+
+  template<typename T,typename ST> NamedVector<T,ST>::NamedVector(ST size, T default_value, std::string name) :
     Vector<T,ST>(size,default_value), name_(name) {}
-    
+
+  template<typename T,typename ST> NamedVector<T,ST>::~NamedVector() {}
+
   template<typename T,typename ST>
-  NamedVector<T,ST>::~NamedVector() {}
-        
-  template<typename T,typename ST>
-  void NamedVector<T,ST>::set_name(std::string new_name) {
+  void NamedVector<T,ST>::set_name(std::string new_name)
+  {
     name_ = new_name;
   }
 
   template<typename T,typename ST>
-  /*virtual*/ const std::string& NamedVector<T,ST>::name() const {
+  /*virtual*/ const std::string& NamedVector<T,ST>::name() const
+  {
     return name_;
-  }   
+  }
 
   template<typename T,typename ST>
-  inline void NamedVector<T,ST>::operator=(const Vector<T,ST>& v) {    
+  inline void NamedVector<T,ST>::operator=(const Vector<T,ST>& v)
+  {
     Storage1D<T,ST>::operator=(v);
   }
 
   //NOTE: the name is NOT copied
   template<typename T,typename ST>
-  inline void NamedVector<T,ST>::operator=(const NamedVector<T,ST>& v) {    
+  inline void NamedVector<T,ST>::operator=(const NamedVector<T,ST>& v)
+  {
     Storage1D<T,ST>::operator=(v);
   }
 
   /************** implementation of stand-alone routines **********************/
 
-  template<typename T,typename ST>    
-  Vector<T,ST> operator+(const Vector<T,ST>& v1, const Vector<T,ST>& v2) {
+  template<typename T,typename ST>
+  Vector<T,ST> operator+(const Vector<T,ST>& v1, const Vector<T,ST>& v2)
+  {
 
     typedef T ALIGNED16 T_A16;
 
@@ -581,7 +601,7 @@ namespace Math1D {
       exit(1);
     }
 #endif
-        
+
     Vector<T,ST> result(size);
     ST i;
     // for (i = 0; i < size; i++)
@@ -601,8 +621,9 @@ namespace Math1D {
     return result;
   }
 
-  template<typename T,typename ST>    
-  Vector<T,ST> operator-(const Vector<T,ST>& v1, const Vector<T,ST>& v2) {
+  template<typename T,typename ST>
+  Vector<T,ST> operator-(const Vector<T,ST>& v1, const Vector<T,ST>& v2)
+  {
 
     typedef T ALIGNED16 T_A16;
 
@@ -617,7 +638,7 @@ namespace Math1D {
       exit(1);
     }
 #endif
-        
+
     Vector<T,ST> result(size);
     ST i;
 
@@ -639,22 +660,23 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline T operator%(const Vector<T,ST>& v1, const Vector<T,ST>& v2) {
+  inline T operator%(const Vector<T,ST>& v1, const Vector<T,ST>& v2)
+  {
 
     typedef T ALIGNED16 T_A16;
-    
+
     const ST size = v1.size();
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (size != v2.size()) {
-      INTERNAL_ERROR << "     cannot compute scalar product of vectors \"" 
+      INTERNAL_ERROR << "     cannot compute scalar product of vectors \""
                      << v1.name() << "\" and \"" << v2.name() << "\":" << std::endl
-                     << "      sizes " << v1.size() << " and " << v2.size() << " mismatch. exiting." 
+                     << "      sizes " << v1.size() << " and " << v2.size() << " mismatch. exiting."
                      << std::endl;
-      exit(1); 
+      exit(1);
     }
 #endif
-        
+
     const attr_restrict T_A16* data1 = v1.direct_access();
     const attr_restrict T_A16* data2 = v2.direct_access();
 
@@ -667,13 +689,14 @@ namespace Math1D {
     // ST i;
     // for (i=0; i < size; i++)
     //   result += data1[i] * data2[i]; //v1.direct_access(i)*v2.direct_access(i);
-            
+
     // return result;
   }
 
 
   template<typename T,typename ST>
-  std::ostream& operator<<(std::ostream& s, const Vector<T,ST>& v) {
+  std::ostream& operator<<(std::ostream& s, const Vector<T,ST>& v)
+  {
 
     s << "[ ";
     for (int i=0; i < ((int) v.size()) - 1; i++)
@@ -687,40 +710,43 @@ namespace Math1D {
 
 
   template<typename T,typename ST>
-  Vector<T,ST> cross(const Vector<T,ST>& v1, const Vector<T,ST>& v2) {
+  Vector<T,ST> cross(const Vector<T,ST>& v1, const Vector<T,ST>& v2)
+  {
 
-#ifndef DONT_CHECK_VECTOR_ARITHMETIC    
+#ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (v1.size() != 3 || v2.size() != 3) {
       INTERNAL_ERROR << "      the cross product is only defined for vectors of size 3." << std::endl
                      << "                  here applied for vectors of size " << v1.size() << " and "
                      << v2.size() << ". exiting." << std::endl;
-      exit(1);    
+      exit(1);
     }
 #endif
-    
+
     Vector<T,ST> result(3);
     result[0] = v1[1]*v2[2] - v1[2]*v2[1];
     result[1] = v1[2]*v2[0] - v1[0]*v2[2];
     result[2] = v1[0]*v2[1] - v1[1]*v2[0];
-        
+
     return result;
-  } 
+  }
 
 
 }//end of namespace Math1D
 
 
 template<typename T,typename ST>
-inline const T& Math1D::Vector<T,ST>::operator[](ST i) const {
+inline const T& Math1D::Vector<T,ST>::operator[](ST i) const
+{
 #ifdef SAFE_MODE
   if (i >= Storage1D<T,ST>::size_) {
-    
-    INTERNAL_ERROR << "    invalid access on element " << i 
-		   << " for Storage1D " <<  "\"" << this->name() << "\" of type " 
-		   << Makros::Typename<T>().name()
-      //<< typeid(T).name()
-		   << " with " << Storage1D<T,ST>::size_ << " elements. exiting." << std::endl;
-    exit(1);  
+
+    INTERNAL_ERROR << "    invalid const access on element " << i
+                   << " for Math1D::Vector " <<  "\"" << this->name() << "\" of type "
+                   << Makros::Typename<T>().name()
+                   //<< typeid(T).name()
+                   << " with " << Storage1D<T,ST>::size_ << " elements. exiting." << std::endl;
+    print_trace();
+    exit(1);
   }
 #endif
   const T_A16* data = Storage1D<T,ST>::data_;
@@ -728,17 +754,19 @@ inline const T& Math1D::Vector<T,ST>::operator[](ST i) const {
 }
 
 template<typename T,typename ST>
-inline T& Math1D::Vector<T,ST>::operator[](ST i) {
+inline T& Math1D::Vector<T,ST>::operator[](ST i)
+{
 #ifdef SAFE_MODE
   if (i >= Storage1D<T,ST>::size_) {
-      
-    INTERNAL_ERROR << "    invalid access on element " << i 
-                   << " for Storage1D " <<  "\"" << this->name() << "\" of type " 
-		   << Makros::Typename<T>().name()
-	//<< typeid(T).name()
-		     << " with " << Storage1D<T,ST>::size_ << " elements. exiting." << std::endl;
-      exit(1);  
-    }
+
+    INTERNAL_ERROR << "    invalid access on element " << i
+                   << " for Math1D::Vector " <<  "\"" << this->name() << "\" of type "
+                   << Makros::Typename<T>().name()
+                   //<< typeid(T).name()
+                   << " with " << Storage1D<T,ST>::size_ << " elements. exiting." << std::endl;
+    print_trace();
+    exit(1);
+  }
 #endif
   T_A16* data = Storage1D<T,ST>::data_;
   return data[i];

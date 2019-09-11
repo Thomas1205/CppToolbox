@@ -4,7 +4,8 @@
 #include <cstring>
 
 template<>
-void Storage2D<int>::operator=(const Storage2D<int>& toCopy) {
+void Storage2D<int>::operator=(const Storage2D<int>& toCopy)
+{
 
   if (size_ != toCopy.size()) {
     if (data_ != 0)
@@ -22,7 +23,8 @@ void Storage2D<int>::operator=(const Storage2D<int>& toCopy) {
 }
 
 template<>
-void Storage2D<uint>::operator=(const Storage2D<uint>& toCopy) {
+void Storage2D<uint>::operator=(const Storage2D<uint>& toCopy)
+{
 
   if (size_ != toCopy.size()) {
     if (data_ != 0)
@@ -40,7 +42,8 @@ void Storage2D<uint>::operator=(const Storage2D<uint>& toCopy) {
 }
 
 template<>
-void Storage2D<float>::operator=(const Storage2D<float>& toCopy) {
+void Storage2D<float>::operator=(const Storage2D<float>& toCopy)
+{
 
   if (size_ != toCopy.size()) {
     if (data_ != 0)
@@ -58,7 +61,8 @@ void Storage2D<float>::operator=(const Storage2D<float>& toCopy) {
 }
 
 template<>
-void Storage2D<double>::operator=(const Storage2D<double>& toCopy) {
+void Storage2D<double>::operator=(const Storage2D<double>& toCopy)
+{
 
   if (size_ != toCopy.size()) {
     if (data_ != 0)
@@ -76,7 +80,8 @@ void Storage2D<double>::operator=(const Storage2D<double>& toCopy) {
 }
 
 template<>
-void Storage2D<long double>::operator=(const Storage2D<long double>& toCopy) {
+void Storage2D<long double>::operator=(const Storage2D<long double>& toCopy)
+{
 
   if (size_ != toCopy.size()) {
     if (data_ != 0)
