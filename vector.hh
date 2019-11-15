@@ -146,7 +146,6 @@ namespace Makros {
 
     std::string name() const
     {
-
       return "Math1D::Vector<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
     }
   };
@@ -157,7 +156,6 @@ namespace Makros {
 
     std::string name() const
     {
-
       return "Math1D::Vector<" + Makros::Typename<T>() + "> ";
     }
   };
@@ -168,7 +166,6 @@ namespace Makros {
 
     std::string name() const
     {
-
       return "Math1D::NamedVector<" + Makros::Typename<T>() + "," + Makros::Typename<ST>() + "> ";
     }
   };
@@ -180,7 +177,6 @@ namespace Makros {
 
     std::string name() const
     {
-
       return "Math1D::NamedVector<" + Makros::Typename<T>() + "> ";
     }
   };
@@ -211,7 +207,6 @@ namespace Math1D {
   template<typename T,typename ST>
   inline T Vector<T,ST>::sum() const
   {
-
     const ST size = Storage1D<T,ST>::size_;
     const T_A16* data = Storage1D<T,ST>::data_;
 
@@ -231,7 +226,6 @@ namespace Math1D {
   template<typename T,typename ST>
   inline T Vector<T,ST>::range_sum(ST start, ST end) const
   {
-
     const ST size = Storage1D<T,ST>::size_;
     const T_A16* data = Storage1D<T,ST>::data_;
 
@@ -275,7 +269,6 @@ namespace Math1D {
   template<typename T,typename ST>
   inline T& Vector<T,ST>::direct_access(ST i)
   {
-
     T_A16* data = Storage1D<T,ST>::data_;
     assertAligned16(data);
 
@@ -285,7 +278,6 @@ namespace Math1D {
   template<typename T,typename ST>
   inline T Vector<T,ST>::direct_access(ST i) const
   {
-
     const T_A16* data = Storage1D<T,ST>::data_;
     assertAligned16(data);
 
@@ -327,7 +319,6 @@ namespace Math1D {
   template<typename T,typename ST>
   T Vector<T,ST>::min() const
   {
-
     const ST size = Storage1D<T,ST>::size_;
 
     if (size > 0) {
@@ -348,7 +339,6 @@ namespace Math1D {
   template<typename T,typename ST>
   T Vector<T,ST>::max_abs() const
   {
-
     const ST size = Storage1D<T,ST>::size_;
 
     T maxel = (T) 0;
@@ -364,7 +354,6 @@ namespace Math1D {
   template<typename T,typename ST>
   inline double Vector<T,ST>::norm() const
   {
-
     const ST size = Storage1D<T,ST>::size_;
 
     const T_A16* data = Storage1D<T,ST>::data_;
@@ -382,7 +371,6 @@ namespace Math1D {
   template<typename T,typename ST>
   inline double Vector<T,ST>::sqr_norm() const
   {
-
     const ST size = Storage1D<T,ST>::size_;
 
     const T_A16* data = Storage1D<T,ST>::data_;
@@ -401,7 +389,6 @@ namespace Math1D {
   template<typename T,typename ST>
   inline double Vector<T,ST>::norm_l1() const
   {
-
     const ST size = Storage1D<T,ST>::size_;
 
     const T_A16* data = Storage1D<T,ST>::data_;
@@ -418,7 +405,6 @@ namespace Math1D {
   template<typename T,typename ST>
   inline void Vector<T,ST>::add_constant(const T addon)
   {
-
     T_A16* data = Storage1D<T,ST>::data_;
     assertAligned16(data);
 
@@ -430,7 +416,6 @@ namespace Math1D {
   template<typename T,typename ST>
   inline void Vector<T,ST>::add_vector_multiple(const Math1D::Vector<T,ST>& v, const T alpha)
   {
-
     const ST size = Storage1D<T,ST>::size_;
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -462,7 +447,6 @@ namespace Math1D {
   template<typename T,typename ST>
   void Vector<T,ST>::operator+=(const Vector<T,ST>& v)
   {
-
     const ST size = Storage1D<T,ST>::size_;
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -493,7 +477,6 @@ namespace Math1D {
   template<typename T,typename ST>
   void Vector<T,ST>::operator-=(const Vector<T,ST>& v)
   {
-
     const ST size = Storage1D<T,ST>::size_;
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -520,7 +503,6 @@ namespace Math1D {
   template<typename T,typename ST>
   void Vector<T,ST>::operator*=(const T constant)
   {
-
     const ST size = Storage1D<T,ST>::size_;
     T_A16* data = Storage1D<T,ST>::data_;
 
@@ -587,7 +569,6 @@ namespace Math1D {
   template<typename T,typename ST>
   Vector<T,ST> operator+(const Vector<T,ST>& v1, const Vector<T,ST>& v2)
   {
-
     typedef T ALIGNED16 T_A16;
 
     const ST size = v1.size();
@@ -624,7 +605,6 @@ namespace Math1D {
   template<typename T,typename ST>
   Vector<T,ST> operator-(const Vector<T,ST>& v1, const Vector<T,ST>& v2)
   {
-
     typedef T ALIGNED16 T_A16;
 
     const ST size = v1.size();
@@ -662,7 +642,6 @@ namespace Math1D {
   template<typename T,typename ST>
   inline T operator%(const Vector<T,ST>& v1, const Vector<T,ST>& v2)
   {
-
     typedef T ALIGNED16 T_A16;
 
     const ST size = v1.size();
@@ -697,7 +676,6 @@ namespace Math1D {
   template<typename T,typename ST>
   std::ostream& operator<<(std::ostream& s, const Vector<T,ST>& v)
   {
-
     s << "[ ";
     for (int i=0; i < ((int) v.size()) - 1; i++)
       s << v[i] << ",";

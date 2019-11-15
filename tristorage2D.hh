@@ -6,13 +6,14 @@
 #define TRISTORAGE2D_HH
 
 #include "makros.hh"
+#include "storage_base.hh"
 
 //two-dimensional container class for objects of any type T, where only have the pattern can be filled/defined
 //you can use this either for a triangular pattern or for a symmetric one
 //(as long as we use only the storage it does not matter much, except when printing. for matrix usage it does matter, e.g. in the matrix-vector product)
 //(neither mathematical nor streaming operations need to be defined on T)
 template<typename T, typename ST = size_t>
-class TriStorage2D {
+class TriStorage2D : public StorageBase<T,ST> {
 public:
 
   //default constructor
@@ -38,32 +39,23 @@ public:
   //all elements are uninitialized after this operation
   void resize_dirty(ST newDim);
 
-  void set_constant(const T new_constant);
-
   //access on an element (handling is symmetric, i.e. accessing (x,y) is equivalent to accessing (y,x) )
-  OPTINLINE const T& operator()(ST x, ST y) const;
+  inline const T& operator()(ST x, ST y) const;
 
-  OPTINLINE T& operator()(ST x, ST y);
+  inline T& operator()(ST x, ST y);
 
   void operator=(const TriStorage2D<T,ST>& toCopy);
 
-  inline T* direct_access();
-
-  inline const T* direct_access() const;
-
-  inline T& direct_access(ST i);
-
-  inline T direct_access(ST i) const;
+  inline T* row_ptr(ST y);
+  
+  inline const T* row_ptr(ST y) const;
 
   inline ST dim() const;
 
-  inline ST size() const;
 
 protected:
 
-  T* data_;
   ST dim_;
-  ST size_;
   static const std::string tristor2D_name_;
 };
 
@@ -106,7 +98,6 @@ namespace Makros {
 
     std::string name() const
     {
-
       return "TriStorage2D<" + Typename<T>() + "," + Typename<ST>() + "> ";
     }
   };
@@ -117,7 +108,6 @@ namespace Makros {
 
     std::string name() const
     {
-
       return "TriStorage2D<" + Typename<T>() + "> ";
     }
   };
@@ -128,7 +118,6 @@ namespace Makros {
 
     std::string name() const
     {
-
       return "NamedTriStorage2D<" + Typename<T>() + "," + Typename<ST>() + "> ";
     }
   };
@@ -139,7 +128,6 @@ namespace Makros {
 
     std::string name() const
     {
-
       return "NamedTriStorage2D<" + Typename<T>() + "> ";
     }
   };
@@ -153,67 +141,64 @@ template<typename T, typename ST>
 /*static*/ const std::string TriStorage2D<T,ST>::tristor2D_name_ = "unnamed TriStorage2D";
 
 //constructors
-template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D() : data_(0), dim_(0), size_(0) {}
+template<typename T, typename ST> 
+TriStorage2D<T,ST>::TriStorage2D() : StorageBase<T,ST>(), dim_(0) {}
 
-template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D(ST dim) : dim_(dim)
+template<typename T, typename ST> 
+TriStorage2D<T,ST>::TriStorage2D(ST dim) : StorageBase<T,ST>(dim*(dim+1) / 2), dim_(dim)
 {
-
-  size_ = dim_*(dim_+1) / 2;
-  data_ = new T[size_];
 }
 
-template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D(ST dim, T default_value) : dim_(dim)
+template<typename T, typename ST> 
+TriStorage2D<T,ST>::TriStorage2D(ST dim, T default_value) : StorageBase<T,ST>(dim*(dim+1) / 2, default_value), dim_(dim)
 {
-
-  size_ = dim_*(dim_+1) / 2;
-  data_ = new T[size_];
-
-  std::fill(data_, data_+size_, default_value); //fill and fill_n are of equal speed
 }
 
 //copy constructor
-template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D(const TriStorage2D<T,ST>& toCopy)
+template<typename T, typename ST> 
+TriStorage2D<T,ST>::TriStorage2D(const TriStorage2D<T,ST>& toCopy)
 {
-
   dim_ = toCopy.dim();
-  size_ = toCopy.size();
+  StorageBase<T,ST>::size_ = toCopy.size();
 
-  if (size_ == 0)
-    data_ = 0;
+  if (StorageBase<T,ST>::size_ == 0)
+    StorageBase<T,ST>::data_ = 0;
   else {
-    data_ = new T[size_];
+    StorageBase<T,ST>::data_ = new T[StorageBase<T,ST>::size_];
 
-    for (ST i = 0; i < size_; i++)
-      data_[i] = toCopy.direct_access(i);
+    Makros::unified_assign(StorageBase<T,ST>::data_, toCopy.direct_access(), StorageBase<T,ST>::size_);
+
+    //for (ST i = 0; i < size_; i++)
+    //  data_[i] = toCopy.direct_access(i);
   }
 }
 
 //destructor
-template <typename T, typename ST> TriStorage2D<T,ST>::~TriStorage2D()
+template <typename T, typename ST> 
+TriStorage2D<T,ST>::~TriStorage2D()
 {
-  if (data_ != 0)
-    delete[] data_;
 }
 
 template<typename T, typename ST>
 void TriStorage2D<T,ST>::operator=(const TriStorage2D<T,ST>& toCopy)
 {
-
   dim_ = toCopy.dim();
-  size_ = toCopy.size();
+  StorageBase<T,ST>::size_ = toCopy.size();
 
   //room for improvement here: could check if the dimensions already match, then we can reuse data_
 
-  if (data_ != 0)
-    delete[] data_;
+  if (StorageBase<T,ST>::data_ != 0)
+    delete[] StorageBase<T,ST>::data_;
 
-  if (size_ == 0)
-    data_ = 0;
+  if (StorageBase<T,ST>::size_ == 0)
+    StorageBase<T,ST>::data_ = 0;
   else {
-    data_ = new T[size_];
+    StorageBase<T,ST>::data_ = new T[StorageBase<T,ST>::size_];
 
-    for (ST i = 0; i < size_; i++)
-      data_[i] = toCopy.direct_access(i);
+    Makros::unified_assign(StorageBase<T,ST>::data_, toCopy.direct_access(), StorageBase<T,ST>::size_);
+
+    //for (ST i = 0; i < size_; i++)
+    //  data_[i] = toCopy.direct_access(i);
   }
 }
 
@@ -223,39 +208,16 @@ template <typename T, typename ST>
   return tristor2D_name_;
 }
 
-template <typename T, typename ST>
-void TriStorage2D<T,ST>::set_constant(const T new_constant)
-{
-
-  std::fill_n(data_,size_,new_constant);
-
-  // for (ST i=0; i < size_; i++)
-  //   data_[i] = new_constant;
-}
-
-
 template<typename T, typename ST>
-inline T* TriStorage2D<T,ST>::direct_access()
+inline T* TriStorage2D<T,ST>::row_ptr(ST y) 
 {
-  return data_;
+  return StorageBase<T,ST>::data_ + (y*(y+1))/2;  
 }
-
+  
 template<typename T, typename ST>
-inline const T* TriStorage2D<T,ST>::direct_access() const
+inline const T* TriStorage2D<T,ST>::row_ptr(ST y) const 
 {
-  return data_;
-}
-
-template<typename T, typename ST>
-inline T& TriStorage2D<T,ST>::direct_access(ST i)
-{
-  return data_[i];
-}
-
-template<typename T, typename ST>
-inline T TriStorage2D<T,ST>::direct_access(ST i) const
-{
-  return data_[i];
+  return StorageBase<T,ST>::data_ + (y*(y+1))/2;
 }
 
 template<typename T, typename ST>
@@ -264,15 +226,8 @@ inline ST TriStorage2D<T,ST>::dim() const
   return dim_;
 }
 
-template<typename T, typename ST>
-inline ST TriStorage2D<T,ST>::size() const
-{
-  return size_;
-}
-
-
 template <typename T, typename ST>
-OPTINLINE const T& TriStorage2D<T,ST>::operator()(ST x, ST y) const
+inline const T& TriStorage2D<T,ST>::operator()(ST x, ST y) const
 {
 #ifdef SAFE_MODE
   if (x >= dim_ || y >= dim_) {
@@ -288,11 +243,11 @@ OPTINLINE const T& TriStorage2D<T,ST>::operator()(ST x, ST y) const
   if (x > y)
     std::swap(x,y);
 
-  return data_[(y*(y+1))/2+x];
+  return StorageBase<T,ST>::data_[(y*(y+1))/2+x];
 }
 
 template <typename T, typename ST>
-OPTINLINE T& TriStorage2D<T,ST>::operator()(ST x, ST y)
+inline T& TriStorage2D<T,ST>::operator()(ST x, ST y)
 {
 #ifdef SAFE_MODE
   if (x >= dim_ || y >= dim_) {
@@ -311,59 +266,60 @@ OPTINLINE T& TriStorage2D<T,ST>::operator()(ST x, ST y)
   if (x > y)
     std::swap(x,y);
 
-  return data_[(y*(y+1))/2+x];
+  return StorageBase<T,ST>::data_[(y*(y+1))/2+x];
 }
-
 
 //existing elements are preserved, new ones are uninitialized
 template<typename T, typename ST>
 void TriStorage2D<T,ST>::resize(ST newDim)
 {
-
   if (newDim != dim_) {
 
     ST new_size = newDim*(newDim+1) / 2;
     T* new_data = new T[new_size];
 
+    Makros::unified_assign(new_data, StorageBase<T,ST>::data_, std::min(StorageBase<T,ST>::size_,new_size));
+
     //copy existing values
-    for (ST i=0; i < std::min(size_,new_size); i++)
-      new_data[i] = data_[i];
+    //for (ST i=0; i < std::min(size_,new_size); i++)
+    //  new_data[i] = data_[i];
 
-    if (data_ != 0)
-      delete[] data_;
+    if (StorageBase<T,ST>::data_ != 0)
+      delete[] StorageBase<T,ST>::data_;
 
-    data_ = new_data;
-    size_ = new_size;
+    StorageBase<T,ST>::data_ = new_data;
+    StorageBase<T,ST>::size_ = new_size;
     dim_ = newDim;
   }
 }
-
 
 //existing elements are preserved, new ones are filled with the second argument
 template<typename T, typename ST>
 void TriStorage2D<T,ST>::resize(ST newDim, const T fill_value)
 {
-
   if (newDim != dim_) {
 
     ST new_size = newDim*(newDim+1) / 2;
     T* new_data = new T[new_size];
 
+    Makros::unified_assign(new_data, StorageBase<T,ST>::data_, std::min(StorageBase<T,ST>::size_,new_size));
+
     //copy existing values
-    for (ST i=0; i < std::min(size_,new_size); i++)
-      new_data[i] = data_[i];
+    //for (ST i=0; i < std::min(size_,new_size); i++)
+    //  new_data[i] = data_[i];
 
     //fill new values
-    if (new_size > size_)
-      std::fill_n(new_data+size_,new_size-size_,fill_value);
+    if (new_size > StorageBase<T,ST>::size_)
+      std::fill_n(new_data+StorageBase<T,ST>::size_,new_size-StorageBase<T,ST>::size_,fill_value);
+    
     // for (ST i=std::min(size_,new_size); i < new_size; i++)
     //   new_data[i] = fill_value;
 
-    if (data_ != 0)
-      delete[] data_;
+    if (StorageBase<T,ST>::data_ != 0)
+      delete[] StorageBase<T,ST>::data_;
 
-    data_ = new_data;
-    size_ = new_size;
+    StorageBase<T,ST>::data_ = new_data;
+    StorageBase<T,ST>::size_ = new_size;
     dim_ = newDim;
   }
 }
@@ -371,15 +327,14 @@ void TriStorage2D<T,ST>::resize(ST newDim, const T fill_value)
 template<typename T, typename ST>
 void TriStorage2D<T,ST>::resize_dirty(ST newDim)
 {
-
   if (newDim != dim_) {
-    if (data_ != 0) {
-      delete[] data_;
+    if (StorageBase<T,ST>::data_ != 0) {
+      delete[] StorageBase<T,ST>::data_;
     }
 
     dim_ = newDim;
-    size_ = dim_*(dim_+1) / 2;
-    data_ = new T[size_];
+    StorageBase<T,ST>::size_ = dim_*(dim_+1) / 2;
+    StorageBase<T,ST>::data_ = new T[StorageBase<T,ST>::size_];
   }
 }
 
@@ -387,7 +342,6 @@ void TriStorage2D<T,ST>::resize_dirty(ST newDim)
 template<typename T, typename ST>
 bool operator==(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2)
 {
-
   if (v1.size() != v2.size())
     return false;
 
@@ -403,7 +357,6 @@ bool operator==(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2)
 template<typename T, typename ST>
 bool operator!=(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2)
 {
-
   if (v1.size() != v2.size())
     return true;
 
@@ -418,13 +371,17 @@ bool operator!=(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2)
 
 /***** implementation of NamedTriStorage2D ********/
 
-template<typename T, typename ST> NamedTriStorage2D<T,ST>::NamedTriStorage2D() {}
+template<typename T, typename ST> 
+NamedTriStorage2D<T,ST>::NamedTriStorage2D() {}
 
-template<typename T, typename ST> NamedTriStorage2D<T,ST>::NamedTriStorage2D(std::string name) : name_(name) {}
+template<typename T, typename ST> 
+NamedTriStorage2D<T,ST>::NamedTriStorage2D(std::string name) : name_(name) {}
 
-template<typename T, typename ST> NamedTriStorage2D<T,ST>::NamedTriStorage2D(ST dim, std::string name) : TriStorage2D<T,ST>(dim), name_(name) {}
+template<typename T, typename ST> 
+NamedTriStorage2D<T,ST>::NamedTriStorage2D(ST dim, std::string name) : TriStorage2D<T,ST>(dim), name_(name) {}
 
-template<typename T, typename ST> NamedTriStorage2D<T,ST>::NamedTriStorage2D(ST dim, T default_value, std::string name) : TriStorage2D<T,ST>(dim,default_value), name_(name) {}
+template<typename T, typename ST> 
+NamedTriStorage2D<T,ST>::NamedTriStorage2D(ST dim, T default_value, std::string name) : TriStorage2D<T,ST>(dim,default_value), name_(name) {}
 
 template<typename T, typename ST>
 /*virtual*/ const std::string& NamedTriStorage2D<T,ST>::name() const
@@ -444,6 +401,5 @@ inline void NamedTriStorage2D<T,ST>::operator=(const NamedTriStorage2D<T,ST>& to
 {
   TriStorage2D<T,ST>::operator=(toCopy);
 }
-
 
 #endif

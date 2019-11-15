@@ -5,11 +5,12 @@
 
 #include "storage1D.hh"
 
+#if 0 //now obsolete!
+
 /** template specializations for the copy operator **/
 template<>
 void Storage1D<uint>::operator=(const Storage1D<uint>& toCopy)
 {
-
   if (size_ != toCopy.size()) {
 
     if (data_ != 0)
@@ -26,7 +27,6 @@ void Storage1D<uint>::operator=(const Storage1D<uint>& toCopy)
 template<>
 void Storage1D<int>::operator=(const Storage1D<int>& toCopy)
 {
-
   if (size_ != toCopy.size()) {
 
     if (data_ != 0)
@@ -42,7 +42,6 @@ void Storage1D<int>::operator=(const Storage1D<int>& toCopy)
 template<>
 void Storage1D<float>::operator=(const Storage1D<float>& toCopy)
 {
-
   if (size_ != toCopy.size()) {
 
     if (data_ != 0)
@@ -58,7 +57,6 @@ void Storage1D<float>::operator=(const Storage1D<float>& toCopy)
 template<>
 void Storage1D<double>::operator=(const Storage1D<double>& toCopy)
 {
-
   if (size_ != toCopy.size()) {
 
     if (data_ != 0)
@@ -74,7 +72,6 @@ void Storage1D<double>::operator=(const Storage1D<double>& toCopy)
 template<>
 void Storage1D<long double>::operator=(const Storage1D<long double>& toCopy)
 {
-
   if (size_ != toCopy.size()) {
 
     if (data_ != 0)
@@ -107,7 +104,6 @@ void Storage1D<ushort>::operator=(const Storage1D<ushort>& toCopy)
 
 template<> Storage1D<int>::Storage1D(const Storage1D<int>& toCopy)
 {
-
   size_ = toCopy.size();
   data_ = new int[size_];
 
@@ -116,7 +112,6 @@ template<> Storage1D<int>::Storage1D(const Storage1D<int>& toCopy)
 
 template<> Storage1D<uint>::Storage1D(const Storage1D<uint>& toCopy)
 {
-
   size_ = toCopy.size();
   data_ = new uint[size_];
 
@@ -125,7 +120,6 @@ template<> Storage1D<uint>::Storage1D(const Storage1D<uint>& toCopy)
 
 template<> Storage1D<ushort>::Storage1D(const Storage1D<ushort>& toCopy)
 {
-
   size_ = toCopy.size();
   data_ = new ushort[size_];
 
@@ -134,7 +128,6 @@ template<> Storage1D<ushort>::Storage1D(const Storage1D<ushort>& toCopy)
 
 template<> Storage1D<float>::Storage1D(const Storage1D<float>& toCopy)
 {
-
   size_ = toCopy.size();
   data_ = new float[size_];
 
@@ -143,7 +136,6 @@ template<> Storage1D<float>::Storage1D(const Storage1D<float>& toCopy)
 
 template<> Storage1D<double>::Storage1D(const Storage1D<double>& toCopy)
 {
-
   size_ = toCopy.size();
   data_ = new double[size_];
 
@@ -155,7 +147,6 @@ template<> Storage1D<double>::Storage1D(const Storage1D<double>& toCopy)
 template<>
 void Storage1D<float>::resize(size_t new_size)
 {
-
   if (data_ == 0) {
     data_ = new float[new_size];
   }
@@ -174,7 +165,6 @@ void Storage1D<float>::resize(size_t new_size)
 template<>
 void Storage1D<double>::resize(size_t new_size)
 {
-
   if (data_ == 0) {
     data_ = new double[new_size];
   }
@@ -193,7 +183,6 @@ void Storage1D<double>::resize(size_t new_size)
 template<>
 void Storage1D<long double>::resize(size_t new_size)
 {
-
   if (data_ == 0) {
     data_ = new long double[new_size];
   }
@@ -212,7 +201,6 @@ void Storage1D<long double>::resize(size_t new_size)
 template<>
 void Storage1D<int>::resize(size_t new_size)
 {
-
   if (data_ == 0) {
     data_ = new int[new_size];
   }
@@ -231,7 +219,6 @@ void Storage1D<int>::resize(size_t new_size)
 template<>
 void Storage1D<uint>::resize(size_t new_size)
 {
-
   if (data_ == 0) {
     data_ = new uint[new_size];
   }
@@ -252,7 +239,6 @@ void Storage1D<uint>::resize(size_t new_size)
 template<>
 void Storage1D<float>::resize(size_t new_size, const float fill_value)
 {
-
   if (data_ == 0) {
     data_ = new float[new_size];
     // for (size_t i=0; i < new_size; i++)
@@ -279,7 +265,6 @@ void Storage1D<float>::resize(size_t new_size, const float fill_value)
 template<>
 void Storage1D<double>::resize(size_t new_size, const double fill_value)
 {
-
   if (data_ == 0) {
     data_ = new double[new_size];
     // for (size_t i=0; i < new_size; i++)
@@ -332,7 +317,6 @@ void Storage1D<long double>::resize(size_t new_size, const long double fill_valu
 template<>
 void Storage1D<int>::resize(size_t new_size, const int fill_value)
 {
-
   if (data_ == 0) {
     data_ = new int[new_size];
     // for (size_t i=0; i < new_size; i++)
@@ -381,11 +365,8 @@ void Storage1D<uint>::resize(size_t new_size, const uint fill_value)
   size_ = new_size;
 }
 
-
-
 template<> FlexibleStorage1D<uint>::FlexibleStorage1D(const FlexibleStorage1D<uint>& toCopy)
 {
-
   size_ = toCopy.size();
   reserved_size_ = toCopy.reserved_size();
 
@@ -397,7 +378,6 @@ template<> FlexibleStorage1D<uint>::FlexibleStorage1D(const FlexibleStorage1D<ui
 template<>
 void FlexibleStorage1D<uint>::operator=(const FlexibleStorage1D<uint>& toCopy)
 {
-
   uint new_res = toCopy.reserved_size();
   if (new_res != reserved_size_) {
     reserved_size_ = new_res;
@@ -411,3 +391,5 @@ void FlexibleStorage1D<uint>::operator=(const FlexibleStorage1D<uint>& toCopy)
 
   memcpy(data_,toCopy.direct_access(),size_*sizeof(uint));
 }
+
+#endif

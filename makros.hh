@@ -14,6 +14,8 @@
 #include <cmath>
 #include <algorithm>
 
+#include <string.h> //memcpy
+
 #ifdef WIN32
 namespace {
   inline bool isnan(double x)
@@ -226,7 +228,66 @@ namespace Makros {
     return fabsl(arg);
   }
 
+  template<typename T>
+  inline void unified_assign(T* attr_restrict dest, const T* attr_restrict source, size_t size)
+  {
+    for (size_t i=0; i < size; i++)
+      dest[i] = source[i];
+  }
+  
+  template<>
+  inline void unified_assign(char* attr_restrict dest, const char* attr_restrict source, size_t size) 
+  {
+    memcpy(dest, source, size * sizeof(char));
+  }  
+  
+  template<>
+  inline void unified_assign(uchar* attr_restrict dest, const uchar* attr_restrict source, size_t size) 
+  {
+    memcpy(dest, source, size * sizeof(uchar));
+  }  
+  
+  template<>
+  inline void unified_assign(short* attr_restrict dest, const short* attr_restrict source, size_t size) 
+  {
+    memcpy(dest, source, size * sizeof(short));
+  }  
 
+  template<>
+  inline void unified_assign(ushort* attr_restrict dest, const ushort* attr_restrict source, size_t size) 
+  {
+    memcpy(dest, source, size * sizeof(ushort));
+  }  
+  
+  template<>
+  inline void unified_assign(int* attr_restrict dest, const int* attr_restrict source, size_t size) 
+  {
+    memcpy(dest, source, size * sizeof(int));
+  }  
+
+  template<>
+  inline void unified_assign(uint* attr_restrict dest, const uint* attr_restrict source, size_t size) 
+  {
+    memcpy(dest, source, size * sizeof(uint));
+  }  
+
+  template<>
+  inline void unified_assign(float* attr_restrict dest, const float* attr_restrict source, size_t size) 
+  {
+    memcpy(dest, source, size * sizeof(float));
+  }  
+  
+  template<>
+  inline void unified_assign(double* attr_restrict dest, const double* attr_restrict source, size_t size) 
+  {
+    memcpy(dest, source, size * sizeof(double));
+  }  
+
+  template<>
+  inline void unified_assign(long double* attr_restrict dest, const long double* attr_restrict source, size_t size) 
+  {
+    memcpy(dest, source, size * sizeof(long double));
+  }  
 }
 
 template<typename T>
