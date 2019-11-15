@@ -1,13 +1,16 @@
-/***** changes for the upcoming version (1.05?) ****/
+/***** changes for the upcoming version (1.1?) ****/
 
+- added symmetric 2D storage
+- introduced StorageBase
+- assignment based on unified_assign
+- templates for abs, log, exp, pow
+- now outputting trace information when errors occur
+- a couple of additional member functions
 - fixed a few lines where the template parameter ST was missing
 - added a member add_constant() for vectors, matrices and tensors
-- slighlty improved speed of a few routines where the size of the data_-array
-  remains constant
-- in vector arithmetic, the dimension check is now skipped if a certain
-  preprocessor definition is set
+- slighlty improved speed of a few routines where the size of the data_-array remains constant
+- in vector arithmetic, the dimension check is now skipped if a certain preprocessor definition is set
 - adapted indentation
-
 
 
 /***** changes for version 1.03 *****/
