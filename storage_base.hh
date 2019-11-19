@@ -1,8 +1,8 @@
 /*-*-c++-*-*/
 /*** written by Thomas Schoenemann as a private person, November 2019 ***/
 
-#ifndef STORGE_BASE_HH
-#define STORGE_BASE_HH
+#ifndef STORAGE_BASE_HH
+#define STORAGE_BASE_HH
 
 #include "makros.hh"
 
