@@ -353,8 +353,8 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline void Vector<T,ST>::ensure_min(T lower_limit) {
-    
+  inline void Vector<T,ST>::ensure_min(T lower_limit) 
+  {  
     const ST size = Storage1D<T,ST>::size_;
     for (ST i=0; i < size; i++) 
       Storage1D<T,ST>::data_[i] = std::max(lower_limit,Storage1D<T,ST>::data_[i]);

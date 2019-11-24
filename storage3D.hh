@@ -69,11 +69,26 @@ public:
   //existing positions are copied, new ones are uninitialized
   void resize(ST newxDim, ST newyDim, ST newzDim);
 
+  inline void resize(const Dim3D<ST> dims)
+  {
+    resize(dims.xDim_, dims.yDim_, dims.zDim_);
+  }
+
   //existing positions are copied, new ones are uninitialized
   void resize(ST newxDim, ST newyDim, ST newzDim, const T default_value);
 
+  inline void resize(const Dim3D<ST> dims, T default_value)
+  {
+    resize(dims.xDim_, dims.yDim_, dims.zDim_, default_value);
+  }
+
   //all elements are uninitialized after this operation
   void resize_dirty(ST newxDim, ST newyDim, ST newzDim);
+
+  inline void resize_dirty(const Dim3D<ST> dims)
+  {
+    resize_dirty(dims.xDim_, dims.yDim_, dims.zDim_);
+  }
 
 protected:
   ST xDim_;

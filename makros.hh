@@ -32,6 +32,7 @@ using std::isinf;
 #ifdef GNU_COMPILER
 
 #define attr_restrict __restrict
+#define ref_attr_restrict __restrict
 //pointers returned by new are guaranteed to have an address that is divisible by 16 if the type is a basic one
 //it is convenient to give the compiler this hint so that he need not handle unaligned cases
 #define ALIGNED16 __attribute__ ((aligned (16)))
@@ -59,6 +60,7 @@ inline void print_trace (void)
 
 #else
 #define attr_restrict
+#define ref_attr_restrict
 #define ALIGNED16
 #define assertAligned16(p)
 inline void print_trace (void) {}
@@ -316,7 +318,6 @@ namespace Makros {
   template<typename T>
   std::string Typename<T>::name() const
   {
-
     return get_typename(typeid(T).name());
   }
 
@@ -328,7 +329,6 @@ namespace Makros {
 
     std::string name() const
     {
-
       return "const " +Typename<T>().name();
     }
   };
@@ -340,7 +340,6 @@ namespace Makros {
 
     std::string name() const
     {
-
       return Typename<T>().name() + "*";
     }
   };
@@ -349,7 +348,6 @@ namespace Makros {
 template<typename T>
 std::ostream& operator<<(std::ostream& out, const Makros::Typename<T>& t)
 {
-
   out << t.name();
   return out;
 }
