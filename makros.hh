@@ -558,7 +558,6 @@ namespace Makros {
 
   inline void find_max_and_argmax(const float_A16* data, const size_t nData, float& max_val, size_t& arg_max)
   {
-
     max_val = MIN_FLOAT;
     arg_max = MAX_UINT;
 
@@ -633,7 +632,6 @@ namespace Makros {
 
   inline void find_max_and_argmax(const double_A16* data, const size_t nData, double& max_val, size_t& arg_max)
   {
-
     max_val = MIN_DOUBLE;
     arg_max = MAX_UINT;
 
@@ -671,7 +669,7 @@ namespace Makros {
                       "xorpd %%xmm3, %%xmm3 \n\t" //contains candidate argmin
                       : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
 
-    for (i=0; (i+4) <= nData; i += 4) {
+    for (i=0; (i+2) <= nData; i += 2) {
       dptr = data+i;
 
       asm __volatile__ ("movupd %[dptr], %%xmm7 \n\t"
@@ -716,7 +714,6 @@ namespace Makros {
 
   inline void find_min_and_argmin(const float_A16* data, const size_t nData, float& min_val, size_t& arg_min)
   {
-
     min_val = MAX_FLOAT;
     arg_min = MAX_UINT;
 
@@ -796,7 +793,6 @@ namespace Makros {
 
   inline void find_min_and_argmin(const double_A16* data, const size_t nData, double& min_val, size_t& arg_min)
   {
-
     min_val = MAX_DOUBLE;
     arg_min = MAX_UINT;
 
@@ -835,7 +831,7 @@ namespace Makros {
                       "xorpd %%xmm3, %%xmm3 \n\t" //contains candidate argmin
                       : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
 
-    for (i=0; (i+4) <= nData; i += 4) {
+    for (i=0; (i+2) <= nData; i += 2) {
       dptr = data+i;
 
       asm __volatile__ ("movupd %[dptr], %%xmm7 \n\t"
