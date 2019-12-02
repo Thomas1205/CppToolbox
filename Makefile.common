@@ -8,3 +8,6 @@ LINKSFLAGS = -lpthread
 DEBUGDIR = debug/
 OPTDIR = opt/
 DEVELDIR = devel/
+
+# you may want to add this if you really want to use g++:
+#OPTFLAGS += -DUSE_SSE=4 -DGNU_COMPILER
