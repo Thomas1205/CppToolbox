@@ -295,7 +295,6 @@ namespace Makros {
 template<typename T>
 std::string toString(T obj, uint width=1)
 {
-
   std::ostringstream s;
 
   s << std::setw(width) << std::setfill('0') << obj;
@@ -363,7 +362,6 @@ std::string operator+(std::string s, const Makros::Typename<T>& t)
 template <typename T>
 inline T convert(const std::string s)
 {
-
   std::istringstream is(s);
   T result;
 
@@ -391,7 +389,6 @@ inline T convert(const std::string s)
 template<>
 inline uint convert<uint>(const std::string s)
 {
-
   uint result = 0;
   char c;
   uint i=0;
@@ -435,7 +432,6 @@ void operator+=(std::pair<T1,T2>& x, const std::pair<T1,T2>& y)
 template<typename T>
 inline T sign(T arg)
 {
-
   if (arg < ((T) 0.0) )
     return ((T) -1.0);
   else if (arg == ((T) 0.0))
@@ -447,7 +443,6 @@ inline T sign(T arg)
 template<typename T>
 inline T robust_sign(T arg, T tolerance)
 {
-
   if (arg < ((T) -tolerance) )
     return ((T) -1.0);
   else if (arg > ((T) tolerance))
@@ -456,24 +451,34 @@ inline T robust_sign(T arg, T tolerance)
     return ((T) 0.0);
 }
 
-//NOTE: prefetch will only work on an x86/x86_64 architecture with SSE1 (Pentium 3 or higher)
-// if you are compiling on a different architecture simply remove the asm-statements
+//load a cache line into the L0 processor cache
 template<typename T>
 inline void prefetcht0(const T* ptr)
 {
+#if USE_SSE >= 1
+  //prefetch is part of SSE1
   asm __volatile__ ("prefetcht0 %[ptr]" : : [ptr] "m" (ptr[0]));
+#endif
 }
 
+//load a cache line into the L1 processor cache
 template<typename T>
 inline void prefetcht1(const T* ptr)
 {
+#if USE_SSE >= 1
+  //prefetch is part of SSE1
   asm ("prefetcht1 %[ptr]" : : [ptr] "m" (ptr[0]));
+#endif
 }
 
+//load a cache line into the L2 processor cache
 template<typename T>
 inline void prefetcht2(const T* ptr)
 {
+#if USE_SSE >= 1
+  //prefetch is part of SSE1
   asm ("prefetcht2 %[ptr]" : : [ptr] "m" (ptr[0]));
+#endif
 }
 
 namespace Makros {
@@ -484,7 +489,7 @@ namespace Makros {
     float cur_datum;
     size_t i;
 
-    //#if !defined(USE_SSE) || USE_SSE < 2
+//#if !defined(USE_SSE) || USE_SSE < 2
 #if 1 // g++ 4.8.5 uses avx instructions automatically
     for (i=0; i < nData; i++) {
       cur_datum = data[i];
@@ -570,13 +575,64 @@ namespace Makros {
     }
 
     // for (i=0; i < nData; i++) {
-    //   cur_val = data[i];
+    //   float cur_val = data[i];
 
     //   if (cur_val > max_val) {
     //     max_val = cur_val;
     //     arg_max = i;
     //   }
     // }
+#elif USE_SSE >= 5
+
+    //use AVX
+    
+    float val = MIN_FLOAT;
+    const uint one = 1;
+    float inc = *reinterpret_cast<const float*>(&one);
+    size_t i = 0;
+    const float* fptr;
+    
+    asm __volatile__ ("vbroadcastss %[tmp], %%ymm6 \n\t" //ymm6 is max register
+                      "vxorps %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmax) to zero
+                      "vbroadcastss %[itemp], %%ymm4 \n\t" //ymm4 is increment register
+                      "vxorps %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
+                      : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
+    
+    for (i=0; (i+8) <= nData; i += 8) {
+      fptr = data+i;
+
+      asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t"
+                        "vcmpnleps %%ymm6, %%ymm7, %%ymm0 \n\t" 
+                        "vblendvps %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
+                        "vblendvps %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
+                        "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
+                        : : [fptr] "m" (fptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
+    }
+    
+    float tmp[8];
+    uint itemp[8];
+    
+    asm __volatile__ ("vmovups %%ymm6, %[tmp] \n\t"
+                      "vmovups %%ymm5, %[itemp]"
+                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : );
+
+    float cur_val;
+    for (i=0; i < 8; i++) {
+      cur_val = tmp[i];
+      if (cur_val > max_val) {
+        max_val = cur_val;
+        arg_max = 8*itemp[i] + i;
+      }
+    }
+
+    for (i= nData - (nData % 8); i < nData; i++) {
+      cur_val = data[i];
+      if (cur_val > max_val) {
+        max_val = cur_val;
+        arg_max = i;
+      }
+    }
+
 #else
     //blendvps is part of SSE4
 
@@ -588,12 +644,12 @@ namespace Makros {
     float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT};
     const float* fptr;
 
-    wchar_t itemp[4] = {1,1,1,1};
+    wchar_t itemp[4] = {1,1,1,1}; //increment array
 
-    asm __volatile__ ("movups %[tmp], %%xmm6 \n\t"
+    asm __volatile__ ("movups %[tmp], %%xmm6 \n\t" //xmm6 is max register
                       "xorps %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmax) to zero
-                      "movups %[itemp], %%xmm4 \n\t"
-                      "xorps %%xmm3, %%xmm3 \n\t"
+                      "movups %[itemp], %%xmm4 \n\t" //xmm4 is increment register
+                      "xorps %%xmm3, %%xmm3 \n\t" //sets xmm3 (= current set index) to zero
                       : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) : "xmm3", "xmm4", "xmm5", "xmm6");
 
     for (i=0; (i+4) <= nData; i += 4) {
@@ -636,6 +692,7 @@ namespace Makros {
     arg_max = MAX_UINT;
 
 #if !defined(USE_SSE) || USE_SSE < 4
+//#if 1
     if (nData > 0) {
       const double* ptr = std::max_element(data,data+nData);
       max_val = *ptr;
@@ -643,13 +700,71 @@ namespace Makros {
     }
 
     // for (i=0; i < nData; i++) {
-    //   cur_val = data[i];
+    //   double cur_val = data[i];
 
     //   if (cur_val > max_val) {
     //     max_val = cur_val;
     //     arg_max = i;
     //   }
     // }
+#elif USE_SSE >= 5
+
+    //use AVX
+    assert(sizeof(size_t) == 8);
+    
+    double val = MIN_DOUBLE;
+    const size_t one = 1;
+    double inc = *reinterpret_cast<const double*>(&one);
+    size_t i = 0;
+    const double* dptr;
+    
+    asm __volatile__ ("vbroadcastsd %[tmp], %%ymm6 \n\t" //ymm6 is max register
+                      "vxorpd %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmax) to zero
+                      "vbroadcastsd %[itemp], %%ymm4 \n\t" //ymm4 is increment register
+                      "vxorpd %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
+                      : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");    
+    
+    for (i=0; (i+4) <= nData; i += 4) {
+      dptr = data+i;
+
+      asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t"
+                        "vcmpnlepd %%ymm6, %%ymm7, %%ymm0 \n\t"
+                        "vblendvpd %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
+                        "vblendvpd %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
+                        "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
+                        : : [dptr] "m" (dptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
+    }   
+    
+    
+    double tmp[4];
+    size_t itemp[4];
+    
+    asm __volatile__ ("vmovups %%ymm6, %[tmp] \n\t"
+                      "vmovups %%ymm5, %[itemp]"
+                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : );
+
+    double cur_val;
+                      
+    for (i=0; i < 4; i++) {
+      cur_val = tmp[i];
+      //std::cerr << "cur val: " << cur_val << std::endl;
+      if (cur_val > max_val) {
+        max_val = cur_val;
+        arg_max = 4*itemp[i] + i;
+      }
+    }
+
+    //std::cerr << "minval: " << min_val << std::endl;
+    
+    for (i = nData - (nData % 4); i < nData; i++) {      
+      cur_val = data[i];
+      if (cur_val > max_val) {
+        max_val = cur_val;
+        arg_max = i;
+      }
+    }
+
+    
 #else
 
     size_t i;
@@ -664,13 +779,14 @@ namespace Makros {
 
 
     asm __volatile__ ("movupd %[tmp], %%xmm6 \n\t"
-                      "xorpd %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmin) to zero
+                      "xorpd %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmax) to zero
                       "movupd %[itemp], %%xmm4 \n\t"
-                      "xorpd %%xmm3, %%xmm3 \n\t" //contains candidate argmin
+                      "xorpd %%xmm3, %%xmm3 \n\t" //sets xmm3 (= current set index)
                       : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
 
     for (i=0; (i+2) <= nData; i += 2) {
       dptr = data+i;
+
 
       asm __volatile__ ("movupd %[dptr], %%xmm7 \n\t"
                         "movapd %%xmm7, %%xmm0 \n\t"
@@ -706,8 +822,6 @@ namespace Makros {
         arg_max = nData-1;
       }
     }
-
-
 #endif
   }
 
@@ -726,13 +840,69 @@ namespace Makros {
     }
 
     // for (i=0; i < nData; i++) {
-    //   cur_val = data[i];
+    //   float cur_val = data[i];
 
     //   if (cur_val < min_val) {
     //     min_val = cur_val;
     //     arg_min = i;
     //   }
     // }
+#elif USE_SSE >= 5
+
+    //use AVX
+    
+    float val = MAX_FLOAT;
+    const uint one = 1;
+    float inc = *reinterpret_cast<const float*>(&one);
+    size_t i = 0;
+    const float* fptr;
+    
+    asm __volatile__ ("vbroadcastss %[tmp], %%ymm6 \n\t" //ymm6 is min register
+                      "vxorps %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmin) to zero
+                      "vbroadcastss %[itemp], %%ymm4 \n\t" //ymm4 is increment register
+                      "vxorps %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
+                      : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
+    
+    for (i=0; (i+8) <= nData; i += 8) {
+      fptr = data+i;
+
+      asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t"
+                        "vcmpltps %%ymm6, %%ymm7, %%ymm0 \n\t" //destination is last
+                        "vblendvps %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
+                        "vblendvps %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
+                        "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
+                        : : [fptr] "m" (fptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
+    }
+
+    float tmp[8];
+    uint itemp[8];
+    
+    asm __volatile__ ("vmovups %%ymm6, %[tmp] \n\t"
+                      "vmovups %%ymm5, %[itemp]"
+                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : );
+
+    float cur_val;
+
+    for (i=0; i < 8; i++) {
+      cur_val = tmp[i];
+      //std::cerr << "cur val: " << cur_val << std::endl;
+      if (cur_val < min_val) {
+        min_val = cur_val;
+        arg_min = 8*itemp[i] + i;
+      }
+    }
+
+    //std::cerr << "minval: " << min_val << std::endl;
+
+    for (i= nData - (nData % 8); i < nData; i++) {
+      cur_val = data[i];
+      if (cur_val < min_val) {
+        min_val = cur_val;
+        arg_min = i;
+      }
+    }
+
+
 #else
     //blendvps is part of SSE4
 
@@ -793,6 +963,7 @@ namespace Makros {
 
   inline void find_min_and_argmin(const double_A16* data, const size_t nData, double& min_val, size_t& arg_min)
   {
+
     min_val = MAX_DOUBLE;
     arg_min = MAX_UINT;
 
@@ -805,13 +976,68 @@ namespace Makros {
     }
 
     // for (i=0; i < nData; i++) {
-    //   cur_val = data[i];
+    //   double cur_val = data[i];
 
     //   if (cur_val < min_val) {
     //     min_val = cur_val;
     //     arg_min = i;
     //   }
     // }
+#elif USE_SSE >= 5
+
+    //use AVX
+    assert(sizeof(size_t) == 8);
+    
+    double val = MAX_DOUBLE;
+    const size_t one = 1;
+    double inc = *reinterpret_cast<const double*>(&one);
+    size_t i = 0;
+    const double* dptr;
+    
+    asm __volatile__ ("vbroadcastsd %[tmp], %%ymm6 \n\t" //ymm6 is min register
+                      "vxorpd %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmin) to zero
+                      "vbroadcastsd %[itemp], %%ymm4 \n\t" //ymm4 is increment register
+                      "vxorpd %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
+                      : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");    
+    
+    for (i=0; (i+4) <= nData; i += 4) {
+      dptr = data+i;
+      
+      asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t"
+                        "vcmpltpd %%ymm6, %%ymm7, %%ymm0 \n\t" //destination is last
+                        "vblendvpd %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
+                        "vblendvpd %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
+                        "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
+                        : : [dptr] "m" (dptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");      
+    }
+
+    double tmp[4];
+    size_t itemp[4];
+    
+    asm __volatile__ ("vmovups %%ymm6, %[tmp] \n\t"
+                      "vmovups %%ymm5, %[itemp]"
+                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : );
+
+    double cur_val;
+
+    for (i=0; i < 4; i++) {
+      cur_val = tmp[i];
+      //std::cerr << "cur val: " << cur_val << std::endl;
+      if (cur_val < min_val) {
+        min_val = cur_val;
+        arg_min = 4*itemp[i] + i;
+      }
+    }
+
+    //std::cerr << "minval: " << min_val << std::endl;
+
+    for (i = nData - (nData % 4); i < nData; i++) {
+      cur_val = data[i];
+      if (cur_val < min_val) {
+        min_val = cur_val;
+        arg_min = i;
+      }
+    }
 #else
 
     size_t i;
@@ -875,12 +1101,28 @@ namespace Makros {
 
   inline void mul_array(float_A16* data, const size_t nData, const float constant)
   {
-
     size_t i;
 #if !defined(USE_SSE) || USE_SSE < 2
-    for (i=0; i < nData; i++) {
+    for (i=0; i < nData; i++) { //g++ uses single sse mul rather than packed
       data[i] *= constant;
     }
+#elif USE_SSE >= 5
+    asm __volatile__ ("vbroadcastss %[tmp], %%ymm7 \n\t"
+                      : : [tmp] "m" (constant) : "ymm7");
+
+    float* fptr;
+
+    for (i=0; i+8 <= nData; i+=8) {
+      fptr = data + i;
+      asm volatile ("vmovups %[fptr], %%ymm6 \n\t"
+                    "vmulps %%ymm7, %%ymm6, %%ymm6 \n\t"
+                    "vmovups %%ymm6, %[fptr] \n\t"
+                    : [fptr] "+m" (fptr[0]) : : "ymm6");
+    }
+
+    for (i= nData - (nData % 8); i < nData; i++) {
+      data[i] *= constant;
+    }   
 #else
     float temp[4];
     float* fptr;
@@ -904,12 +1146,30 @@ namespace Makros {
 
   inline void mul_array(double_A16* data, const size_t nData, const double constant)
   {
-
     size_t i;
 #if !defined(USE_SSE) || USE_SSE < 2
     for (i=0; i < nData; i++) {
       data[i] *= constant;
     }
+#elif USE_SSE >= 5
+
+    asm __volatile__ ("vbroadcastsd %[tmp], %%ymm7 \n\t"
+                      : : [tmp] "m" (constant) : "ymm7");
+
+    double* dptr;
+
+    for (i=0; i+4 <= nData; i+=4) {
+      dptr = data + i;
+
+      asm volatile ("vmovupd %[dptr], %%ymm6 \n\t"
+                    "vmulpd %%ymm7, %%ymm6, %%ymm6 \n\t"
+                    "vmovupd %%ymm6, %[dptr] \n\t"
+                    : [dptr] "+m" (dptr[0]) : : "ymm6");
+    }
+
+    for (i= nData - (nData % 4); i < nData; i++) 
+      data[i] *= constant;
+
 #else
     double temp[2];
     double* dptr;
@@ -926,9 +1186,8 @@ namespace Makros {
                     : [dptr] "+m" (dptr[0]) : : "xmm6");
     }
 
-    for (i= nData - (nData % 2); i < nData; i++) {
+    for (i= nData - (nData % 2); i < nData; i++) 
       data[i] *= constant;
-    }
 #endif
   }
 
@@ -937,7 +1196,6 @@ namespace Makros {
   inline void array_subtract_multiple(double_A16* attr_restrict data, const size_t nData, double factor,
                                       const double_A16* attr_restrict data2)
   {
-
     size_t i;
 #if !defined(USE_SSE) || USE_SSE < 2
     for (i=0; i < nData; i++)
