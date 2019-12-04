@@ -11,3 +11,5 @@ DEVELDIR = devel/
 
 # you may want to add this if you really want to use g++:
 #OPTFLAGS += -DUSE_SSE=5 -DGNU_COMPILER
+# and maybe this:
+#OPTFLAGS += -DDONT_CHECK_VECTOR_ARITHMETIC

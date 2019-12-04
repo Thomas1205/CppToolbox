@@ -1200,6 +1200,28 @@ namespace Makros {
 #if !defined(USE_SSE) || USE_SSE < 2
     for (i=0; i < nData; i++)
       data[i] -= factor*data2[i];
+#elif USE_SSE >= 5
+    //use AVX
+    asm __volatile__ ("vbroadcastsd %[tmp], %%ymm7 \n\t"
+                      : : [tmp] "m" (factor) : "ymm7");
+                      
+    double* dptr;
+    const double* cdptr;
+
+    for (i=0; i+4 <= nData; i+=4) {
+      cdptr = data2+i;
+      dptr = data+i;
+
+      asm volatile ("vmovupd %[cdptr], %%ymm6 \n\t"
+                    "vmulpd %%ymm7, %%ymm6, %%ymm6 \n\t" //destination goes last
+                    "vmovupd %[dptr], %%ymm5 \n\t"
+                    "vsubpd %%ymm6, %%ymm5, %%ymm5 \n\t" //destination goes last
+                    "vmovupd %%ymm5, %[dptr] \n\t"
+                    : [dptr] "+m" (dptr[0]) : [cdptr] "m" (cdptr[0]) : "ymm5", "ymm6");
+    }
+
+    for (i= nData - (nData % 4); i < nData; i++)
+      data[i] -= factor*data2[i];                      
 #else
     double temp[2];
     double* dptr;
@@ -1223,6 +1245,49 @@ namespace Makros {
       data[i] -= factor*data2[i];
 #endif
   }
+  
+  inline void array_add_multiple(double_A16* attr_restrict data, const size_t nData, double factor,
+                                 const double_A16* attr_restrict data2) 
+  {                                      
+    array_subtract_multiple(data, nData, -factor, data2);
+  }
+
+  //NOTE: despite attr_restrict, you can safely pass the same for dest and src1 or src2
+  inline void assign_weighted_combination(double_A16* attr_restrict dest, const size_t nData, double w1, const double_A16* attr_restrict src1,
+                                          double w2, const double_A16* attr_restrict src2) 
+  {
+#if !defined(USE_SSE) || USE_SSE < 5
+    for (size_t i=0; i < nData; i++)
+      dest[i] = w1 * src1[i] + w2 * src2[i];
+#else
+    //use AVX
+  
+    asm __volatile__ ("vbroadcastsd %[w1], %%ymm0 \n\t" //ymm0 = w1
+                      "vbroadcastsd %[w2], %%ymm1 \n\t" //ymm0 = w2
+                      : : [w1] "m" (w1), [w2] "m" (w2) : "ymm0", "ymm1");
+
+    double* dest_ptr;
+    const double* s1_ptr;
+    const double* s2_ptr;
+    size_t i;
+    for (i=0; i+4 < nData; i++) {
+      dest_ptr = dest + i;
+      s1_ptr = src1 + i;
+      s2_ptr = src2 + i;
+      
+      asm volatile ("vmovupd %[s1_ptr], %%ymm2 \n\t"
+                    "vmulpd %%ymm0, %%ymm2, %%ymm2 \n\t" //destination goes last
+                    "vmovupd %[s2_ptr], %%ymm3 \n\t"
+                    "vmulpd %%ymm1, %%ymm3, %%ymm3 \n\t" //destination goes last
+                    "vaddpd %%ymm3, %%ymm2, %%ymm2 \n\t"
+                    "vmovupd %%ymm2, %[dest]"
+                    : [dest] "+m" (dest_ptr[0]) : [s1_ptr] "m" (s1_ptr[0]), [s2_ptr] "m" (s2_ptr[0]) : "ymm2", "ymm3");
+    }
+    
+    for (i= nData - (nData % 4); i < nData; i++) 
+      dest[i] = w1 * src1[i] + w2 * src2[i];
+#endif
+  }  
 
   template<typename T1, typename T2>
   class first_lower {
