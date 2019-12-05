@@ -1269,7 +1269,7 @@ namespace Makros {
     const double* s1_ptr;
     const double* s2_ptr;
     size_t i;
-    for (i=0; i+4 < nData; i++) {
+    for (i=0; i+4 <= nData; i+= 4) {
       dest_ptr = dest + i;
       s1_ptr = src1 + i;
       s2_ptr = src2 + i;
@@ -1277,7 +1277,7 @@ namespace Makros {
       asm volatile ("vmovupd %[s2_ptr], %%ymm3 \n\t"
                     "vmulpd %%ymm0, %%ymm3, %%ymm3 \n\t" //destination goes last
                     "vmovupd %[s1_ptr], %%ymm2 \n\t"
-                    "vsubpd %%ymm2, %%ymm3, %%ymm2 \n\t"
+                    "vsubpd %%ymm2, %%ymm3, %%ymm2 \n\t" //destination goes last
                     "vmovupd %%ymm2, %[dest]"
                     : [dest] "+m" (dest_ptr[0]) : [s1_ptr] "m" (s1_ptr[0]), [s2_ptr] "m" (s2_ptr[0]) : "ymm2", "ymm3");      
     }    
@@ -1298,14 +1298,14 @@ namespace Makros {
     //use AVX
   
     asm __volatile__ ("vbroadcastsd %[w1], %%ymm0 \n\t" //ymm0 = w1
-                      "vbroadcastsd %[w2], %%ymm1 \n\t" //ymm0 = w2
+                      "vbroadcastsd %[w2], %%ymm1 \n\t" //ymm1 = w2
                       : : [w1] "m" (w1), [w2] "m" (w2) : "ymm0", "ymm1");
 
     double* dest_ptr;
     const double* s1_ptr;
     const double* s2_ptr;
     size_t i;
-    for (i=0; i+4 < nData; i++) {
+    for (i=0; i+4 <= nData; i+= 4) {
       dest_ptr = dest + i;
       s1_ptr = src1 + i;
       s2_ptr = src2 + i;
@@ -1314,7 +1314,7 @@ namespace Makros {
                     "vmulpd %%ymm0, %%ymm2, %%ymm2 \n\t" //destination goes last
                     "vmovupd %[s2_ptr], %%ymm3 \n\t"
                     "vmulpd %%ymm1, %%ymm3, %%ymm3 \n\t" //destination goes last
-                    "vaddpd %%ymm3, %%ymm2, %%ymm2 \n\t"
+                    "vaddpd %%ymm3, %%ymm2, %%ymm2 \n\t" //destination goes last
                     "vmovupd %%ymm2, %[dest]"
                     : [dest] "+m" (dest_ptr[0]) : [s1_ptr] "m" (s1_ptr[0]), [s2_ptr] "m" (s2_ptr[0]) : "ymm2", "ymm3");
     }
