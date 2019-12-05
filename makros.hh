@@ -1277,7 +1277,7 @@ namespace Makros {
       asm volatile ("vmovupd %[s2_ptr], %%ymm3 \n\t"
                     "vmulpd %%ymm0, %%ymm3, %%ymm3 \n\t" //destination goes last
                     "vmovupd %[s1_ptr], %%ymm2 \n\t"
-                    "vsubpd %%ymm2, %%ymm3, %%ymm2 \n\t" //destination goes last
+                    "vsubpd %%ymm3, %%ymm2, %%ymm2 \n\t" //destination goes last
                     "vmovupd %%ymm2, %[dest]"
                     : [dest] "+m" (dest_ptr[0]) : [s1_ptr] "m" (s1_ptr[0]), [s2_ptr] "m" (s2_ptr[0]) : "ymm2", "ymm3");      
     }    
