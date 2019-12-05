@@ -1251,6 +1251,41 @@ namespace Makros {
   {                                      
     array_subtract_multiple(data, nData, -factor, data2);
   }
+  
+  //NOTE: despite attr_restrict, you can safely pass the same for dest and src1 or src2
+  inline void go_in_neg_direction(double_A16* attr_restrict dest, const size_t nData, const double_A16* attr_restrict src1,
+                                  const double_A16* attr_restrict src2, double alpha)
+  {
+#if !defined(USE_SSE) || USE_SSE < 5
+    for (size_t i=0; i < nData; i++)
+      dest[i] = src1[i] - alpha * src2[i];
+#else
+    //use AVX
+  
+    asm __volatile__ ("vbroadcastsd %[w1], %%ymm0 \n\t" //ymm0 = w1
+                      : : [w1] "m" (alpha) : "ymm0");
+    
+    double* dest_ptr;
+    const double* s1_ptr;
+    const double* s2_ptr;
+    size_t i;
+    for (i=0; i+4 < nData; i++) {
+      dest_ptr = dest + i;
+      s1_ptr = src1 + i;
+      s2_ptr = src2 + i;
+
+      asm volatile ("vmovupd %[s2_ptr], %%ymm3 \n\t"
+                    "vmulpd %%ymm0, %%ymm3, %%ymm3 \n\t" //destination goes last
+                    "vmovupd %[s1_ptr], %%ymm2 \n\t"
+                    "vsubpd %%ymm2, %%ymm3, %%ymm2 \n\t"
+                    "vmovupd %%ymm2, %[dest]"
+                    : [dest] "+m" (dest_ptr[0]) : [s1_ptr] "m" (s1_ptr[0]), [s2_ptr] "m" (s2_ptr[0]) : "ymm2", "ymm3");      
+    }    
+ 
+    for (i= nData - (nData % 4); i < nData; i++) 
+      dest[i] = src1[i] - alpha * src2[i]; 
+#endif
+  }                                    
 
   //NOTE: despite attr_restrict, you can safely pass the same for dest and src1 or src2
   inline void assign_weighted_combination(double_A16* attr_restrict dest, const size_t nData, double w1, const double_A16* attr_restrict src1,
