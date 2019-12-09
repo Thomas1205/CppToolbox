@@ -132,6 +132,22 @@ namespace Math3D {
     std::string name_;
   };
 
+  //NOTE: dest can be the same as src1 or src2
+  inline void go_in_neg_direction(Math3D::Tensor<double>& dest, const Math3D::Tensor<double>& src1, const Math3D::Tensor<double>& src2, double alpha) {
+    
+    assert(dest.dims() == src1.dims());
+    assert(dest.dims() == src2.dims());
+    Makros::go_in_neg_direction(dest.direct_access(), dest.size(), src1.direct_access(), src2.direct_access(), alpha);
+  }
+
+  //NOTE: dest can be the same as src1 or src2
+  inline void assign_weighted_combination(Math3D::Tensor<double>& dest, double w1, const Math3D::Tensor<double>& src1, 
+                                          double w2, const Math3D::Tensor<double>& src2) {
+  
+    assert(dest.dims() == src1.dims());
+    assert(dest.dims() == src2.dims());
+    Makros::assign_weighted_combination(dest.direct_access(), dest.size(), w1, src1.direct_access(), w2, src2.direct_access());
+  }
 
   /**** stand-alone operators ****/
   template<typename T, typename ST>
@@ -242,7 +258,7 @@ namespace Math3D {
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
-    if (toAdd.xDim() != Base::xDim_ || toAdd.yDim() != Base::yDim_ || toAdd.zDim() != Base::zDim_) {
+    if (toAdd.dims() != Base::dims()) {
       INTERNAL_ERROR << "    cannot add multiple of tensor \"" << toAdd.name() << "\" to tensor \""
                      << this->name() << "\":" << std::endl
                      << "    sizes " << toAdd.xDim() << "x" << toAdd.yDim() << "x" << toAdd.zDim()
@@ -264,7 +280,7 @@ namespace Math3D {
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
-    if (toAdd.xDim() != Base::xDim_ || toAdd.yDim() != Base::yDim_ || toAdd.zDim() != Base::zDim_) {
+    if (toAdd.dims() != Base::dims()) {
       INTERNAL_ERROR << "    cannot add multiple of tensor \"" << toAdd.name() << "\" to tensor \""
                      << this->name() << "\":" << std::endl
                      << "    sizes " << toAdd.xDim() << "x" << toAdd.yDim() << "x" << toAdd.zDim()
@@ -282,9 +298,7 @@ namespace Math3D {
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
-    if (toAdd.xDim() != Base::xDim_
-        || toAdd.yDim() != Base::yDim_
-        || toAdd.zDim() != Base::zDim_) {
+    if (toAdd.dims() != Base::dims()) {
       INTERNAL_ERROR << "    illegal addition of tensor \"" << toAdd.name() << "\" to tensor \""
                      << this->name() << "\":" << std::endl
                      << "    sizes " << toAdd.xDim() << "x" << toAdd.yDim() << "x" << toAdd.zDim()
@@ -309,9 +323,7 @@ namespace Math3D {
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
-    if (toSub.xDim() != Base::xDim_
-        || toSub.yDim() != Base::yDim_
-        || toSub.zDim() != Base::zDim_) {
+    if (toSub.dims() != Base::dims()) {
       INTERNAL_ERROR << "    illegal subtraction of tensor \"" << toSub.name() << "\" from tensor \""
                      << this->name() << "\":" << std::endl
                      << "    sizes " << toSub.xDim() << "x" << toSub.yDim() << "x" << toSub.zDim()

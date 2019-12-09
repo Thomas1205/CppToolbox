@@ -19,6 +19,18 @@ struct Dim3D {
   ST zDim_;
 };
 
+template<typename ST>
+bool operator==(const Dim3D<ST>& d1, const Dim3D<ST>& d2) {
+  
+  return (d1.xDim_ == d2.xDim_ && d1.yDim_ == d2.yDim_ && d1.zDim_ == d2.zDim_);
+}
+
+template<typename ST>
+bool operator!=(const Dim3D<ST>& d1, const Dim3D<ST>& d2) {
+  
+  return (d1.xDim_ != d2.xDim_ || d1.yDim_ != d2.yDim_ || d1.zDim_ != d2.zDim_);
+}
+
 template<typename T, typename ST=size_t>
 class Storage3D : public StorageBase<T,ST> {
 public:
