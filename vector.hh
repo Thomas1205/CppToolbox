@@ -67,6 +67,8 @@ namespace Math1D {
     /*** L2-norm of the vector ***/
     inline double norm() const;
 
+    inline T norm_T() const;
+
     inline double sqr_norm() const;
 
     /*** L1-norm of the vector ***/
@@ -396,6 +398,24 @@ namespace Math1D {
     }
 
     return sqrt(result);
+  }
+
+  /*** L2-norm of the vector ***/
+  template<typename T,typename ST>
+  inline T Vector<T,ST>::norm_T() const
+  {
+    const ST size = Base::size_;
+
+    const T_A16* data = Base::data_;
+    assertAligned16(data);
+
+    T result = (T) 0;
+    for (ST i=0; i < size; i++) {
+      const T cur = data[i];
+      result += cur*cur;
+    }
+
+    return Makros::sqrt<T>(result);
   }
 
   template<typename T,typename ST>

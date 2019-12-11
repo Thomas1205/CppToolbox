@@ -8,27 +8,32 @@ static int __attribute__((used))  rational_res_is_save = 1;
 
 //#define DEBUG_OUTPUT
 
-bool rational_result_is_save() {
+bool rational_result_is_save()
+{
   assert(sizeof(long) == 8);
   return (rational_res_is_save != 0);
 }
 
-void reset_rational_result_is_save() {
+void reset_rational_result_is_save()
+{
   rational_res_is_save = 1;
 }
 
 Rational64::Rational64()
-  : num_(0), denom_(1) {
+  : num_(0), denom_(1)
+{
 }
 
 Rational64::Rational64(long num, long denom)
-  : num_(num), denom_(denom) {
+  : num_(num), denom_(denom)
+{
   assert(denom_ > 0);
 }
 
 Rational64::Rational64(long num) : num_(num), denom_(1) {}
 
-Rational64 Rational64::inverse() const {
+Rational64 Rational64::inverse() const
+{
 
   assert(num_ != 0);
 
@@ -36,7 +41,8 @@ Rational64 Rational64::inverse() const {
   return Rational64(denom_ * sign, abs(num_));
 }
 
-void Rational64::invert() {
+void Rational64::invert()
+{
 
   assert(num_ != 0);
   if (num_ < 0) {
@@ -48,11 +54,13 @@ void Rational64::invert() {
 }
 
 
-void Rational64::negate() {
+void Rational64::negate()
+{
   num_ = - num_;
 }
 
-void Rational64::normalize() {
+void Rational64::normalize()
+{
 
   long cur_gcd = gcd64(abs(num_),denom_);
 
@@ -62,34 +70,41 @@ void Rational64::normalize() {
   }
 }
 
-bool Rational64::is_normalized() const {
+bool Rational64::is_normalized() const
+{
   return (gcd64(abs(num_),denom_) == 1);
 }
 
-bool Rational64::is_negative() const {
+bool Rational64::is_negative() const
+{
   assert(denom_ > 0);
   return (num_ < 0);
 }
 
-bool Rational64::is_one() const {
+bool Rational64::is_one() const
+{
   assert(denom_ > 0);
   return (denom_ == 1 && num_ == 1);
 }
 
-bool Rational64::is_zero() const {
+bool Rational64::is_zero() const
+{
   return (num_ == 0);
 }
 
-bool Rational64::is_nonzero() const {
+bool Rational64::is_nonzero() const
+{
   return (num_ != 0);
 }
 
-double Rational64::toDouble() const {
+double Rational64::toDouble() const
+{
   return double(num_) / double(denom_);
 }
 
 #ifdef USE_ASM
-inline void simple_save_mul(long& n, const long fac) {
+inline void simple_save_mul(long& n, const long fac)
+{
 
   __asm__ volatile ("imulq %1 \n\t"
                     "jno 1f \n\t"
@@ -100,7 +115,8 @@ inline void simple_save_mul(long& n, const long fac) {
 }
 #endif
 
-void Rational64::operator*=(long fac) {
+void Rational64::operator*=(long fac)
+{
 
   long cur_gcd = gcd64(abs(fac),denom_);
   if (cur_gcd != 1) {
@@ -115,7 +131,8 @@ void Rational64::operator*=(long fac) {
 #endif
 }
 
-Rational64 operator*(long r1, const Rational64& r2) {
+Rational64 operator*(long r1, const Rational64& r2)
+{
 
   Rational64 result = r2;
 
@@ -125,17 +142,18 @@ Rational64 operator*(long r1, const Rational64& r2) {
     r1 /= cur_gcd;
     result.denom_ /= cur_gcd;
   }
-  
+
 #ifndef USE_ASM
   result.num_ *= r1;
 #else
   simple_save_mul(result.num_, r1);
-#endif  
-  
+#endif
+
   return result;
 }
 
-Rational64 operator*(const Rational64& r1, long r2) {
+Rational64 operator*(const Rational64& r1, long r2)
+{
 
   return operator*(r2,r1);
 }
@@ -143,8 +161,9 @@ Rational64 operator*(const Rational64& r1, long r2) {
 
 #ifdef USE_ASM
 inline void save_add(const Rational64& r1, const Rational64& r2, long denom_gcd,
-                     long& new_num, long& new_denom) {
-  
+                     long& new_num, long& new_denom)
+{
+
   long sdenom1 = r1.denom_;
   long sdenom2 = r2.denom_;
 
@@ -162,12 +181,12 @@ inline void save_add(const Rational64& r1, const Rational64& r2, long denom_gcd,
                     "imulq %4               \n\t"
                     "jc 1f            \n\t"
                     "addq %%rbx,%%rax       \n\t"
-                    "movq %%rax,%1          \n\t" //numerator is done 
+                    "movq %%rax,%1          \n\t" //numerator is done
                     "jo 1f            \n\t"
                     "movq %7,%%rax          \n\t"
                     "imulq %6               \n\t"
                     "jc 1f            \n\t"
-                    "movq %%rax,%2          \n\t" //denominator is done 
+                    "movq %%rax,%2          \n\t" //denominator is done
                     "jmp 2f            \n\t"
                     "1:              \n\t"
                     "movl $0,%0             \n\t"
@@ -175,13 +194,14 @@ inline void save_add(const Rational64& r1, const Rational64& r2, long denom_gcd,
                     : "+&g"(rational_res_is_save), "=&g"(new_num), "=&g"(new_denom) //0,1,2
                     : "g"(r1.num_), "g"(sdenom1), "g"(r2.num_), "g"(sdenom2), "g"(r1.denom_) //3,4,5,6,7
                     : "rax", "rbx", "rdx", "cc"
-                    );
+                   );
 }
 
 
 inline void save_add2(const Rational64& r1, const Rational64& r2, long denom_gcd,
-                      long& new_num, long& new_denom) {
-  
+                      long& new_num, long& new_denom)
+{
+
   long sdenom1 = r1.denom_;
   long sdenom2 = r2.denom_;
 
@@ -198,12 +218,12 @@ inline void save_add2(const Rational64& r1, const Rational64& r2, long denom_gcd
                     "imulq %3               \n\t"
                     "jc 1f            \n\t"
                     "addq %%rbx,%%rax       \n\t"
-                    "movq %%rax,%0          \n\t" //numerator is done 
+                    "movq %%rax,%0          \n\t" //numerator is done
                     "jo 1f            \n\t"
                     "movq %6,%%rax          \n\t"
                     "imulq %5               \n\t"
                     "jc 1f            \n\t"
-                    "movq %%rax,%1          \n\t" //denominator is done 
+                    "movq %%rax,%1          \n\t" //denominator is done
                     "jmp 2f            \n\t"
                     "1:              \n\t"
                     "movl $0,_ZL20rational_res_is_save        \n\t"
@@ -211,11 +231,12 @@ inline void save_add2(const Rational64& r1, const Rational64& r2, long denom_gcd
                     : "=&g"(new_num), "=&g"(new_denom) //0,1,
                     : "a"(r1.num_), "g"(sdenom1), "g"(r2.num_), "g"(sdenom2), "g"(r1.denom_) //2,3,4,5,6
                     : "rbx", "rdx", "cc"
-                    );
+                   );
 }
 #endif
 
-Rational64 operator+(const Rational64& r1, const Rational64& r2) {
+Rational64 operator+(const Rational64& r1, const Rational64& r2)
+{
 
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator+" << std::endl;
@@ -248,7 +269,8 @@ Rational64 operator+(const Rational64& r1, const Rational64& r2) {
   return Rational64(new_num,new_denom);
 }
 
-void Rational64::operator+=(Rational64 r) {
+void Rational64::operator+=(Rational64 r)
+{
 
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator+=" << std::endl;
@@ -283,7 +305,8 @@ void Rational64::operator+=(Rational64 r) {
 
 #ifdef USE_ASM
 inline void save_sub(const Rational64& r1, const Rational64& r2, long denom_gcd,
-                     long& new_num, long& new_denom) {
+                     long& new_num, long& new_denom)
+{
 
   long sdenom1 = r1.denom_;
   long sdenom2 = r2.denom_;
@@ -302,12 +325,12 @@ inline void save_sub(const Rational64& r1, const Rational64& r2, long denom_gcd,
                     "imulq %4               \n\t"
                     "jc 1f            \n\t"
                     "subq %%rax,%%rbx       \n\t"
-                    "movq %%rbx,%1          \n\t" //numerator is done 
+                    "movq %%rbx,%1          \n\t" //numerator is done
                     "jo 1f            \n\t"
                     "movq %7,%%rax          \n\t"
                     "imulq %6               \n\t"
                     "jc 1f            \n\t"
-                    "movq %%rax,%2          \n\t" //denominator is done 
+                    "movq %%rax,%2          \n\t" //denominator is done
                     "jmp 2f            \n\t"
                     "1:              \n\t"
                     "movl $0,%0             \n\t"
@@ -315,12 +338,13 @@ inline void save_sub(const Rational64& r1, const Rational64& r2, long denom_gcd,
                     : "+&g"(rational_res_is_save), "=&g"(new_num), "=&g"(new_denom) //0,1,2
                     : "g"(r1.num_), "g"(sdenom1), "g"(r2.num_), "g"(sdenom2), "g"(r1.denom_) //3,4,5,6,7
                     : "rax", "rbx", "rdx", "cc", "memory"
-                    );
+                   );
 }
 
 
 inline void save_sub2(const Rational64& r1, const Rational64& r2, long denom_gcd,
-                      long& new_num, long& new_denom) {
+                      long& new_num, long& new_denom)
+{
 
 
   long sdenom1 = r1.denom_;
@@ -339,12 +363,12 @@ inline void save_sub2(const Rational64& r1, const Rational64& r2, long denom_gcd
                     "imulq %3               \n\t"
                     "jc 1f            \n\t"
                     "subq %%rax,%%rbx       \n\t"
-                    "movq %%rbx,%0          \n\t" //numerator is done 
+                    "movq %%rbx,%0          \n\t" //numerator is done
                     "jo 1f            \n\t"
                     "movq %6,%%rax          \n\t"
                     "imulq %5               \n\t"
                     "jc 1f            \n\t"
-                    "movq %%rax,%1          \n\t" //denominator is done 
+                    "movq %%rax,%1          \n\t" //denominator is done
                     "jmp 2f            \n\t"
                     "1:              \n\t"
                     "movl $0,_ZL20rational_res_is_save  \n\t"
@@ -352,11 +376,12 @@ inline void save_sub2(const Rational64& r1, const Rational64& r2, long denom_gcd
                     : "=&g"(new_num), "=&g"(new_denom) //0,1,
                     : "a"(r1.num_), "g"(sdenom1), "g"(r2.num_), "g"(sdenom2), "g"(r1.denom_) //2,3,4,5,6
                     : "rbx", "rdx", "cc", "memory"
-                    );
+                   );
 }
 #endif
 
-Rational64 operator-(const Rational64& r1, const Rational64& r2) {
+Rational64 operator-(const Rational64& r1, const Rational64& r2)
+{
 
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator-" << std::endl;
@@ -373,7 +398,7 @@ Rational64 operator-(const Rational64& r1, const Rational64& r2) {
 #else
   long new_num;
   long new_denom;
-  
+
   //save_sub(r1, r2, denom_gcd, new_num, new_denom);
   save_sub2(r1, r2, denom_gcd, new_num, new_denom);
 
@@ -391,7 +416,8 @@ Rational64 operator-(const Rational64& r1, const Rational64& r2) {
   return Rational64(new_num,new_denom);
 }
 
-void Rational64::operator-=(Rational64 r) {
+void Rational64::operator-=(Rational64 r)
+{
 
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator-=(" << (*this) << ", " << r << ")" << std::endl;
@@ -412,7 +438,7 @@ void Rational64::operator-=(Rational64 r) {
 #else
   long new_num;
   long new_denom;
-  
+
   //save_sub(*this, r, denom_gcd, new_num, new_denom);
   save_sub2(*this, r, denom_gcd, new_num, new_denom);
 
@@ -438,7 +464,8 @@ void Rational64::operator-=(Rational64 r) {
 
 #ifdef USE_ASM
 inline  void save_mul(long n1, long d1, long n2, long d2,
-                      long& num, long& denom) {
+                      long& num, long& denom)
+{
 
 
   // with local labels
@@ -457,11 +484,12 @@ inline  void save_mul(long n1, long d1, long n2, long d2,
                     : "+&g"(rational_res_is_save), "=&g"(num), "=&g"(denom)
                     : "g"(n1), "g"(n2), "g"(d1), "g"(d2)
                     : "rax", "rdx", "cc"
-                    );
+                   );
 }
 
 inline  void save_mul2(long n1, long d1, long n2, long d2,
-                      long& num, long& denom) {
+                       long& num, long& denom)
+{
 
 
   // with local labels
@@ -479,12 +507,13 @@ inline  void save_mul2(long n1, long d1, long n2, long d2,
                     : "=&g"(num), "=&g"(denom)
                     : "a"(n1), "g"(n2), "g"(d1), "g"(d2)
                     : "rdx", "cc"
-                    );
+                   );
 }
 #endif
 
 
-Rational64 operator*(const Rational64& r1, const Rational64& r2) {
+Rational64 operator*(const Rational64& r1, const Rational64& r2)
+{
 
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator*" << std::endl;
@@ -531,7 +560,8 @@ Rational64 operator*(const Rational64& r1, const Rational64& r2) {
 }
 
 
-void Rational64::operator*=(Rational64 r) {
+void Rational64::operator*=(Rational64 r)
+{
 
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator*=" << std::endl;
@@ -586,7 +616,8 @@ void Rational64::operator*=(Rational64 r) {
 #endif
 }
 
-bool operator<(const Rational64& r1, const Rational64& r2) {
+bool operator<(const Rational64& r1, const Rational64& r2)
+{
 
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator<" << std::endl;
@@ -604,10 +635,10 @@ bool operator<(const Rational64& r1, const Rational64& r2) {
 
   if (r1.num_ == 0)
     return (r2.num_ > 0);
- 
+
   //this should be redundant
   //if (r2.num_ == 0)
-  //  return neg1; 
+  //  return neg1;
 
   long double ratio1 = ((long double)r1.num_) / ((long double)r1.denom_);
   long double ratio2 = ((long double)r2.num_) / ((long double)r2.denom_);
@@ -615,7 +646,8 @@ bool operator<(const Rational64& r1, const Rational64& r2) {
   return (ratio1 < ratio2);
 }
 
-bool operator<=(const Rational64& r1, const Rational64& r2) {
+bool operator<=(const Rational64& r1, const Rational64& r2)
+{
 
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator<=" << std::endl;
@@ -636,7 +668,7 @@ bool operator<=(const Rational64& r1, const Rational64& r2) {
 
   //this should be redundant
   //if (r2.num_ == 0)
-  //  return neg1; 
+  //  return neg1;
 
   long double ratio1 = ((long double)r1.num_) / ((long double)r1.denom_);
   long double ratio2 = ((long double)r2.num_) / ((long double)r2.denom_);
@@ -645,7 +677,8 @@ bool operator<=(const Rational64& r1, const Rational64& r2) {
 }
 
 
-bool operator>(const Rational64& r1, const Rational64& r2) {
+bool operator>(const Rational64& r1, const Rational64& r2)
+{
 
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator>" << std::endl;
@@ -667,7 +700,8 @@ bool operator>(const Rational64& r1, const Rational64& r2) {
   return (ratio1 > ratio2);
 }
 
-bool operator>=(const Rational64& r1, const Rational64& r2) {
+bool operator>=(const Rational64& r1, const Rational64& r2)
+{
 
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator>=" << std::endl;
@@ -693,20 +727,23 @@ bool operator>=(const Rational64& r1, const Rational64& r2) {
 }
 
 
-std::ostream& operator<<(std::ostream& out, const Rational64& r) {
+std::ostream& operator<<(std::ostream& out, const Rational64& r)
+{
   out << r.num_ << "/" << r.denom_;
   return out;
 }
 
 
-Rational64 rabs(const Rational64& r) {
+Rational64 rabs(const Rational64& r)
+{
 
   assert(r.denom_ > 0);
   return Rational64(abs(r.num_),r.denom_);
 }
 
 
-bool operator==(const Rational64& r1, const Rational64& r2) {
+bool operator==(const Rational64& r1, const Rational64& r2)
+{
 
   if (!r2.is_normalized())
     std::cerr << "r2: " << r2 << std::endl;
@@ -719,18 +756,20 @@ bool operator==(const Rational64& r1, const Rational64& r2) {
   return (r1.num_==r2.num_ && r1.denom_==r2.denom_);
 }
 
-bool operator!=(const Rational64& r1, const Rational64& r2) {
+bool operator!=(const Rational64& r1, const Rational64& r2)
+{
   return !operator==(r1,r2);
 }
 
 //unary minus
-Rational64 operator-(const Rational64& r) {
+Rational64 operator-(const Rational64& r)
+{
   return Rational64(-r.num_,r.denom_);
 }
 
 
-Rational64 approx_r64(double d) {
-
+Rational64 approx_r64(double d)
+{
   double df = floor(d);
 
   //int sign = (d < 0) ? -1 : 1;
@@ -751,15 +790,25 @@ Rational64 approx_r64(double d) {
   if (absd >= 100.0) {
     Rational64 r(floor(1000000*df+0.5),1000000);
     r.normalize();
-    return r;    
+    return r;
   }
   if (absd >= 1.0) {
     Rational64 r(floor(100000000*df+0.5),100000000);
     r.normalize();
-    return r;    
+    return r;
   }
 
   Rational64 r(floor(100000000000*df+0.5),100000000000);
   r.normalize();
-  return r;    
+  return r;
 }
+
+
+Rational64 approx_sqrt(const Rational64& r)
+{
+  if (r.num_ < 0)
+    return Rational64(-1);
+  else
+    return Rational64(sqrt(r.num_),sqrt(r.denom_));
+}
+

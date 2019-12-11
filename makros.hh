@@ -131,6 +131,27 @@ namespace Makros {
   }
 
   template<typename T>
+  inline T sqrt(T arg) {
+    return T(::sqrt(double(arg)));
+  }
+  
+  //specializations:
+  template<>
+  inline float sqrt(float arg) {
+    return sqrtf(arg);
+  }
+
+  template<>
+  inline double sqrt(double arg) {
+    return ::sqrt(arg);
+  }
+
+  template<>
+  inline long double sqrt(long double arg) {
+    return sqrtl(arg);
+  }
+
+  template<typename T>
   inline T exp(T arg)
   {
     return T(::exp(double(arg)));

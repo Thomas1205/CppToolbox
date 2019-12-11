@@ -25,7 +25,7 @@ public:
   void normalize();
 
   bool is_normalized() const;
-  
+
   bool is_negative() const;
 
   void negate();
@@ -45,7 +45,7 @@ public:
   void operator*=(long fac);
 
   void operator*=(Rational64 r);
-  
+
   long num_;
   long denom_;
 };
@@ -79,6 +79,8 @@ std::ostream& operator<<(std::ostream& out, const Rational64& r);
 
 //absolute of a rational number
 Rational64 rabs(const Rational64& r);
+
+Rational64 approx_sqrt(const Rational64& r);
 
 Rational64 approx_r64(double d);
 
