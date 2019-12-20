@@ -54,6 +54,8 @@ public:
 
   inline void range_set_constant(const T constant, ST start, ST length);
   
+  void swap(Storage1D<T,ST>& toSwap);
+  
 protected:
 
   static const std::string stor1D_name_;
@@ -495,7 +497,6 @@ void Storage1D<T,ST>::resize(ST new_size, const T fill_value)
 template<typename T,typename ST>
 void Storage1D<T,ST>::resize_dirty(ST new_size)
 {
-
   if (Base::size_ != new_size) {
     if (Base::data_ != 0)
       delete[] Base::data_;
@@ -510,6 +511,13 @@ void Storage1D<T,ST>::resize_dirty(ST new_size)
     Base::data_ = new T[new_size];
   }
   Base::size_ = new_size;
+}
+
+template<typename T,typename ST>
+void Storage1D<T,ST>::swap(Storage1D<T,ST>& toSwap) 
+{
+  std::swap(Base::data_, Base::toSwap.data_);
+  std::swap(Base::size_, Base::toSwap.size);
 }
 
 /******** implementation of NamedStorage1D ***************/

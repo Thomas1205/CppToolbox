@@ -35,7 +35,7 @@ using std::isinf;
 #define ref_attr_restrict __restrict
 //pointers returned by new are guaranteed to have an address that is divisible by 16 if the type is a basic one
 //it is convenient to give the compiler this hint so that he need not handle unaligned cases
-#define ALIGNED16 __attribute__ ((aligned (16)))
+#define ALIGNED16 __attribute__ ((aligned(16)))
 #define assertAligned16(p) assert( ((size_t)p) % 16 == 0);
 
 #include <execinfo.h>
@@ -75,6 +75,8 @@ inline void print_trace (void) {}
 typedef unsigned int uint;
 typedef unsigned short ushort;
 typedef unsigned char uchar;
+typedef long long int Int64;
+typedef unsigned long long int UInt64;
 typedef double ALIGNED16 double_A16;
 typedef float ALIGNED16 float_A16;
 
@@ -90,7 +92,12 @@ typedef float ALIGNED16 float_A16;
 #define HIGH_FLOAT (0.1f*MAX_FLOAT)
 #define EPS_FLOAT  std::numeric_limits<float>::epsilon()
 #define MAX_UINT std::numeric_limits<uint>::max()
+#define MAX_ULONG std::numeric_limits<unsigned long long>::max()
 #define MAX_USHORT std::numeric_limits<ushort>::max()
+
+#ifndef NAN
+#define NAN sqrt(-1.0)
+#endif
 
 enum NormType {L1,L2,L0_5};
 
@@ -1124,7 +1131,7 @@ namespace Makros {
   {
     size_t i;
 #if !defined(USE_SSE) || USE_SSE < 2
-    for (i=0; i < nData; i++) { //g++ uses single sse mul rather than packed
+    for (i=0; i < nData; i++) { //g++ uses packed avx mul, but after checking alignment
       data[i] *= constant;
     }
 #elif USE_SSE >= 5
@@ -1295,6 +1302,8 @@ namespace Makros {
       s1_ptr = src1 + i;
       s2_ptr = src2 + i;
 
+      //TODO: check for usage of VFMSUBPD
+
       asm volatile ("vmovupd %[s2_ptr], %%ymm3 \n\t"
                     "vmulpd %%ymm0, %%ymm3, %%ymm3 \n\t" //destination goes last
                     "vmovupd %[s1_ptr], %%ymm2 \n\t"
@@ -1330,6 +1339,8 @@ namespace Makros {
       dest_ptr = dest + i;
       s1_ptr = src1 + i;
       s2_ptr = src2 + i;
+      
+      //TODO: check for usage of VFMADDPD
       
       asm volatile ("vmovupd %[s1_ptr], %%ymm2 \n\t"
                     "vmulpd %%ymm0, %%ymm2, %%ymm2 \n\t" //destination goes last
