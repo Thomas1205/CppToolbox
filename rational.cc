@@ -88,7 +88,7 @@ void Rational64::square_this()
 {
 #ifndef USE_ASM
   num_ *= num_;
-  denom_ *= denom_
+  denom_ *= denom_;
 #else
   simple_save_mul(num_,num_);
   simple_save_mul(denom_,denom_);

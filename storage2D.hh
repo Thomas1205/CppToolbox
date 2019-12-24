@@ -475,8 +475,8 @@ void Storage2D<T,ST>::resize_dirty(ST newxDim, ST newyDim)
 }
 
 template<typename T, typename ST>
-void Storage2D<T,ST>::swap(Storage2D<T,ST>& toSwap) {
-
+void Storage2D<T,ST>::swap(Storage2D<T,ST>& toSwap) 
+{
   std::swap(Base::data_, toSwap.data_);
   std::swap(Base::size_, toSwap.size_);
   std::swap(xDim_, toSwap.xDim_);

@@ -12,6 +12,15 @@
 #include "storage_base.hh"
 #include <cstring>
 
+template<typename T>
+class SwapOp {
+public:
+  
+  void operator()(T& val1, T& val2) const {
+    std::swap(val1, val2);
+  }
+};
+
 template<typename T, typename ST=size_t>
 class Storage1D : public StorageBase<T,ST> {
 public:
@@ -45,6 +54,10 @@ public:
 
   //maintains the values of existing positions, new ones are undefined
   void resize(ST new_size);
+  
+  //maintains the values of existing positions, new ones are undefined
+  template<class swap_op = SwapOp<T>>
+  void resize_swap(ST newsize, swap_op op);
 
   //maintains the values of exisitng positions, new ones are filled with <code> fill_value </code>
   void resize(ST new_size, const T fill_value);
@@ -349,26 +362,6 @@ void Storage1D<T,ST>::operator=(const T& invalid_object)
 }
 #endif
 
-
-// template<>
-// void Storage1D<uint>::operator=(const Storage1D<uint>& toCopy);
-
-// template<>
-// void Storage1D<int>::operator=(const Storage1D<int>& toCopy);
-
-// template<>
-// void Storage1D<float>::operator=(const Storage1D<float>& toCopy);
-
-// template<>
-// void Storage1D<double>::operator=(const Storage1D<double>& toCopy);
-
-// template<>
-// void Storage1D<long double>::operator=(const Storage1D<long double>& toCopy);
-
-// template<>
-// void Storage1D<ushort>::operator=(const Storage1D<ushort>& toCopy);
-
-
 //maintains the values of existing positions, new ones are undefined
 template<typename T,typename ST>
 void Storage1D<T,ST>::resize(ST new_size)
@@ -399,12 +392,6 @@ void Storage1D<T,ST>::resize(ST new_size)
 
     Makros::unified_assign(new_data, Base::data_, size);
 
-    // for (ST i=0; i < size; i++)
-      // new_data[i] = data_[i];
-
-    //this is faster for basic types but it fails for complex types where e.g. arrays have to be copied
-    //memcpy(new_data,data_,std::min(size_,new_size)*sizeof(T));
-
     delete[] Base::data_;
     Base::data_ = new_data;
   }
@@ -412,21 +399,30 @@ void Storage1D<T,ST>::resize(ST new_size)
   Base::size_ = new_size;
 }
 
-// template<>
-// void Storage1D<float>::resize(size_t new_size);
 
-// template<>
-// void Storage1D<double>::resize(size_t new_size);
+//maintains the values of existing positions, new ones are undefined
+template<typename T, typename ST>
+template<class swap_op>
+void Storage1D<T,ST>::resize_swap(ST new_size, swap_op op)
+{
+  if (Base::data_ == 0) {
+    Base::data_ = new T[new_size];
+  }
+  else if (Base::size_ != new_size) {
 
-// template<>
-// void Storage1D<long double>::resize(size_t new_size);
+    T* new_data = new T[new_size];
 
-// template<>
-// void Storage1D<int>::resize(size_t new_size);
+    const ST size = std::min(Base::size_,new_size);
 
-// template<>
-// void Storage1D<uint>::resize(size_t new_size);
+    for (ST i=0; i < size; i++)
+      op(new_data[i],Base::data_[i]);
 
+    delete[] Base::data_;
+    Base::data_ = new_data;
+  }
+
+  Base::size_ = new_size;
+}
 
 //maintains the values of existing positions, new ones are filled with <code> fill_value </code>
 template<typename T,typename ST>
@@ -504,8 +500,8 @@ void Storage1D<T,ST>::resize_dirty(ST new_size)
 template<typename T,typename ST>
 void Storage1D<T,ST>::swap(Storage1D<T,ST>& toSwap) 
 {
-  std::swap(Base::data_, Base::toSwap.data_);
-  std::swap(Base::size_, Base::toSwap.size);
+  std::swap(Base::data_, toSwap.data_);
+  std::swap(Base::size_, toSwap.size_);
 }
 
 /******** implementation of NamedStorage1D ***************/

@@ -5,6 +5,7 @@
 
 #include "makros.hh"
 #include "storage1D.hh"
+#include "sorting.hh"
 #include <numeric>
 
 namespace Math1D {
@@ -80,6 +81,8 @@ namespace Math1D {
     void set_zeros();
 
     inline void add_vector_multiple(const Math1D::Vector<T,ST>& vec, const T alpha);
+
+    bool is_sorted() const;
 
     void operator+=(const Vector<T,ST>& v);
 
@@ -462,6 +465,11 @@ namespace Math1D {
     for (ST i=0; i < size; i++)
       data[i] += addon;
   }
+  
+  template<typename T,typename ST>
+  bool Vector<T,ST>::is_sorted() const {
+    return is_sorted(Base::data_, Base::size_);
+  }
 
   template<typename T,typename ST>
   inline void Vector<T,ST>::add_vector_multiple(const Math1D::Vector<T,ST>& v, const T alpha)
@@ -510,6 +518,7 @@ namespace Math1D {
   
     Makros::array_add_multiple(Base::data_, size, alpha, v.direct_access());
   }
+
 
   template<typename T,typename ST>
   void Vector<T,ST>::operator+=(const Vector<T,ST>& v)
@@ -729,6 +738,7 @@ namespace Math1D {
     assertAligned16(data1);
     assertAligned16(data2);
 
+    //g++ uses packed fused multiply-add, but ignores the alignment information
     return std::inner_product(data1,data1+size,data2, (T) 0);
 
     // T result = (T) 0;

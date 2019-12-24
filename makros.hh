@@ -319,7 +319,7 @@ namespace Makros {
   inline void unified_assign(long double* attr_restrict dest, const long double* attr_restrict source, size_t size) 
   {
     memcpy(dest, source, size * sizeof(long double));
-  }  
+  }    
 }
 
 template<typename T>
