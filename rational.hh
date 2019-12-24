@@ -2,39 +2,44 @@
 #define RATIONAL_HH
 
 #include <iostream>
+#include "makros.hh"
 
 bool rational_result_is_save();
 
 void reset_rational_result_is_save();
-
-long gcd(unsigned long n1, unsigned long n2);
 
 class Rational64 {
 public:
 
   Rational64();
 
-  Rational64(long num);
+  Rational64(Int64 num);
 
-  Rational64(long num, long denom);
+  Rational64(Int64 num, Int64 denom);
 
   Rational64 inverse() const;
+  
+  Rational64 square() const;
+
+  void negate();
 
   void invert();
+
+  void square_this();
 
   void normalize();
 
   bool is_normalized() const;
 
-  bool is_negative() const;
+  inline bool is_positive() const;
 
-  void negate();
+  inline bool is_negative() const;
 
-  bool is_zero() const;
+  inline bool is_zero() const;
 
-  bool is_nonzero() const;
+  inline bool is_nonzero() const;
 
-  bool is_one() const;
+  inline bool is_one() const;
 
   double toDouble() const;
 
@@ -42,12 +47,12 @@ public:
 
   void operator-=(Rational64 r);
 
-  void operator*=(long fac);
+  void operator*=(Int64 fac);
 
   void operator*=(Rational64 r);
 
-  long num_;
-  long denom_;
+  Int64 num_;
+  Int64 denom_;
 };
 
 Rational64 operator+(const Rational64& r1, const Rational64& r2);
@@ -56,9 +61,9 @@ Rational64 operator-(const Rational64& r1, const Rational64& r2);
 
 Rational64 operator*(const Rational64& r1, const Rational64& r2);
 
-Rational64 operator*(long r1, const Rational64& r2);
+Rational64 operator*(Int64 r1, const Rational64& r2);
 
-Rational64 operator*(const Rational64& r1, long r2);
+Rational64 operator*(const Rational64& r1, Int64 r2);
 
 //unary minus
 Rational64 operator-(const Rational64& r);
@@ -83,5 +88,52 @@ Rational64 rabs(const Rational64& r);
 Rational64 approx_sqrt(const Rational64& r);
 
 Rational64 approx_r64(double d);
+
+namespace Makros {
+  
+  template<>
+  inline Rational64 abs(Rational64 arg)
+  {
+    return rabs(arg);
+  }
+  
+  template<>
+  inline void unified_assign(Rational64* attr_restrict dest, const Rational64* attr_restrict source, size_t size) 
+  {
+    memcpy(dest, source, size * sizeof(Rational64));
+  }    
+}
+
+/******* implementation ******/
+
+inline bool Rational64::is_negative() const
+{
+  assert(denom_ > 0);
+  return (num_ < 0);
+}
+
+inline bool Rational64::is_positive() const
+{
+  assert(denom_ > 0);
+  return (num_ > 0);  
+}
+
+inline bool Rational64::is_one() const
+{
+  assert(denom_ > 0);
+  return (denom_ == 1 && num_ == 1);
+}
+
+inline bool Rational64::is_zero() const
+{
+  return (num_ == 0);
+}
+
+inline bool Rational64::is_nonzero() const
+{
+  return (num_ != 0);
+}
+
+
 
 #endif

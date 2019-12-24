@@ -258,22 +258,10 @@ Storage1D<T,ST>::Storage1D(const Storage1D<T,ST>& toCopy) : StorageBase<T,ST>(to
   Makros::unified_assign(Base::data_, toCopy.direct_access(), Base::size_);
 }
 
-// template<> Storage1D<int>::Storage1D(const Storage1D<int>& toCopy);
-
-// template<> Storage1D<uint>::Storage1D(const Storage1D<uint>& toCopy);
-
-// template<> Storage1D<float>::Storage1D(const Storage1D<float>& toCopy);
-
-// template<> Storage1D<double>::Storage1D(const Storage1D<double>& toCopy);
-
-// template<> Storage1D<ushort>::Storage1D(const Storage1D<ushort>& toCopy);
-
 template<typename T,typename ST>
 inline void Storage1D<T,ST>::range_set_constant(const T constant, ST start, ST length)
 {
-  const ST size = Base::size_;
-  assert(start < size);
-  assert(start+length <= size);
+  assert(start+length <= Base::size_);
 
   std::fill_n(Base::data_+start,length,constant); //experimental result: fill_n is usually faster
 }

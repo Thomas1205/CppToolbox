@@ -2,15 +2,30 @@
 #include "makros.hh"
 #include "combinatoric.hh" //imports gcd
 
+#include "integer_math.hh"
+
 #include <cmath>
 
 static int __attribute__((used))  rational_res_is_save = 1;
 
 //#define DEBUG_OUTPUT
 
+#ifdef USE_ASM
+//#define VIA128
+
+inline void simple_save_mul(Int64& n, const Int64 fac)
+{
+  __asm__ volatile ("imulq %1 \n\t"
+                    "jno 1f \n\t"
+                    "movl $0,_ZL20rational_res_is_save \n\t"
+                    "1: \n\t"
+                    : "+&a"(n) : "g"(fac) : "rdx"); //load n into rax 
+}
+#endif
+
 bool rational_result_is_save()
 {
-  assert(sizeof(long) == 8);
+  assert(sizeof(Int64) == 8);
   return (rational_res_is_save != 0);
 }
 
@@ -24,26 +39,24 @@ Rational64::Rational64()
 {
 }
 
-Rational64::Rational64(long num, long denom)
+Rational64::Rational64(Int64 num, Int64 denom)
   : num_(num), denom_(denom)
 {
   assert(denom_ > 0);
 }
 
-Rational64::Rational64(long num) : num_(num), denom_(1) {}
+Rational64::Rational64(Int64 num) : num_(num), denom_(1) {}
 
 Rational64 Rational64::inverse() const
 {
-
   assert(num_ != 0);
 
-  long sign = (num_ < 0) ? -1 : 1;
+  Int64 sign = (num_ < 0) ? -1 : 1;
   return Rational64(denom_ * sign, abs(num_));
 }
 
 void Rational64::invert()
 {
-
   assert(num_ != 0);
   if (num_ < 0) {
     num_ = - num_;
@@ -53,15 +66,37 @@ void Rational64::invert()
   std::swap(num_,denom_);
 }
 
-
 void Rational64::negate()
 {
   num_ = - num_;
 }
 
+Rational64 Rational64::square() const 
+{
+  //we can save both gcds as this number should be normalized
+#ifndef USE_ASM
+  return Rational64(num_* num_, denom_ * denom_);
+#else
+  Rational64 result(num_, denom_);
+  simple_save_mul(result.num_,result.num_);
+  simple_save_mul(result.denom_,result.denom_);
+  return result;
+#endif
+}
+
+void Rational64::square_this()
+{
+#ifndef USE_ASM
+  num_ *= num_;
+  denom_ *= denom_
+#else
+  simple_save_mul(num_,num_);
+  simple_save_mul(denom_,denom_);
+#endif
+}
+
 void Rational64::normalize()
 {
-
   long cur_gcd = gcd64(abs(num_),denom_);
 
   if (cur_gcd != 1) {
@@ -75,50 +110,14 @@ bool Rational64::is_normalized() const
   return (gcd64(abs(num_),denom_) == 1);
 }
 
-bool Rational64::is_negative() const
-{
-  assert(denom_ > 0);
-  return (num_ < 0);
-}
-
-bool Rational64::is_one() const
-{
-  assert(denom_ > 0);
-  return (denom_ == 1 && num_ == 1);
-}
-
-bool Rational64::is_zero() const
-{
-  return (num_ == 0);
-}
-
-bool Rational64::is_nonzero() const
-{
-  return (num_ != 0);
-}
-
 double Rational64::toDouble() const
 {
   return double(num_) / double(denom_);
 }
 
-#ifdef USE_ASM
-inline void simple_save_mul(long& n, const long fac)
+void Rational64::operator*=(Int64 fac)
 {
-
-  __asm__ volatile ("imulq %1 \n\t"
-                    "jno 1f \n\t"
-                    "movl $0,_ZL20rational_res_is_save \n\t"
-                    "1: \n\t"
-                    : "+&a"(n) : "g"(fac) : "rdx");
-
-}
-#endif
-
-void Rational64::operator*=(long fac)
-{
-
-  long cur_gcd = gcd64(abs(fac),denom_);
+  Int64 cur_gcd = gcd64(abs(fac),denom_);
   if (cur_gcd != 1) {
     fac /= cur_gcd;
     denom_ /= cur_gcd;
@@ -131,12 +130,11 @@ void Rational64::operator*=(long fac)
 #endif
 }
 
-Rational64 operator*(long r1, const Rational64& r2)
+Rational64 operator*(Int64 r1, const Rational64& r2)
 {
-
   Rational64 result = r2;
 
-  long cur_gcd = gcd64(abs(r1),result.denom_);
+  Int64 cur_gcd = gcd64(abs(r1),result.denom_);
 
   if (cur_gcd != 1) {
     r1 /= cur_gcd;
@@ -154,18 +152,15 @@ Rational64 operator*(long r1, const Rational64& r2)
 
 Rational64 operator*(const Rational64& r1, long r2)
 {
-
   return operator*(r2,r1);
 }
 
-
 #ifdef USE_ASM
-inline void save_add(const Rational64& r1, const Rational64& r2, long denom_gcd,
-                     long& new_num, long& new_denom)
+inline void save_add(const Rational64& r1, const Rational64& r2, Int64 denom_gcd,
+                     Int64& new_num, Int64& new_denom)
 {
-
-  long sdenom1 = r1.denom_;
-  long sdenom2 = r2.denom_;
+  Int64 sdenom1 = r1.denom_;
+  Int64 sdenom2 = r2.denom_;
 
   if (denom_gcd != 1) {
     sdenom1 /= denom_gcd;
@@ -197,11 +192,9 @@ inline void save_add(const Rational64& r1, const Rational64& r2, long denom_gcd,
                    );
 }
 
-
-inline void save_add2(const Rational64& r1, const Rational64& r2, long denom_gcd,
-                      long& new_num, long& new_denom)
+inline void save_add2(const Rational64& r1, const Rational64& r2, Int64 denom_gcd,
+                      Int64& new_num, Int64& new_denom)
 {
-
   long sdenom1 = r1.denom_;
   long sdenom2 = r2.denom_;
 
@@ -237,7 +230,6 @@ inline void save_add2(const Rational64& r1, const Rational64& r2, long denom_gcd
 
 Rational64 operator+(const Rational64& r1, const Rational64& r2)
 {
-
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator+" << std::endl;
 #endif
@@ -245,55 +237,147 @@ Rational64 operator+(const Rational64& r1, const Rational64& r2)
   assert(r1.denom_ > 0);
   assert(r2.denom_ > 0);
 
-  long denom_gcd = gcd64(r1.denom_,r2.denom_);
+  Int64 denom_gcd = gcd64(r1.denom_,r2.denom_);
 
+  Int64 new_num;
+  Int64 new_denom;
+
+#if defined(USE_ASM) && defined(VIA128)
+
+  Int64 prod1_high, prod1_low, prod2_high, prod2_low;
+  imul(r1.num_, r2.denom_/denom_gcd, prod1_high, prod1_low);
+  imul(r2.num_, r1.denom_/denom_gcd, prod2_high, prod2_low);
+
+  bool overflow = false;
+
+  Int64 sum_high, sum_low;
+  iadd(prod1_high, prod1_low, prod2_high, prod2_low, sum_high, sum_low, overflow);
+  assert(overflow == false); //this really cannot happen here!
+
+  bool sum_fits = (sum_high == 0 || sum_high == -1);
+
+  Int64 denom_high, denom_low;
+  imul(r1.denom_/denom_gcd, r2.denom_, denom_high, denom_low);
+
+  bool denom_fits = (denom_high == 0); //since denom is positive!
+
+  bool mark_overflow = false;
+
+  if (sum_fits && denom_fits) {
+
+    long new_gcd = gcd64(abs(sum_low), denom_low);
+    if (new_gcd != 1) {
+      new_num = sum_low / new_gcd;
+      new_denom =  denom_low / new_gcd;
+    }    
+  }
+  else if (sum_fits) {
+        
+    if (denom_high >= abs(sum_low)) {
+      mark_overflow = true;
+    }
+    else {
+    
+      long new_gcd = gcd_mixed_128_64(denom_high, denom_low, sum_low); 
+
+      if (denom_high >= abs(new_gcd)) {
+        mark_overflow = true;
+      }    
+      else {
+        new_num = sum_low / new_gcd;
+        new_denom = idiv(denom_high, denom_low, new_gcd);        
+      }
+    }
+  }
+  else if (denom_fits) {
+    
+    Int64 abs_high == sum_high;
+    Int64 abs_low = sum_low;
+    if (sum_high < 0)
+      ineg(sum_high, sum_low, abs_high, abs_low);
+    
+    if (abs_high >= denom_low) {
+      mark_overflow = true;
+    }
+    else {
+    
+      Int64 new_gcd = gcd_mixed_128_64(abs_high, abs_low, denom_low); 
+      
+      if (abs_high >= new_gcd) {
+        mark_overflow = true;
+      }
+      else {        
+        new_num = idiv(sum_high, sum_low, new_gcd);
+        new_denom = denom_low / new_gcd;
+      }
+    }
+  }
+  else 
+    mark_overflow = true;
+  
+  if (mark_overflow) {
+    
+    new_num = 0;
+    new_denom = 1;
+    
+    rational_res_is_save = 0;
+    assert(false);
+  }
+
+#else 
+ 
 #ifndef USE_ASM
-  long new_num = r1.num_*(r2.denom_/denom_gcd)  + r2.num_*(r1.denom_/denom_gcd) ;
-  long new_denom = (r1.denom_/denom_gcd)*r2.denom_;
-#else
-  long new_num;
-  long new_denom;
-
+  new_num = r1.num_*(r2.denom_/denom_gcd)  + r2.num_*(r1.denom_/denom_gcd) ;
+  new_denom = (r1.denom_/denom_gcd)*r2.denom_;
+#else 
   //save_add(r1, r2, denom_gcd, new_num, new_denom);
   save_add2(r1, r2, denom_gcd, new_num, new_denom);
 
   assert(rational_res_is_save != 0);
 #endif
 
-  long new_gcd = gcd64(abs(new_num),new_denom);
+  Int64 new_gcd = gcd64(abs(new_num),new_denom);
   if (new_gcd != 1) {
     new_num /= new_gcd;
     new_denom /= new_gcd;
   }
+#endif
 
   return Rational64(new_num,new_denom);
 }
 
 void Rational64::operator+=(Rational64 r)
 {
-
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator+=" << std::endl;
 #endif
 
+#if defined(USE_ASM) && defined(VIA128)
+
+  Rational64 new_r = *this + r;
+  num_ = new_r.num_;
+  denom_ = new_r.denom_;
+
+#else
+
   assert(denom_ > 0);
   assert(r.denom_ > 0);
 
-  long denom_gcd = gcd64(denom_,r.denom_);
+  Int64 denom_gcd = gcd64(denom_,r.denom_);
 
 #ifndef USE_ASM
-  long new_num = num_*(r.denom_/denom_gcd)  + r.num_*(denom_/denom_gcd) ;
-  long new_denom = (denom_/denom_gcd)*r.denom_;
+  Int64 new_num = num_*(r.denom_/denom_gcd)  + r.num_*(denom_/denom_gcd) ;
+  Int64 new_denom = (denom_/denom_gcd)*r.denom_;
 #else
-  long new_num;
-  long new_denom;
+  Int64 new_num;
+  Int64 new_denom;
 
   //save_add(*this, r, denom_gcd, new_num, new_denom);
   save_add2(*this, r, denom_gcd, new_num, new_denom);
   assert(rational_res_is_save != 0);
 #endif
 
-  long new_gcd = gcd64(abs(new_num),new_denom);
+  Int64 new_gcd = gcd64(abs(new_num),new_denom);
   if (new_gcd != 1) {
     new_num /= new_gcd;
     new_denom /= new_gcd;
@@ -301,15 +385,15 @@ void Rational64::operator+=(Rational64 r)
 
   num_ = new_num;
   denom_ = new_denom;
+#endif
 }
 
 #ifdef USE_ASM
-inline void save_sub(const Rational64& r1, const Rational64& r2, long denom_gcd,
-                     long& new_num, long& new_denom)
+inline void save_sub(const Rational64& r1, const Rational64& r2, Int64 denom_gcd,
+                     Int64& new_num, Int64& new_denom)
 {
-
-  long sdenom1 = r1.denom_;
-  long sdenom2 = r2.denom_;
+  Int64 sdenom1 = r1.denom_;
+  Int64 sdenom2 = r2.denom_;
 
   if (denom_gcd != 1) {
     sdenom1 /= denom_gcd;
@@ -341,14 +425,11 @@ inline void save_sub(const Rational64& r1, const Rational64& r2, long denom_gcd,
                    );
 }
 
-
-inline void save_sub2(const Rational64& r1, const Rational64& r2, long denom_gcd,
-                      long& new_num, long& new_denom)
+inline void save_sub2(const Rational64& r1, const Rational64& r2, Int64 denom_gcd,
+                      Int64& new_num, Int64& new_denom)
 {
-
-
-  long sdenom1 = r1.denom_;
-  long sdenom2 = r2.denom_;
+  Int64 sdenom1 = r1.denom_;
+  Int64 sdenom2 = r2.denom_;
 
   if (denom_gcd != 1) {
     sdenom1 /= denom_gcd;
@@ -382,7 +463,6 @@ inline void save_sub2(const Rational64& r1, const Rational64& r2, long denom_gcd
 
 Rational64 operator-(const Rational64& r1, const Rational64& r2)
 {
-
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator-" << std::endl;
 #endif
@@ -390,14 +470,14 @@ Rational64 operator-(const Rational64& r1, const Rational64& r2)
   assert(r1.denom_ > 0);
   assert(r2.denom_ > 0);
 
-  long denom_gcd = gcd64(r1.denom_,r2.denom_);
+  Int64 denom_gcd = gcd64(r1.denom_,r2.denom_);
 
 #ifndef USE_ASM
-  long new_num = r1.num_*(r2.denom_/denom_gcd)  - r2.num_*(r1.denom_/denom_gcd) ;
-  long new_denom = (r1.denom_/denom_gcd)*r2.denom_;
+  Int64 new_num = r1.num_*(r2.denom_/denom_gcd)  - r2.num_*(r1.denom_/denom_gcd) ;
+  Int64 new_denom = (r1.denom_/denom_gcd)*r2.denom_;
 #else
-  long new_num;
-  long new_denom;
+  Int64 new_num;
+  Int64 new_denom;
 
   //save_sub(r1, r2, denom_gcd, new_num, new_denom);
   save_sub2(r1, r2, denom_gcd, new_num, new_denom);
@@ -407,7 +487,7 @@ Rational64 operator-(const Rational64& r1, const Rational64& r2)
   assert(rational_res_is_save != 0);
 #endif
 
-  const long new_gcd = gcd64(abs(new_num),new_denom);
+  const Int64 new_gcd = gcd64(abs(new_num),new_denom);
   if (new_gcd != 1) {
     new_num /= new_gcd;
     new_denom /= new_gcd;
@@ -418,7 +498,6 @@ Rational64 operator-(const Rational64& r1, const Rational64& r2)
 
 void Rational64::operator-=(Rational64 r)
 {
-
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator-=(" << (*this) << ", " << r << ")" << std::endl;
 #endif
@@ -428,20 +507,19 @@ void Rational64::operator-=(Rational64 r)
 
   //std::cerr << "this: " << (*this) << ", r: " << r << std::endl;
 
-  long denom_gcd = gcd64(denom_,r.denom_);
+  Int64 denom_gcd = gcd64(denom_,r.denom_);
 
   //std::cerr << "denom_gcd: " << denom_gcd << std::endl;
 
 #ifndef USE_ASM
-  long new_num = num_*(r.denom_/denom_gcd)  - r.num_*(denom_/denom_gcd) ;
-  long new_denom = (denom_/denom_gcd)*r.denom_;
+  Int64 new_num = num_*(r.denom_/denom_gcd)  - r.num_*(denom_/denom_gcd) ;
+  Int64 new_denom = (denom_/denom_gcd)*r.denom_;
 #else
-  long new_num;
-  long new_denom;
+  Int64 new_num;
+  Int64 new_denom;
 
   //save_sub(*this, r, denom_gcd, new_num, new_denom);
   save_sub2(*this, r, denom_gcd, new_num, new_denom);
-
 
   //std::cerr << "new_num: " << new_num << std::endl;
   //std::cerr << "new denom: " << new_denom << std::endl;
@@ -450,7 +528,7 @@ void Rational64::operator-=(Rational64 r)
   assert(rational_res_is_save != 0);
 #endif
 
-  const long new_gcd = gcd64(abs(new_num),new_denom);
+  const Int64 new_gcd = gcd64(abs(new_num),new_denom);
   if (new_gcd != 1) {
     new_num /= new_gcd;
     new_denom /= new_gcd;
@@ -463,11 +541,8 @@ void Rational64::operator-=(Rational64 r)
 }
 
 #ifdef USE_ASM
-inline  void save_mul(long n1, long d1, long n2, long d2,
-                      long& num, long& denom)
+inline  void save_mul(Int64 n1, Int64 d1, Int64 n2, Int64 d2, Int64& num, Int64& denom)
 {
-
-
   // with local labels
 
   __asm__ volatile ("movq %3,%%rax          \n\t"
@@ -487,11 +562,8 @@ inline  void save_mul(long n1, long d1, long n2, long d2,
                    );
 }
 
-inline  void save_mul2(long n1, long d1, long n2, long d2,
-                       long& num, long& denom)
+inline  void save_mul2(Int64 n1, Int64 d1, Int64 n2, Int64 d2, Int64& num, Int64& denom)
 {
-
-
   // with local labels
 
   __asm__ volatile ("imulq %3               \n\t"
@@ -511,10 +583,8 @@ inline  void save_mul2(long n1, long d1, long n2, long d2,
 }
 #endif
 
-
 Rational64 operator*(const Rational64& r1, const Rational64& r2)
 {
-
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator*" << std::endl;
 #endif
@@ -522,19 +592,19 @@ Rational64 operator*(const Rational64& r1, const Rational64& r2)
   if (r1.num_ == 0 || r2.num_ == 0)
     return Rational64(0,1);
 
-  long rnum1 = r1.num_;
-  long rdenom2 = r2.denom_;
+  Int64 rnum1 = r1.num_;
+  Int64 rdenom2 = r2.denom_;
 
-  const long gcd1 = gcd64(abs(r1.num_),r2.denom_);
+  const Int64 gcd1 = gcd64(abs(r1.num_),r2.denom_);
   if (gcd1 != 1) {
     rnum1 /= gcd1;
     rdenom2 /= gcd1;
   }
 
-  long rnum2 = r2.num_;
-  long rdenom1 = r1.denom_;
+  Int64 rnum2 = r2.num_;
+  Int64 rdenom1 = r1.denom_;
 
-  const long gcd2 = gcd64(abs(r2.num_),r1.denom_);
+  const Int64 gcd2 = gcd64(abs(r2.num_),r1.denom_);
 
   if (gcd2 != 1) {
     rnum2 /= gcd2;
@@ -549,7 +619,7 @@ Rational64 operator*(const Rational64& r1, const Rational64& r2)
   return Rational64(rnum1*rnum2,rdenom1*rdenom2);
 #else
 
-  long inum,idenom;
+  Int64 inum,idenom;
   //save_mul(rnum1,rdenom1,rnum2,rdenom2,inum,idenom);
   save_mul2(rnum1,rdenom1,rnum2,rdenom2,inum,idenom);
 
@@ -559,10 +629,8 @@ Rational64 operator*(const Rational64& r1, const Rational64& r2)
 #endif
 }
 
-
 void Rational64::operator*=(Rational64 r)
 {
-
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator*=" << std::endl;
 #endif
@@ -577,19 +645,18 @@ void Rational64::operator*=(Rational64 r)
     return;
   }
 
-  long rnum1 = num_;
-  long rdenom2 = r.denom_;
+  Int64 rnum1 = num_;
+  Int64 rdenom2 = r.denom_;
 
-
-  const long gcd1 = gcd64(abs(num_),r.denom_);
+  const Int64 gcd1 = gcd64(abs(num_),r.denom_);
   if (gcd1 != 1) {
     rnum1 /= gcd1;
     rdenom2 /= gcd1;
   }
 
-  long rnum2 = r.num_;
-  long rdenom1 = denom_;
-  const long gcd2 = gcd64(abs(r.num_),denom_);
+  Int64 rnum2 = r.num_;
+  Int64 rdenom1 = denom_;
+  const Int64 gcd2 = gcd64(abs(r.num_),denom_);
   if (gcd2 != 1) {
     rnum2 /= gcd2;
     rdenom1 /= gcd2;
@@ -605,7 +672,7 @@ void Rational64::operator*=(Rational64 r)
   denom_ = rdenom1*rdenom2;
 #else
 
-  long inum,idenom;
+  Int64 inum,idenom;
   //save_mul(rnum1,rdenom1,rnum2,rdenom2,inum,idenom);
   save_mul2(rnum1,rdenom1,rnum2,rdenom2,inum,idenom);
 
@@ -618,7 +685,6 @@ void Rational64::operator*=(Rational64 r)
 
 bool operator<(const Rational64& r1, const Rational64& r2)
 {
-
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator<" << std::endl;
 #endif
@@ -640,15 +706,27 @@ bool operator<(const Rational64& r1, const Rational64& r2)
   //if (r2.num_ == 0)
   //  return neg1;
 
+#ifdef VIA128
+  Int64 mul1_high, mul1_low, mul2_high, mul2_low;
+  imul(r1.num_, r2.denom_, mul1_high, mul1_low);
+  imul(r2.num_, r1.denom_, mul2_high, mul2_low);
+  
+  if (mul1_high != mul2_high)
+    return (mul1_high < mul2_high);
+  if (neg1 && neg2)
+    return (UInt64(mul1_low) > UInt64(mul2_low));
+  else
+    return (UInt64(mul1_low) < UInt64(mul2_low));
+#else
   long double ratio1 = ((long double)r1.num_) / ((long double)r1.denom_);
   long double ratio2 = ((long double)r2.num_) / ((long double)r2.denom_);
 
   return (ratio1 < ratio2);
+#endif
 }
 
 bool operator<=(const Rational64& r1, const Rational64& r2)
 {
-
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator<=" << std::endl;
 #endif
@@ -670,16 +748,27 @@ bool operator<=(const Rational64& r1, const Rational64& r2)
   //if (r2.num_ == 0)
   //  return neg1;
 
+#ifdef VIA128
+  Int64 mul1_high, mul1_low, mul2_high, mul2_low;
+  imul(r1.num_, r2.denom_, mul1_high, mul1_low);
+  imul(r2.num_, r1.denom_, mul2_high, mul2_low);
+  
+  if (mul1_high != mul2_high)
+    return (mul1_high < mul2_high);
+  if (neg1 && neg2)
+    return (UInt64(mul1_low) >= UInt64(mul2_low));
+  else
+    return (UInt64(mul1_low) <= UInt64(mul2_low));
+#else
   long double ratio1 = ((long double)r1.num_) / ((long double)r1.denom_);
   long double ratio2 = ((long double)r2.num_) / ((long double)r2.denom_);
+#endif
 
   return (ratio1 <= ratio2);
 }
 
-
 bool operator>(const Rational64& r1, const Rational64& r2)
 {
-
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator>" << std::endl;
 #endif
@@ -694,15 +783,27 @@ bool operator>(const Rational64& r1, const Rational64& r2)
   if (neg2 && !neg1)
     return true;
 
+#ifdef VIA128
+  Int64 mul1_high, mul1_low, mul2_high, mul2_low;
+  imul(r1.num_, r2.denom_, mul1_high, mul1_low);
+  imul(r2.num_, r1.denom_, mul2_high, mul2_low);
+  
+  if (mul1_high != mul2_high)
+    return (mul1_high > mul2_high);
+  if (neg1 && neg2)
+    return (UInt64(mul1_low) < UInt64(mul2_low));
+  else
+    return (UInt64(mul1_low) > UInt64(mul2_low));
+#else
   long double ratio1 = ((long double)r1.num_) / ((long double)r1.denom_);
   long double ratio2 = ((long double)r2.num_) / ((long double)r2.denom_);
+#endif
 
   return (ratio1 > ratio2);
 }
 
 bool operator>=(const Rational64& r1, const Rational64& r2)
 {
-
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator>=" << std::endl;
 #endif
@@ -720,12 +821,24 @@ bool operator>=(const Rational64& r1, const Rational64& r2)
   if (r1 == r2)
     return true;
 
+#ifdef VIA128
+  Int64 mul1_high, mul1_low, mul2_high, mul2_low;
+  imul(r1.num_, r2.denom_, mul1_high, mul1_low);
+  imul(r2.num_, r1.denom_, mul2_high, mul2_low);
+  
+  if (mul1_high != mul2_high)
+    return (mul1_high > mul2_high);
+  if (neg1 && neg2)
+    return (UInt64(mul1_low) < UInt64(mul2_low));
+  else
+    return (UInt64(mul1_low) > UInt64(mul2_low));
+#else
   long double ratio1 = ((long double)r1.num_) / ((long double)r1.denom_);
   long double ratio2 = ((long double)r2.num_) / ((long double)r2.denom_);
+#endif
 
   return (ratio1 >= ratio2);
 }
-
 
 std::ostream& operator<<(std::ostream& out, const Rational64& r)
 {
@@ -733,18 +846,14 @@ std::ostream& operator<<(std::ostream& out, const Rational64& r)
   return out;
 }
 
-
 Rational64 rabs(const Rational64& r)
 {
-
   assert(r.denom_ > 0);
   return Rational64(abs(r.num_),r.denom_);
 }
 
-
 bool operator==(const Rational64& r1, const Rational64& r2)
 {
-
   if (!r2.is_normalized())
     std::cerr << "r2: " << r2 << std::endl;
 
@@ -767,7 +876,6 @@ Rational64 operator-(const Rational64& r)
   return Rational64(-r.num_,r.denom_);
 }
 
-
 Rational64 approx_r64(double d)
 {
   double df = floor(d);
@@ -775,12 +883,12 @@ Rational64 approx_r64(double d)
   //int sign = (d < 0) ? -1 : 1;
 
   if (d == df)
-    return Rational64(long(df),1);
+    return Rational64(Int64(df),1);
 
   double absd = fabs(d);
 
   if (absd >= 100000000.0)
-    return Rational64(long(floor(df+0.5)),1);
+    return Rational64(Int64(floor(df+0.5)),1);
   if (absd >= 10000.0) {
 
     Rational64 r(floor(10000*df+0.5),10000);
@@ -803,7 +911,6 @@ Rational64 approx_r64(double d)
   return r;
 }
 
-
 Rational64 approx_sqrt(const Rational64& r)
 {
   if (r.num_ < 0)
@@ -811,4 +918,3 @@ Rational64 approx_sqrt(const Rational64& r)
   else
     return Rational64(sqrt(r.num_),sqrt(r.denom_));
 }
-
