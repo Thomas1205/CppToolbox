@@ -1,3 +1,9 @@
+
+/***** changes since the last release ******/
+
+- corrected and extended rational numbers, plus improved efficiency and cases that can be handled inside precision
+- released sorting
+
 /***** changes for version 1.1 (December 20 2019) ****/
 
 - added symmetric 2D storage
@@ -11,7 +17,6 @@
 - slighlty improved speed of a few routines where the size of the data_-array remains constant
 - in vector arithmetic, the dimension check is now skipped if a certain preprocessor definition is set
 - adapted indentation
-
 
 /***** changes for version 1.03 *****/
 

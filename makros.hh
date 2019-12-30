@@ -93,6 +93,7 @@ typedef float ALIGNED16 float_A16;
 #define EPS_FLOAT  std::numeric_limits<float>::epsilon()
 #define MAX_INT std::numeric_limits<int>::max()
 #define MAX_UINT std::numeric_limits<uint>::max()
+#define MIN_LONG std::numeric_limits<long long>::min()
 #define MAX_LONG std::numeric_limits<long long>::max()
 #define MAX_ULONG std::numeric_limits<unsigned long long>::max()
 #define MAX_USHORT std::numeric_limits<ushort>::max()
@@ -234,13 +235,17 @@ namespace Makros {
     return arg;
   }
 
-#ifndef _32BIT_OS
   template<>
-  inline size_t abs(size_t arg)
+  inline UInt64 abs(UInt64 arg)
   {
     return arg;
   }
-#endif
+
+  template<>
+  inline Int64 abs(Int64 arg) 
+  {
+    return llabs(arg);
+  }
 
   template<>
   inline float abs(float arg)
@@ -616,7 +621,7 @@ namespace Makros {
     // }
 #elif USE_SSE >= 5
 
-    //use AVX
+    //use AVX - align16 is no good, need align32 for aligned moves
     
     float val = MIN_FLOAT;
     const uint one = 1;
@@ -745,7 +750,8 @@ namespace Makros {
     // }
 #elif USE_SSE >= 5
 
-    //use AVX
+    //use AVX  - align16 is no good, need align32 for aligned moves
+    
     assert(sizeof(size_t) == 8);
     
     double val = MIN_DOUBLE;
@@ -887,7 +893,7 @@ namespace Makros {
     // }
 #elif USE_SSE >= 5
 
-    //use AVX
+    //use AVX  - align16 is no good, need align32 for aligned moves
     
     float val = MAX_FLOAT;
     const uint one = 1;
@@ -1025,7 +1031,8 @@ namespace Makros {
     // }
 #elif USE_SSE >= 5
 
-    //use AVX
+    //use AVX  - align16 is no good, need align32 for aligned moves
+    
     assert(sizeof(size_t) == 8);
     
     double val = MAX_DOUBLE;
@@ -1149,6 +1156,9 @@ namespace Makros {
       data[i] *= constant;
     }
 #elif USE_SSE >= 5
+
+    // AVX  - align16 is no good, need align32 for aligned moves
+
     asm __volatile__ ("vbroadcastss %[tmp], %%ymm7 \n\t"
                       : : [tmp] "m" (constant) : "ymm7");
 
@@ -1194,6 +1204,8 @@ namespace Makros {
       data[i] *= constant;
     }
 #elif USE_SSE >= 5
+
+    // AVX  - align16 is no good, need align32 for aligned moves
 
     asm __volatile__ ("vbroadcastsd %[tmp], %%ymm7 \n\t"
                       : : [tmp] "m" (constant) : "ymm7");
@@ -1245,7 +1257,9 @@ namespace Makros {
     for (i=0; i < nData; i++)
       data[i] -= factor*data2[i];
 #elif USE_SSE >= 5
-    //use AVX
+
+    // AVX  - align16 is no good, need align32 for aligned moves
+
     asm __volatile__ ("vbroadcastsd %[tmp], %%ymm7 \n\t"
                       : : [tmp] "m" (factor) : "ymm7");
                       
@@ -1306,7 +1320,8 @@ namespace Makros {
     for (size_t i=0; i < nData; i++)
       dest[i] = src1[i] - alpha * src2[i];
 #else
-    //use AVX
+
+    // AVX  - align16 is no good, need align32 for aligned moves
   
     asm __volatile__ ("vbroadcastsd %[w1], %%ymm0 \n\t" //ymm0 = w1
                       : : [w1] "m" (alpha) : "ymm0");

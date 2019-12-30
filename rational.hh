@@ -11,6 +11,8 @@ void reset_rational_result_is_save();
 class Rational64 {
 public:
 
+  typedef Int64 BaseType;
+
   Rational64();
 
   Rational64(Int64 num);
@@ -18,7 +20,11 @@ public:
   Rational64(Int64 num, Int64 denom);
 
   Rational64 inverse() const;
-  
+    
+  Rational64 rabs() const;
+
+  Rational64 negative() const;
+
   Rational64 square() const;
 
   void negate();
@@ -40,8 +46,14 @@ public:
   inline bool is_nonzero() const;
 
   inline bool is_one() const;
+  
+  inline bool is_integer() const;  
 
   double toDouble() const;
+
+  long double toLongDouble() const;
+
+  //TODO: operators for adding and subtracting an Int64
 
   void operator+=(Rational64 r);
 
@@ -134,6 +146,10 @@ inline bool Rational64::is_nonzero() const
   return (num_ != 0);
 }
 
-
+inline bool Rational64::is_integer() const
+{
+  //assumes normalized state
+  return (denom_ == 1);
+}
 
 #endif
