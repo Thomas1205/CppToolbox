@@ -391,7 +391,7 @@ Rational64 operator+(const Rational64& r1, const Rational64& r2)
 
   Rational64 result;
 
-#if 1
+#ifdef USE_ASM
   if (r1.denom_ == r2.denom_) {
     bool overflow;
     iadd(r1.num_, r2.num_, result.num_, overflow);
@@ -465,7 +465,7 @@ void Rational64::operator+=(Rational64 r)
     return;
   }
 
-#if 1
+#ifdef USE_ASM
   if (denom_ == r.denom_) {
     bool overflow;
     iadd_inplace(num_, r.num_, overflow);
@@ -581,7 +581,7 @@ Rational64 operator-(const Rational64& r1, const Rational64& r2)
 
   Rational64 result;
 
-#if 1
+#ifdef USE_ASM
   if (r1.denom_ == r2.denom_) {
     bool overflow;
     iadd(r1.num_, -r2.num_, result.num_, overflow);
@@ -656,7 +656,7 @@ void Rational64::operator-=(Rational64 r)
     return;
   }
 
-#if 1
+#ifdef USE_ASM
   if (denom_ == r.denom_) {
     bool overflow;
     iadd_inplace(num_, -r.num_, overflow);
