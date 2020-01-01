@@ -15,7 +15,13 @@ template<typename T>
 bool is_sorted(const T* data, const size_t nData);
 
 template<typename T>
+bool is_reverse_sorted(const T* data, const size_t nData);
+
+template<typename T>
 bool is_unique_sorted(const T* data, const size_t nData);
+
+template<typename T>
+bool is_unique_reverse_sorted(const T* data, const size_t nData);
 
 /***** plain sorting ****/
 
@@ -71,6 +77,17 @@ bool is_sorted(const T* data, const size_t nData)
 }
 
 template<typename T>
+bool is_reverse_sorted(const T* data, const size_t nData)
+{
+  for (size_t i=1; i < nData; i++) {
+    if (data[i-1] < data[i])
+      return false;
+  }
+
+  return true;
+}
+
+template<typename T>
 bool is_unique_sorted(const T* data, const size_t nData) 
 {
   for (size_t i=1; i < nData; i++) {
@@ -79,6 +96,17 @@ bool is_unique_sorted(const T* data, const size_t nData)
   }
 
   return true;
+}
+
+template<typename T>
+bool is_unique_reverse_sorted(const T* data, const size_t nData)
+{
+  for (size_t i=1; i < nData; i++) {
+    if (data[i-1] <= data[i])
+      return false;
+  }
+
+  return true;  
 }
 
 /**** plain ***/

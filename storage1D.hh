@@ -195,7 +195,12 @@ public:
 
   void operator=(const FlexibleStorage1D<T,ST>& toCopy);
 
-  ST append(T val);
+  inline T back() const;
+
+  ST append(T val);  
+  
+  //shortcut when you are sure the allocated memory suffices
+  inline void append_trusting(T val);
 
   inline void push_back(T val);
 
@@ -203,9 +208,9 @@ public:
 
   void append(FlexibleStorage1D<T,ST>& toAppend);
 
-  ST size() const;
+  inline ST size() const;
 
-  ST reserved_size() const;
+  inline ST reserved_size() const;
 
   T* direct_access();
 
@@ -675,15 +680,23 @@ void FlexibleStorage1D<T,ST>::set_constant(T val)
 }
 
 template<typename T, typename ST>
-ST FlexibleStorage1D<T,ST>::size() const
+inline ST FlexibleStorage1D<T,ST>::size() const
 {
   return size_;
 }
 
 template<typename T, typename ST>
-ST FlexibleStorage1D<T,ST>::reserved_size() const
+inline ST FlexibleStorage1D<T,ST>::reserved_size() const
 {
   return reserved_size_;
+}
+
+template<typename T, typename ST>
+inline T FlexibleStorage1D<T,ST>::back() const
+{
+  assert(size_ > 0);
+  assert(data_ != 0);
+  return data_[size_-1];
 }
 
 template<typename T, typename ST>
@@ -710,6 +723,15 @@ ST FlexibleStorage1D<T,ST>::append(T val)
   size_++;
 
   return k;
+}
+
+//shortcut when you are sure the allocated memory suffices
+template<typename T, typename ST>
+inline void FlexibleStorage1D<T,ST>::append_trusting(T val)
+{
+  assert(size_ < reserved_size_);
+  data_[size_] = val;
+  size_++;
 }
 
 template<typename T, typename ST>

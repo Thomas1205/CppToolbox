@@ -49,6 +49,8 @@ public:
   
   inline bool is_integer() const;  
 
+  Int64 toInt() const;
+
   double toDouble() const;
 
   long double toLongDouble() const;

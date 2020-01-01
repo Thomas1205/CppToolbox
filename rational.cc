@@ -137,6 +137,12 @@ bool Rational64::is_normalized() const
   return (gcd64(Makros::abs(num_),denom_) == 1 && denom_ > 0);
 }
 
+Int64 Rational64::toInt() const
+{
+  assert(denom_ == 1);
+  return num_;
+}
+
 double Rational64::toDouble() const
 {
   return double(num_) / double(denom_);

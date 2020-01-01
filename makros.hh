@@ -325,6 +325,24 @@ namespace Makros {
   {
     memcpy(dest, source, size * sizeof(long double));
   }    
+
+  inline size_t highest_bit(size_t val) 
+  {  
+    assert(val > 0);
+    size_t ret = 0;
+#ifndef USE_ASM
+    val >>= 1;
+    while (val > 0) {
+      ret++;
+      val >>= 1;
+    }
+#else
+    __asm__ volatile ("bsr %%rcx, %%rbx \n\t" //bit scan reverse
+                      : [ret] "+b"(ret) : [val] "c" (val) : "cc" );
+#endif  
+
+    return ret;
+  }
 }
 
 template<typename T>
