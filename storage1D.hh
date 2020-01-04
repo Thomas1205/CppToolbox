@@ -52,6 +52,8 @@ public:
   void operator=(const T& invalid_object);
 #endif
 
+  T back() const;
+
   //maintains the values of existing positions, new ones are undefined
   void resize(ST new_size);
   
@@ -232,6 +234,9 @@ std::ostream& operator<<(std::ostream& s, const FlexibleStorage1D<T,ST>& v);
 template<typename T, typename ST>
 bool operator==(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2);
 
+template<typename T, typename ST>
+bool operator!=(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2);
+
 template<typename T, typename ST=size_t>
 class NamedFlexibleStorage1D : public FlexibleStorage1D<T,ST> {
 public:
@@ -340,6 +345,12 @@ inline T& Storage1D<T,ST>::operator[](ST i)
   return Base::data_[i];
 }
 
+template<typename T,typename ST>
+T Storage1D<T,ST>::back() const
+{
+  assert(Base::size_ > 0);
+  return Base::data_[Base::size_-1];
+}
 
 template<typename T,typename ST>
 void Storage1D<T,ST>::operator=(const Storage1D<T,ST>& toCopy)
@@ -899,6 +910,18 @@ bool operator==(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>
   return true;
 }
 
+template<typename T, typename ST>
+bool operator!=(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2)
+{
+  if (v1.size() != v2.size())
+    return true;
+
+  for (ST k=0; k < v1.size(); k++) {
+    if (v1[k] != v2[k])
+      return true;
+  }
+  return false;
+}
 
 /***********************************/
 

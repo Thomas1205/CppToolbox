@@ -54,13 +54,16 @@ inline void merge_sort_key_value(T1* key, T2* value, const size_t nData);
 /***** index sorting *****/
 
 template<typename T, typename ST>
-inline void index_bubble_sort(T* data, ST* indices, ST nData);
+inline void index_bubble_sort(const T* data, ST* indices, ST nData);
 
 template<typename T, typename ST>
-void index_merge_sort(T* data, ST* indices, const ST nData);
+inline void index_batch_bubble_sort(const T* data, ST* indices, ST nData);
 
 template<typename T, typename ST>
-void index_quick_sort(T* data, ST* indices, const ST nData);
+void index_merge_sort(const T* data, ST* indices, const ST nData);
+
+template<typename T, typename ST>
+void index_quick_sort(const T* data, ST* indices, const ST nData);
 
 
 /************ implementation  *************/
@@ -154,8 +157,8 @@ inline void batch_bubble_sort(T* data, const size_t nData)
 
         std::reverse(data+l-1, data+end);        
         
-        flip = l-1;
-        l = end-1; //the last swapped index needs to be compared again
+        flip = l;
+        l = end-2; //the last swapped index needs to be compared again (l is incremented by the loop)
       }      
     }  
 
@@ -272,10 +275,18 @@ inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData) 
   size_t last_flip = nData;
   
   while (last_flip > 1) {
+
+    //std::cerr << "*** keys: ";
+    //for (uint k = 0; k < nData; k++)
+    //  std::cerr << key[k] << " ";
+    //std::cerr << std::endl;
+    //std::cerr << "last flip: " << last_flip << std::endl;
     
     size_t flip = 0;
     
     for (size_t l=1; l < last_flip; l++) {
+
+      //std::cerr << "l: " << l << std::endl;
 
       if (key[l] < key[l-1]) {
 
@@ -285,12 +296,19 @@ inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData) 
             break;
         }
 
+        //std::cerr << "reversing from " << (l-1) << " to excl. " << end << std::endl;
+
         std::reverse(key+l-1, key+end);
         std::reverse(value+l-1, value+end);
-        flip = l-1;
-        l = end-1; //the last swapped index needs to be compared again
-      }      
+        flip = l;
+        l = end-2; //the last swapped index needs to be compared again (l is incremented by the loop)
+      }            
     }  
+
+    //std::cerr << "*** keys after: ";
+    //for (uint k = 0; k < nData; k++)
+    //  std::cerr << key[k] << " ";
+    //std::cerr << std::endl;
 
     last_flip = flip;
   }
@@ -385,7 +403,7 @@ inline void merge_sort_key_value(T1* key, T2* value, const size_t nData)
 /**** index ****/
 
 template<typename T, typename ST>
-inline void index_bubble_sort(T* data, ST* indices, const ST nData)
+inline void index_bubble_sort(const T* data, ST* indices, const ST nData)
 {
   for (uint i=0; i < nData; i++)
     indices[i] = i;
@@ -416,10 +434,41 @@ inline void index_bubble_sort(T* data, ST* indices, const ST nData)
 }
 
 template<typename T, typename ST>
-void aux_index_quick_sort(T* data, ST* indices, const ST nData);
+inline void index_batch_bubble_sort(const T* data, ST* indices, ST nData)
+{
+  size_t last_flip = nData;
+  
+  while (last_flip > 1) {
+    
+    size_t flip = 0;
+    
+    for (size_t l=1; l < last_flip; l++) {
+
+      if (data[indices[l]] < data[indices[l-1]]) {
+
+        size_t end = l+1;
+        for (; end < last_flip; end++) {
+                                        
+          if (!(data[indices[end]] < data[indices[end-1]])) 
+            break;
+        }
+
+        std::reverse(indices+l-1, indices+end);        
+        
+        flip = l;
+        l = end-2; //the last swapped index needs to be compared again (l is incremented by the loop)
+      }      
+    }  
+
+    last_flip = flip;
+  }
+}
 
 template<typename T, typename ST>
-void aux_index_merge_sort(T* data, ST* indices, const ST nData)
+void aux_index_quick_sort(const T* data, ST* indices, const ST nData);
+
+template<typename T, typename ST>
+void aux_index_merge_sort(const T* data, ST* indices, const ST nData)
 {
   //std::cerr << "nData: "<< nData << std::endl;
 
@@ -504,7 +553,7 @@ void aux_index_merge_sort(T* data, ST* indices, const ST nData)
 
 //this is still fixed to memcpy
 template<typename T, typename ST>
-void aux_index_merge_sort_4split(T* data, ST* indices, const ST nData)
+void aux_index_merge_sort_4split(const T* data, ST* indices, const ST nData)
 {
   //std::cerr << "nData: "<< nData << std::endl;
 
@@ -592,7 +641,7 @@ void aux_index_merge_sort_4split(T* data, ST* indices, const ST nData)
 }
 
 template<typename T, typename ST>
-void index_merge_sort(T* data, ST* indices, const ST nData)
+void index_merge_sort(const T* data, ST* indices, const ST nData)
 {
   //std::cerr << "sorting " << nData << " entries" << std::endl;
 
@@ -604,7 +653,7 @@ void index_merge_sort(T* data, ST* indices, const ST nData)
 
 
 template<typename T, typename ST>
-void aux_index_quick_sort(T* data, ST* indices, const ST nData)
+void aux_index_quick_sort(const T* data, ST* indices, const ST nData)
 {
 
   //std::cerr << "nData: " << nData << std::endl;
@@ -687,7 +736,7 @@ void aux_index_quick_sort(T* data, ST* indices, const ST nData)
 }
 
 template<typename T, typename ST>
-void index_quick_sort(T* data, ST* indices, const ST nData)
+void index_quick_sort(const T* data, ST* indices, const ST nData)
 {
   //std::cerr << "sorting " << nData << " entries" << std::endl;
 
