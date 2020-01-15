@@ -53,6 +53,8 @@ public:
 #endif
 
   T back() const;
+  
+  T& back();
 
   //maintains the values of existing positions, new ones are undefined
   void resize(ST new_size);
@@ -188,6 +190,8 @@ public:
 
   void resize(ST size, bool exact_fit = false);
   
+  void shrink(ST size);
+  
   void reserve(ST size);
 
   //will not free memory
@@ -198,6 +202,8 @@ public:
   void operator=(const FlexibleStorage1D<T,ST>& toCopy);
 
   inline T back() const;
+
+  inline T& back();
 
   ST append(T val);  
   
@@ -350,6 +356,13 @@ T Storage1D<T,ST>::back() const
 {
   assert(Base::size_ > 0);
   return Base::data_[Base::size_-1];
+}
+
+template<typename T,typename ST>
+T& Storage1D<T,ST>::back()
+{
+  assert(Base::size_ > 0);
+  return Base::data_[Base::size_-1];  
 }
 
 template<typename T,typename ST>
@@ -711,6 +724,14 @@ inline T FlexibleStorage1D<T,ST>::back() const
 }
 
 template<typename T, typename ST>
+inline T& FlexibleStorage1D<T,ST>::back()
+{
+  assert(size_ > 0);
+  assert(data_ != 0);
+  return data_[size_-1];
+}
+
+template<typename T, typename ST>
 ST FlexibleStorage1D<T,ST>::append(T val)
 {
   if (size_ == reserved_size_) {
@@ -815,8 +836,7 @@ void FlexibleStorage1D<T,ST>::resize(ST size, bool exact_fit)
     data_ = new_data;
   }
 
-  if (size < size_)
-    size_ = size;
+  size_ = size;
 
   if (exact_fit && size_ != reserved_size_) {
 
@@ -831,6 +851,13 @@ void FlexibleStorage1D<T,ST>::resize(ST size, bool exact_fit)
     delete[] data_;
     data_ = new_data;
   }
+}
+
+template<typename T, typename ST>
+void FlexibleStorage1D<T,ST>::shrink(ST size)
+{
+  assert(size <= size_);
+  size_ = size;
 }
 
 template<typename T, typename ST>

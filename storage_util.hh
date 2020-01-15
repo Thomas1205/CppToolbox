@@ -53,6 +53,12 @@ inline ST find_in_storage1D(const Storage1D<T,ST>& stor, T element)
 }
 
 template<typename T, typename ST>
+inline ST find_in_flexstorage1D(const FlexibleStorage1D<T,ST>& stor, T element)
+{
+  return std::find(stor.direct_access(),stor.direct_access()+stor.size(),element) - stor.direct_access();
+}
+
+template<typename T, typename ST>
 inline bool contains(const Storage1D<T,ST>& stor, T element)
 {
   T* end = stor.direct_access()+stor.size();
