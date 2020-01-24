@@ -32,7 +32,10 @@ template<typename T>
 inline void batch_bubble_sort(T* data, const size_t nData);
 
 template<typename T>
-inline void bubble_sort_extra(T* data, const size_t nData);
+inline void bubble_sort_prepro(T* data, const size_t nData);
+
+template<typename T>
+inline void shift_bubble_sort(T* data, const size_t nData);
 
 template<typename T>
 void merge_sort(T* data, const size_t nData);
@@ -46,7 +49,10 @@ template<typename T1, typename T2>
 inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData);
 
 template<typename T1, typename T2>
-inline void bubble_sort_key_value_extra(T1* key, T2* value, const size_t nData);
+inline void bubble_sort_key_value_prepro(T1* key, T2* value, const size_t nData);
+
+template<typename T1, typename T2>
+inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData);
 
 template<typename T1, typename T2>
 inline void merge_sort_key_value(T1* key, T2* value, const size_t nData);
@@ -166,8 +172,9 @@ inline void batch_bubble_sort(T* data, const size_t nData)
   }
 }
 
+
 template<typename T>
-inline void bubble_sort_extra(T* data, const size_t nData) 
+inline void bubble_sort_prepro(T* data, const size_t nData)
 {
   const size_t thresh = 5;
   
@@ -177,9 +184,38 @@ inline void bubble_sort_extra(T* data, const size_t nData)
       if ( data[i] < data[0] )
         std::swap(data[i],data[0]);
     }
-  }
-  
-  bubble_sort(data, nData);
+  }  
+}
+
+template<typename T>
+inline void shift_bubble_sort(T* data, const size_t nData) 
+{     
+  for (size_t l=1; l < nData; l++) 
+  {
+#if 1
+    const T curdat = data[l];
+    size_t inspos = l;
+    while (inspos > 0 && curdat < data[inspos-1]) 
+      inspos--;
+    
+    if (inspos != l) {      
+      for (size_t ll = l; ll > inspos; ll--)
+        data[ll] = data[ll-1];
+      data[inspos] = curdat;
+    }
+#else
+    if (data[l] < data[l-1]) {
+        
+      std::swap(data[l],data[l-1]);
+      for (size_t ll = l-1; ll > 0; ll--) {
+        if (data[ll] < data[ll-1]) 
+          std::swap(data[ll],data[ll-1]);
+        else
+          break;
+      }
+    }
+#endif
+  }  
 }
 
 template<typename T>
@@ -315,7 +351,7 @@ inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData) 
 }
 
 template<typename T1, typename T2>
-inline void bubble_sort_key_value_extra(T1* key, T2* value, const size_t nData) 
+inline void bubble_sort_key_value_prepro(T1* key, T2* value, const size_t nData)
 {
   const size_t thresh = 5;
   
@@ -327,9 +363,46 @@ inline void bubble_sort_key_value_extra(T1* key, T2* value, const size_t nData)
         std::swap(value[i],value[0]);
       }
     }
-  }
+  }  
+}
 
-  bubble_sort_key_value(key, value, nData);
+template<typename T1, typename T2>
+inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
+{
+  for (size_t j=1; j < nData; j++) 
+  {
+#if 1
+    const T1 curkey = key[j];
+    size_t inspos = j;
+    while (inspos > 0 && curkey < key[inspos-1]) 
+      inspos--;
+    
+    if (inspos != j) {      
+      const T2 curval = value[j];
+      for (size_t jj = j; jj > inspos; jj--) {
+        key[jj] = key[jj-1];
+        value[jj] = value[jj-1];
+      }
+      key[inspos] = curkey;
+      value[inspos] = curval;
+    }
+#else
+    if (key[j] < key[j-1]) {
+
+      std::swap(key[j],key[j-1]);
+      std::swap(value[j],value[j-1]);
+        
+      for (size_t jj = j-1; jj > 0; jj--) {
+        if (key[jj] < key[jj-1]) {
+          std::swap(key[jj],key[jj-1]);
+          std::swap(value[jj],value[jj-1]);
+        }
+        else
+          break;
+      }
+    }
+#endif    
+  }
 }
 
 template<typename T1, typename T2>

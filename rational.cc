@@ -24,9 +24,12 @@ static int __attribute__((used))  rational_res_is_save = 1;
 ****/
 
 inline void simple_save_mul(Int64& n, const Int64 fac)
-{
+{  
   //note: cmov can only move memory to registers
   //note: + means that the operand is read and written, & that it is early clobber
+  
+  //NOTE: we only need overflow set, not rdx written -> can change to the two operand imul
+  
   __asm__ volatile ("imulq %[fac] \n\t"
                     "jno 1f \n\t"
                     //"movl $0,_ZL20rational_res_is_save \n\t"
@@ -736,6 +739,8 @@ void Rational64::operator-=(Rational64 r)
 #ifdef USE_ASM
 inline void save_mul(Int64 n1, Int64 d1, Int64 n2, Int64 d2, Int64& num, Int64& denom)
 {
+  //NOTE: we only need overflow set, not rdx written -> can change to the two operand imul
+  
   // with local labels, mapping n1 to rax
   __asm__ volatile ("imulq %4               \n\t"
                     "jo 1f                  \n\t"

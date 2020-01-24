@@ -21,6 +21,16 @@ public:
   }
 };
 
+template<typename T>
+class SpecialSwapOp {
+public:
+  
+  void operator()(T& val1, T& val2) const
+  {
+    val1.swap(val2);
+  }
+};
+
 template<typename T, typename ST=size_t>
 class Storage1D : public StorageBase<T,ST> {
 public:

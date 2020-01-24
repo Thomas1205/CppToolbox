@@ -468,7 +468,7 @@ namespace Math1D {
   
   template<typename T,typename ST>
   bool Vector<T,ST>::is_sorted() const {
-    return is_sorted(Base::data_, Base::size_);
+    return ::is_sorted(Base::data_, Base::size_);
   }
 
   template<typename T,typename ST>
