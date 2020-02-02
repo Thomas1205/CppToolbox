@@ -7,6 +7,7 @@
 #include <iostream>
 #include "makros.hh"
 #include "stl_out.hh" //DEBUG
+#include "storage1D.hh"
 
 template<typename T>
 class TreeSet {
@@ -19,6 +20,8 @@ public:
 	TreeSet(const TreeSet<T>& s) {
 		data_ = s.data_;
 	}
+
+	void swap(TreeSet<T>& other);
 
 	size_t size() const;
 
@@ -48,6 +51,8 @@ public:
 
 	std::vector<T> get_sorted_data() const;
 	
+	void get_sorted_data(Storage1D<T>& target) const;
+	
 	std::vector<T> get_sorted_head(size_t nElements) const;
 
 	//if val is found: all data >= val, otherwise empty vector
@@ -74,6 +79,12 @@ template<typename T>
 size_t TreeSet<T>::size() const
 {
 	return data_.size() - 1;
+}
+
+template<typename T>
+void TreeSet<T>::swap(TreeSet<T>& other)
+{
+  data_.swap(other.data_);
 }
 
 template<typename T>
@@ -510,6 +521,52 @@ std::vector<T> TreeSet<T>::get_sorted_data() const
 	}
 	
 	return result;
+}
+
+template <typename T>
+void TreeSet<T>::get_sorted_data(Storage1D<T>& result) const
+{
+	const size_t size = data_.size();
+	result.resize_dirty(size-1);
+
+	size_t k = 0;
+	size_t i = 1;
+	bool descending = true;
+	bool from_right = true;
+	while (i > 0) {
+	
+		if (2*i >= size) {
+			//leaf
+			result[k] = data_[i];
+			k++;
+			descending = false;
+			from_right = ((i%2) == 1);
+			i /= 2;
+		}
+		else if (descending) {
+			i *= 2; //go to left child
+		}
+		else {			
+			if (from_right) {
+				from_right = ((i%2) == 1);
+				i /= 2;				
+			}
+			else {
+				result[k] = data_[i];
+				k++;
+				if (i*2+1 < size) {
+					//go to right child
+					descending = true;
+					i = i*2+1;
+				}
+				else {
+					//there is no right child -> up
+					from_right = ((i%2) == 1);
+					i /= 2;					
+				}
+			}
+		}
+	}
 }
 
 template <typename T>
