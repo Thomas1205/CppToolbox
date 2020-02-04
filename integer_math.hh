@@ -42,7 +42,8 @@ inline void iadd(Int64 x, Int64 y, Int64& res, bool& overflow) {
 								"jno 1f \n\t"
 								"movl $1, %[o] \n\t"
 								"1: \n\t"
-                : [res] "=a" (res), [o] "+g" (o) : [x] "%a" (x), [y] "%g" (y) : "cc"); //note: o needs +, percent declares commutative
+                : [res] "=a" (res), [o] "+g" (o) : [x] "%a" (x), [y] "g" (y) : "cc"); 
+								//note: o needs +, percent declares commutative (marks also the following operand)
 	
   overflow = (o != 0);
 }
@@ -72,7 +73,8 @@ inline void iadd(Int64 x_high, Int64 x_low, Int64 y_high, Int64 y_low, Int64& re
 								"movl $1, %[o] \n\t"
 								"1: \n\t"
                 : [res_low] "=a" (res_low), [res_high] "=b" (res_high), [o] "+g" (o) //note: o needs +
-								: [x_low] "%a" (x_low), [x_high] "b" (x_high), [y_low] "%g" (y_low), [y_high] "g" (y_high) : "cc"); // percent declares commutative
+								: [x_low] "%a" (x_low), [y_low] "g" (y_low), [x_high] "b" (x_high), [y_high] "g" (y_high) : "cc");
+								// percent declares commutative (marks also the following operand)
 	
   overflow = (o != 0);	
 }
@@ -86,7 +88,8 @@ inline void uadd(UInt64 x, UInt64 y, UInt64& res, bool& overflow) {
 								"jnc 1f \n\t"
 								"movl $1, %[c] \n\t"
 								"1: \n\t"
-                : [res] "=a" (res), [c] "+g" (c) : [x] "%a" (x), [y] "%g" (y) : "cc"); //note: c needs +, percent declares commutative
+                : [res] "=a" (res), [c] "+g" (c) : [x] "%a" (x), [y] "g" (y) : "cc"); 
+								//note: c needs +, percent declares commutative (marks also the following operand)
 	
   overflow = (c != 0);
 }
@@ -113,7 +116,8 @@ inline void imul(Int64 x, Int64 y, Int64& res, int& rational_res_is_save) {
 								"jno 1f            \n\t"
 								"movl $1, %[o]     \n\t"
 								"1:                \n\t"
-                : [res] "=a" (res), [o] "+g" (o) : [x] "%a" (x), [y] "%g" (y) : "cc");	//note: o needs +, percent declares commutative
+                : [res] "=a" (res), [o] "+g" (o) : [x] "%a" (x), [y] "g" (y) : "cc");	
+								//note: o needs +, percent declares commutative (marks also the following operand)
 
 	if (o != 0)
 		rational_res_is_save = 0;
