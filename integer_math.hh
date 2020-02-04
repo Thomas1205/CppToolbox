@@ -25,10 +25,8 @@ inline void ineg(Int64 in_high, Int64 in_low, Int64& out_high, Int64& out_low) {
 	
   //assembler implementation with local labels
   asm volatile ("incq %%rax \n\t"
-								//"movq %%rax, %[ol] \n\t"
 								"jnc 1f \n\t"
 								"incq %%rbx \n\t"
-								//"movq %%rbx, %[oh] \n\t"
 								"1:  \n\t"
                 : [oh] "+&b" (out_high), [ol] "+&a" (out_low) : : "cc");
 }
@@ -44,8 +42,7 @@ inline void iadd(Int64 x, Int64 y, Int64& res, bool& overflow) {
 								"jno 1f \n\t"
 								"movl $1, %[o] \n\t"
 								"1: \n\t"
-								//"movq %%rax, %[res] \n\t"
-                : [res] "=a" (res), [o] "+g" (o) : [x] "a" (x), [y] "g" (y) : "cc"); //note: o needs +
+                : [res] "=a" (res), [o] "+g" (o) : [x] "%a" (x), [y] "%g" (y) : "cc"); //note: o needs +, percent declares commutative
 	
   overflow = (o != 0);
 }
@@ -70,15 +67,12 @@ inline void iadd(Int64 x_high, Int64 x_low, Int64 y_high, Int64 y_low, Int64& re
 	
   //assembler implementation with local labels
   asm volatile ("addq %[y_low], %%rax \n\t"
-								//"movq %%rax, %[res_low] \n\t"
-								//"movq %[x_high], %%rbx \n\t"
 								"adcq %[y_high], %%rbx \n\t"
 								"jno 1f \n\t"
 								"movl $1, %[o] \n\t"
 								"1: \n\t"
-								//"movq %%rbx, %[res_high] \n\t"
                 : [res_low] "=a" (res_low), [res_high] "=b" (res_high), [o] "+g" (o) //note: o needs +
-								: [x_low] "a" (x_low), [x_high] "b" (x_high), [y_low] "g" (y_low), [y_high] "g" (y_high) : "cc");
+								: [x_low] "%a" (x_low), [x_high] "b" (x_high), [y_low] "%g" (y_low), [y_high] "g" (y_high) : "cc"); // percent declares commutative
 	
   overflow = (o != 0);	
 }
@@ -92,8 +86,7 @@ inline void uadd(UInt64 x, UInt64 y, UInt64& res, bool& overflow) {
 								"jnc 1f \n\t"
 								"movl $1, %[c] \n\t"
 								"1: \n\t"
-								//"movq %%rax, %[res] \n\t"
-                : [res] "=a" (res), [c] "+g" (c) : [x] "a" (x), [y] "g" (y) : "cc"); //note: c needs +
+                : [res] "=a" (res), [c] "+g" (c) : [x] "%a" (x), [y] "%g" (y) : "cc"); //note: c needs +, percent declares commutative
 	
   overflow = (c != 0);
 }
@@ -102,10 +95,9 @@ inline void uadd(UInt64 x, UInt64 y, UInt64& res, bool& overflow) {
 /***************** muls *******************/
 
 inline void imul(Int64 x, Int64 y, Int64& res_high, Int64& res_low) {
-	
+		
   //assembler implementation with local labels
   asm volatile ("imulq %[y] \n\t"
-								//"movq %%rax, %[res_low] \n\t"
                 : [res_high] "=d" (res_high), [res_low] "=a" (res_low) : [x] "a" (x), [y] "g" (y) : "cc");
 	
 }
@@ -114,13 +106,14 @@ inline void imul(Int64 x, Int64 y, Int64& res, int& rational_res_is_save) {
 
 	uint o = 0;
 	
+	//NOTE: we only need overflow set, not rdx written -> can use the two operand imul
+	
   //assembler implementation with local labels
-  asm volatile ("imulq %[y] \n\t"
-								"jno 1f \n\t"
-								"movl $1, %[o] \n\t"
-								"1: \n\t"
-								//"movq %%rax, %[res] \n\t"
-                : [res] "=a" (res), [o] "+g" (o) : [x] "a" (x), [y] "g" (y) : "rdx", "cc");	//note: o needs +
+  asm volatile ("imulq %[y], %%rax \n\t"
+								"jno 1f            \n\t"
+								"movl $1, %[o]     \n\t"
+								"1:                \n\t"
+                : [res] "=a" (res), [o] "+g" (o) : [x] "%a" (x), [y] "%g" (y) : "cc");	//note: o needs +, percent declares commutative
 
 	if (o != 0)
 		rational_res_is_save = 0;
@@ -130,12 +123,14 @@ inline void imul_inplace(Int64& x, Int64 y, int& rational_res_is_save) {
 
 	uint o = 0;
 	
+	//NOTE: we only need overflow set, not rdx written -> can use the two operand imul
+	
   //assembler implementation with local labels
-  asm volatile ("imulq %[y] \n\t"
-								"jno 1f \n\t"
-								"movl $1, %[o] \n\t"
-								"1: \n\t"
-                : [x] "+a" (x), [o] "+g" (o) : [y] "g" (y) : "rdx", "cc");	//note: o needs +
+  asm volatile ("imulq %[y], %%rax \n\t"
+								"jno 1f            \n\t"
+								"movl $1, %[o]     \n\t"
+								"1:                \n\t"
+                : [x] "+a" (x), [o] "+g" (o) : [y] "g" (y) : "cc");	//note: o needs +
 
 	if (o != 0)
 		rational_res_is_save = 0;
@@ -145,7 +140,6 @@ inline void umul(UInt64 x, UInt64 y, UInt64& res_high, UInt64& res_low) {
 	
   //assembler implementation with local labels
   asm volatile ("mulq %[y] \n\t"
-								//"movq %%rax, %[res_low] \n\t"
                 : [res_high] "=d" (res_high), [res_low] "=a" (res_low) : [x] "a" (x), [y] "g" (y) : "rdx", "cc");	
 }
 
@@ -156,8 +150,7 @@ inline Int64 idiv(Int64 x_high, Int64 x_low, Int64 y) {
   Int64 res;
 	
   //assembler implementation with local labels
-  asm volatile ("divq %[y] \n\t"
-                //"movq %%rax, %[res] \n\t"
+  asm volatile ("idivq %[y] \n\t"
                 : [res] "=a" (res) : [x_high] "d" (x_high), [x_low] "a" (x_low), [y] "g" (y) : );
 	
 	return res;

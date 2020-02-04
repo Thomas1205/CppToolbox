@@ -738,9 +738,8 @@ void Rational64::operator-=(Rational64 r)
 
 #ifdef USE_ASM
 inline void save_mul(Int64 n1, Int64 d1, Int64 n2, Int64 d2, Int64& num, Int64& denom)
-{
-  //NOTE: we only need overflow set, not rdx written -> can change to the two operand imul
-  
+{  
+#if 0
   // with local labels, mapping n1 to rax
   __asm__ volatile ("imulq %4               \n\t"
                     "jo 1f                  \n\t"
@@ -748,16 +747,26 @@ inline void save_mul(Int64 n1, Int64 d1, Int64 n2, Int64 d2, Int64& num, Int64& 
                     "movq %5,%%rax          \n\t"
                     "imulq %6               \n\t"
                     "jo 1f                  \n\t"
-                    //"movq %%rax,%1          \n\t" //denominator done - mapping to rax
                     "jmp 2f                 \n\t"
                     "1:                     \n\t"
-                    //"movl $0,_ZL20rational_res_is_save       \n\t"
                     "movl $0, %2 \n\t"
                     "2:               \n\t"
                     : "=&g"(num), "=a"(denom), "+m"(rational_res_is_save) //0,1,2
                     : "a"(n1), "g"(n2), "g"(d1), "g"(d2) //3,4,5,6
                     : "rdx", "cc"
                    );
+#else
+  //NOTE: we only need overflow set, not rdx written -> can change to the two operand imul
+  __asm__ volatile ("imulq %%rbx, %%rax   \n\t" //dest is last
+                    "jo 1f                \n\t"
+                    "imulq %%rdx, %%rcx   \n\t" //dest is last
+                    "jo 1f                \n\t"
+                    "movl $0, %2          \n\t"
+                    "2:                   \n\t"
+                    : "=a"(num), "=c"(denom), "+m"(rational_res_is_save) //0,1,2
+                    : "%a"(n1), "%b"(n2), "c"(d1), "d"(d2) //declare n1 and n2 commitative with the percent sign
+                    : "cc");
+#endif  
 }
 #endif
 

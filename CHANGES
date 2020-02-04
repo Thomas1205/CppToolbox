@@ -1,11 +1,12 @@
 
-/***** changes since the last release ******/
+/***** changes for the upcoming release (1.15?) ******/
 
 - TreeSet: efficient search trees based on arrays. Functionality can be extended. No plans for a TreeMap so far.
 - SortedSet: must faster than TreeSet in practice, and simpler. No plans for a SortedMap so far.
 - corrected and extended rational numbers, plus improved efficiency and cases that can be handled inside precision
 - released sorting, with many bubble sort variants
 - augmented binary search
+- fixes and extensions for rational numbers
 
 /***** changes for version 1.1 (December 20 2019) ****/
 
@@ -17,7 +18,7 @@
 - a couple of additional member functions
 - fixed a few lines where the template parameter ST was missing
 - added a member add_constant() for vectors, matrices and tensors
-- slighlty improved speed of a few routines where the size of the data_-array remains constant
+- slightly improved speed of a few routines where the size of the data_-array remains constant
 - in vector arithmetic, the dimension check is now skipped if a certain preprocessor definition is set
 - adapted indentation
 
