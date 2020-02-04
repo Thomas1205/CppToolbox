@@ -4,43 +4,44 @@ SIMPLE TYPES
 
 - some basic typedefs and macros (makros.hh)
 
-- a class for computations with Rational numbers (based on 64 bit integers for both numerator and denominator), 
+- a class for computations with rational numbers (rational.*), based on 64 bit integers for both numerator and denominator), 
   with a check for overflow (on a 64 bit operating system and if x86-AT&T assembler is supported) 
 
 DATA CLASSES
 
-- template classes for 1, 2 and 3-dimensional containers,
-  optionally with bound checks and object names stored as strings. 
-  Plus a container classes for a variable dimension size and for symmetric matrices.
+- template classes for 1, 2 and 3-dimensional containers, optionally with bound checks and object names stored as strings. 
+  Plus container classes for a variable dimension size and for symmetric matrices.
 
-- template classes for matrices, vectors and tensors,
-  as an extension of the above containers. Includes saving matrices and tensors as PGMs or PPMs. 
-  Furthermore, a basic matrix inversion is provided (matrix_inversion.hh)
+- template classes for matrices, vectors and tensors, as an extension of the above containers. Includes saving matrices and tensors 
+  as PGMs or PPMs. Furthermore, a basic matrix inversion is provided (matrix_inversion.hh)
 
-- template classes for gray-level and color images including
-  loading PGMs and PPMs (extensions of the above mathematical objects). 
+- template classes for gray-level and color images including loading PGMs and PPMs (extensions of the above mathematical objects). 
 
-- code for input-output of files (fileio.hh/cc) and standard objects
-  such as vectors, sets and maps (stl_out.hh)
+- a generic application class to ease the parsing of command line arguments. This includes the specification of mandatory parameters 
+  as well as default values. Filenames are checked for existence.
+
+- sets in two variants: based on array trees and based on sorted arrays
+
+BASIC ROUTINES
+
+- code for input-output of files (fileio.hh/cc) and standard objects such as vectors, sets and maps (stl_out.hh)
+
+- some wrappers for using stl classes (stl_util.*)
 
 - some basic string-processing routines including tokenization and downcasing (stringprocessing.hh)
   and conversion of strings into arbitrary types (makros.hh)
 
-- a generic application class to ease the parsing of command line arguments.
-  This includes the specification of mandatory parameters as well as default values.
-  Filenames are checked for existence.
-
-- sets in two variants: based on array trees and based on sorted arrays
+- cast abs, log, exp into templates (makros.hh)
 
 ALGORITHMS
 
 - sorting algorithms
 
-- binary search algorithms
+- binary search algorithms (makros.hh and stl_util.hh)
 
-- some routines for combinatorics (combinatoric.hh), including choose(n,k), factorial 
-  and greatest common divisor
+- some routines for combinatorics (combinatoric.hh), including choose(n,k), factorial and greatest common divisor
 
+---------
 
 Sample application files to illustrate the usage of the features may follow, sufficient interest provided. 
 Please contact thomas_schoenemann AT yahoo DOT de
