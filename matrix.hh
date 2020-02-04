@@ -646,6 +646,7 @@ namespace Math2D {
   template<typename T, typename ST>
   Matrix<T,ST> operator*(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2)
   {
+
     //there is room for optimization here
     // but if you want efficient code you should never call a routine that returns a matrix - except if most of your run-time lies elsewhere
 
