@@ -18,21 +18,20 @@ long double ldchoose(uint n, uint k);
 long double ldchoose(uint n, uint k, const Math1D::Vector<long double>& ld_fac);
 
 // greatest common divisor via the Euclidean algorithm
-inline long gcd64(unsigned long n1, unsigned long n2);
-
-// greatest common divisor via the Euclidean algorithm
 uint gcd(uint n1, uint n2);
 
+// greatest common divisor via the Euclidean algorithm
+inline UInt64 gcd64(UInt64 n1, UInt64 n2);
 
 /**** implementation ****/
 
-inline long gcd64(unsigned long n1, unsigned long n2) {
-
+inline UInt64 gcd64(UInt64 n1, UInt64 n2)
+{
   if (n1 < n2)
     std::swap(n1,n2);
 
   while (n2 != 0) {
-    unsigned long t = n2;
+    UInt64 t = n2;
     n2 = n1 % n2;
     n1 = t;
   }
@@ -40,5 +39,30 @@ inline long gcd64(unsigned long n1, unsigned long n2) {
   return n1;
 }
 
+inline UInt64 gcd_mixed_128_64(UInt64 n1_high, UInt64 n1_low, UInt64 n2)
+{
+  assert(n1_high > 0);
+
+#ifdef USE_ASM
+  if (n2 <= 1)
+    return n2;
+
+  UInt64 t = n2;
+  asm volatile ("movq %[n1_high], %%rdx \n\t"
+                "movq %[n1_low], %%rax \n\t"
+                "divq %[n2] \n\t"
+                "movq %%rdx, %[n2]"
+                : [n2] "+g" (n2) : [n1_high] "g" (n1_high), [n1_low] "g" (n1_low) : "rdx", "rax");
+  n1_low = t;
+
+  while(n2 != 0) {
+    t = n2;
+    n2 = n1_low % n2;
+    n1_low = t;
+  }
+
+  return n1_low;
+#endif
+}
 
 #endif

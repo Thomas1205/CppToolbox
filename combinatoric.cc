@@ -3,7 +3,8 @@
 
 #include "combinatoric.hh"
 
-uint fac(uint n) {
+uint fac(uint n)
+{
 
   uint r = 1;
   for (uint k=2; k <= n; k++)
@@ -12,17 +13,19 @@ uint fac(uint n) {
   return r;
 }
 
-long double ldfac(uint n) {
+long double ldfac(uint n)
+{
 
   long double r = 1.0;
 
   for (uint k=2; k <= n; k++)
     r *= k;
 
-  return r;  
+  return r;
 }
 
-uint choose(uint n, uint k) {
+uint choose(uint n, uint k)
+{
 
   assert(k <= n);
   assert(n >= 1);
@@ -40,7 +43,8 @@ uint choose(uint n, uint k) {
   return r;
 }
 
-long double ldchoose(uint n, uint k) {
+long double ldchoose(uint n, uint k)
+{
 
   assert(k <= n);
   assert(n >= 1);
@@ -58,7 +62,8 @@ long double ldchoose(uint n, uint k) {
   return r;
 }
 
-long double ldchoose(uint n, uint k, const Math1D::Vector<long double>& ld_fac) {
+long double ldchoose(uint n, uint k, const Math1D::Vector<long double>& ld_fac)
+{
 
   assert(k <= n);
   assert(n >= 1);
@@ -93,7 +98,8 @@ long double ldchoose(uint n, uint k, const Math1D::Vector<long double>& ld_fac) 
 // }
 
 // greatest common divisor via the Euclidean algorithm
-uint gcd(uint n1, uint n2) {
+uint gcd(uint n1, uint n2)
+{
 
   if (n1 < n2)
     std::swap(n1,n2);

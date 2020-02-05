@@ -24,18 +24,17 @@ static int __attribute__((used))  rational_res_is_save = 1;
 ****/
 
 inline void simple_save_mul(Int64& n, const Int64 fac)
-{  
+{
   //note: cmov can only move memory to registers
   //note: + means that the operand is read and written, & that it is early clobber
-  
-  //NOTE: we only need overflow set, not rdx written -> can change to the two operand imul
-  
-  __asm__ volatile ("imulq %[fac] \n\t"
+
+  //NOTE: we only need overflow set, not rdx written -> use the two operand imul
+
+  __asm__ volatile ("imulq %[fac], %%rax \n\t"
                     "jno 1f \n\t"
-                    //"movl $0,_ZL20rational_res_is_save \n\t"
                     "movl $0, %[ratsav] \n\t"
                     "1: \n\t"
-                    : "+&a"(n), [ratsav] "+m"(rational_res_is_save) : [fac] "g"(fac) : "rdx"); //load n into rax 
+                    : "+&a"(n), [ratsav] "+m"(rational_res_is_save) : [fac] "g"(fac) : ); //load n into rax
 }
 #endif
 
@@ -61,7 +60,7 @@ Rational64::Rational64(Int64 num, Int64 denom)
   assert(denom_ > 0);
 }
 
-Rational64::Rational64(Int64 num) : num_(num), denom_(1) 
+Rational64::Rational64(Int64 num) : num_(num), denom_(1)
 {
 }
 
@@ -99,7 +98,7 @@ void Rational64::negate()
   num_ = -num_;
 }
 
-Rational64 Rational64::square() const 
+Rational64 Rational64::square() const
 {
   //we can save both gcds as this number should be normalized
 #ifndef USE_ASM
@@ -309,79 +308,79 @@ inline void save_add_via128(const Rational64& r1, const Rational64& r2, Int64 de
     }
   }
   else if (sum_fits) {
-#ifdef SAFE_MODE        
+#ifdef SAFE_MODE
     std::cerr << "sum_fits" << std::endl;
-#endif        
-        
+#endif
+
     if (denom_high >= Makros::abs(sum_low)) {
       mark_overflow = true;
     }
     else {
-    
-      const Int64 new_gcd = gcd_mixed_128_64(denom_high, denom_low, sum_low); 
+
+      const Int64 new_gcd = gcd_mixed_128_64(denom_high, denom_low, sum_low);
 
       if (denom_high >= Makros::abs(new_gcd)) {
         mark_overflow = true;
-      }    
+      }
       else {
         assert(new_gcd > 1);
         new_num = sum_low / new_gcd;
-        new_denom = idiv(denom_high, denom_low, new_gcd);        
-      }        
+        new_denom = idiv(denom_high, denom_low, new_gcd);
+      }
     }
   }
   else if (denom_fits) {
 
 #ifdef SAFE_MODE
     std::cerr << "denom_fits, num: " << sum_high << "," << sum_low << " --- denom: " << denom_low << std::endl;
-#endif    
-    
+#endif
+
     Int64 abs_high = sum_high;
     Int64 abs_low = sum_low;
     if (sum_high < 0) {
       ineg(sum_high, sum_low, abs_high, abs_low);
     }
-    
+
     if (abs_high >= denom_low) {
       mark_overflow = true;
     }
     else {
-    
-      const Int64 new_gcd = gcd_mixed_128_64(abs_high, abs_low, denom_low); 
+
+      const Int64 new_gcd = gcd_mixed_128_64(abs_high, abs_low, denom_low);
       //std::cerr << "gcd: " << new_gcd << std::endl;
-      
+
       if (abs_high >= new_gcd) {
         mark_overflow = true;
       }
       else {
         assert(new_gcd > 1);
-        
+
         new_num = idiv(sum_high, sum_low, new_gcd);
         new_denom = denom_low / new_gcd;
       }
     }
   }
   else {
-#ifdef SAFE_MODE    
+#ifdef SAFE_MODE
     std::cerr << "rien a faire" << std::endl;
 #endif
     mark_overflow = true;
   }
-  
+
   if (mark_overflow) {
-    
+
     new_num = 0;
     new_denom = 1;
 
-#ifdef SAFE_MODE    
+#ifdef SAFE_MODE
     print_trace();
 #endif
-    
+
     //std::cerr << "save_add_via128(" << r1 << "," << r2 << "," << denom_gcd << ")" << std::endl;
     rational_res_is_save = 0;
     assert(false);
   }
-  
+
   //std::cerr << "return " << new_num << "/" << new_denom << std::endl;
 }
 #endif
@@ -413,7 +412,7 @@ Rational64 operator+(const Rational64& r1, const Rational64& r2)
           result.num_ /= new_gcd;
           result.denom_ /= new_gcd;
         }
-      }        
+      }
       return result;
     }
   }
@@ -430,8 +429,8 @@ Rational64 operator+(const Rational64& r1, const Rational64& r2)
   result.denom_ = (r1.denom_/denom_gcd)*r2.denom_;
 #else
 #ifdef VIA128
-  save_add_via128(r1, r2, denom_gcd, result.num_, result.denom_);  
-#else  
+  save_add_via128(r1, r2, denom_gcd, result.num_, result.denom_);
+#else
   save_add(r1, r2, denom_gcd, result.num_, result.denom_);
 #endif
   assert(rational_res_is_save != 0);
@@ -508,7 +507,7 @@ void Rational64::operator+=(Rational64 r)
 
 #ifdef VIA128
   save_add_via128(*this, r, denom_gcd, new_num, new_denom);
-#else  
+#else
   save_add(*this, r, denom_gcd, new_num, new_denom);
 #endif
   assert(rational_res_is_save != 0);
@@ -738,7 +737,7 @@ void Rational64::operator-=(Rational64 r)
 
 #ifdef USE_ASM
 inline void save_mul(Int64 n1, Int64 d1, Int64 n2, Int64 d2, Int64& num, Int64& denom)
-{  
+{
 #if 0
   // with local labels, mapping n1 to rax
   __asm__ volatile ("imulq %4             \n\t"
@@ -757,18 +756,18 @@ inline void save_mul(Int64 n1, Int64 d1, Int64 n2, Int64 d2, Int64& num, Int64& 
                    );
 #else
   //NOTE: we only need overflow set, not rdx written -> can change to the two operand imul
-  __asm__ volatile ("imulq %%rbx, %%rax   \n\t" //dest is last
+  __asm__ volatile ("imulq %[n2], %%rax   \n\t" //dest is last
                     "jo 1f                \n\t"
-                    "imulq %%rdx, %%rcx   \n\t" //dest is last
+                    "imulq %[d2], %%rcx   \n\t" //dest is last
                     "jo 1f                \n\t"
                     "jmp 2f               \n\t"
                     "1:                   \n\t"
                     "movl $0, %2          \n\t"
                     "2:                   \n\t"
                     : "=a"(num), "=c"(denom), "+m"(rational_res_is_save) //0,1,2
-                    : "%a"(n1), "b"(n2), "c"(d1), "d"(d2) //declare n1 and n2 commitative with the percent sign (marks also the following operand)
+                    : "%a"(n1), [n2] "g"(n2), "c"(d1), [d2] "g"(d2) //declare n1 and n2 commitative with the percent sign (marks also the following operand)
                     : "cc");
-#endif  
+#endif
 }
 #endif
 
@@ -789,7 +788,7 @@ Rational64 operator*(const Rational64& r1, const Rational64& r2)
   if (r1.denom_ == 1 && r2.denom_ == 1) {
 #ifndef USE_ASM
     return Rational64(r1.num_*r2.num_,1);
-#else 
+#else
     imul(r1.num_, r2.num_, result.num_, rational_res_is_save);
     return result;
 #endif
@@ -797,7 +796,7 @@ Rational64 operator*(const Rational64& r1, const Rational64& r2)
   if (r1.num_ == 1 && r2.num_ == 1) {
 #ifndef USE_ASM
     return Rational64(r1.num_*r2.num_,1);
-#else 
+#else
     imul(r1.denom_, r2.denom_, result.denom_, rational_res_is_save);
     result.num_ = 1;
     return result;
@@ -861,7 +860,7 @@ void Rational64::operator*=(Rational64 r)
   if (denom_ == 1 && r.denom_ == 1) {
 #ifndef USE_ASM
     num_ *= r.num_;
-#else 
+#else
     imul_inplace(num_, r.num_, rational_res_is_save);
 #endif
     return;
@@ -869,7 +868,7 @@ void Rational64::operator*=(Rational64 r)
   if (Makros::abs(num_) == 1 && r.num_ == 1) {
 #ifndef USE_ASM
     denom_ *= r.denom_;
-#else 
+#else
     imul_inplace(denom_, r.denom_, rational_res_is_save);
 #endif
     return;
@@ -889,7 +888,7 @@ void Rational64::operator*=(Rational64 r)
 
   Int64 rnum2 = r.num_;
   Int64 rdenom1 = denom_;
-  
+
   if (denom_ != 1) {
     const Int64 gcd2 = gcd64(Makros::abs(r.num_),denom_);
     if (gcd2 != 1) {
@@ -937,7 +936,7 @@ bool operator<(const Rational64& r1, const Rational64& r2)
 
 #ifdef VIA128
 
-#ifdef CHECK_COMP  
+#ifdef CHECK_COMP
   long double ratio1 = ((long double)r1.num_) / ((long double)r1.denom_);
   long double ratio2 = ((long double)r2.num_) / ((long double)r2.denom_);
   bool approx = (ratio1 < ratio2);
@@ -946,35 +945,35 @@ bool operator<(const Rational64& r1, const Rational64& r2)
   Int64 mul1_high, mul1_low, mul2_high, mul2_low;
   imul(r1.num_, r2.denom_, mul1_high, mul1_low);
   imul(r2.num_, r1.denom_, mul2_high, mul2_low);
-  
+
   if (mul1_high != mul2_high) {
-#ifdef CHECK_COMP      
+#ifdef CHECK_COMP
     if ( (mul1_high < mul2_high) != approx ) {
-      std::cerr << "differs1: < " << r1 << "," << r2 << std::endl; 
-    }    
-#endif    
+      std::cerr << "differs1: < " << r1 << "," << r2 << std::endl;
+    }
+#endif
     return (mul1_high < mul2_high);
   }
   else if (neg1 && neg2) {
-    
+
     //-1 has the highest uint value
-    
-#ifdef CHECK_COMP  
+
+#ifdef CHECK_COMP
     if ( (UInt64(mul1_low) < UInt64(mul2_low)) != approx ) {
-      std::cerr << "differs2: < " << r1 << "," << r2 << std::endl; 
+      std::cerr << "differs2: < " << r1 << "," << r2 << std::endl;
       std::cerr << "mul1: " << mul1_high << "," << mul1_low << std::endl;
       std::cerr << "mul2: " << mul2_high << "," << mul2_low << std::endl;
-      
+
       std::cerr << "u1: " << UInt64(mul1_low) << std::endl;
-      std::cerr << "u2: " << UInt64(mul2_low) << std::endl;      
+      std::cerr << "u2: " << UInt64(mul2_low) << std::endl;
     }
 #endif
     return (UInt64(mul1_low) < UInt64(mul2_low));
   }
   else {
-#ifdef CHECK_COMP      
+#ifdef CHECK_COMP
     if ( (UInt64(mul1_low) < UInt64(mul2_low)) != approx ) {
-      std::cerr << "differs3: < " << r1 << "," << r2 << std::endl; 
+      std::cerr << "differs3: < " << r1 << "," << r2 << std::endl;
     }
 #endif
     return (UInt64(mul1_low) < UInt64(mul2_low));
@@ -1012,7 +1011,7 @@ bool operator<=(const Rational64& r1, const Rational64& r2)
 
 #ifdef VIA128
 
-#ifdef CHECK_COMP  
+#ifdef CHECK_COMP
   long double ratio1 = ((long double)r1.num_) / ((long double)r1.denom_);
   long double ratio2 = ((long double)r2.num_) / ((long double)r2.denom_);
   bool approx = (ratio1 <= ratio2);
@@ -1021,31 +1020,31 @@ bool operator<=(const Rational64& r1, const Rational64& r2)
   Int64 mul1_high, mul1_low, mul2_high, mul2_low;
   imul(r1.num_, r2.denom_, mul1_high, mul1_low);
   imul(r2.num_, r1.denom_, mul2_high, mul2_low);
-  
+
   if (mul1_high != mul2_high) {
-#ifdef CHECK_COMP      
+#ifdef CHECK_COMP
     if ( (mul1_high < mul2_high) != approx) {
-       std::cerr << "differs1: <= " << r1 << ", " << r2 << std::endl;
-    }        
-#endif    
+      std::cerr << "differs1: <= " << r1 << ", " << r2 << std::endl;
+    }
+#endif
     return (mul1_high < mul2_high);
   }
   else if (neg1 && neg2) {
-    
+
     //-1 has the highest uint value
 
-#ifdef CHECK_COMP  
+#ifdef CHECK_COMP
     if ( (UInt64(mul1_low) <= UInt64(mul2_low)) != approx) {
-       std::cerr << "differs2: <= " << r1 << ", " << r2 << std::endl;
-    }        
+      std::cerr << "differs2: <= " << r1 << ", " << r2 << std::endl;
+    }
 #endif
     return (UInt64(mul1_low) <= UInt64(mul2_low));
   }
   else {
-#ifdef CHECK_COMP  
+#ifdef CHECK_COMP
     if ( (UInt64(mul1_low) <= UInt64(mul2_low)) != approx) {
-       std::cerr << "differs3: <= " << r1 << ", " << r2 << std::endl;
-    }        
+      std::cerr << "differs3: <= " << r1 << ", " << r2 << std::endl;
+    }
 #endif
     return (UInt64(mul1_low) <= UInt64(mul2_low));
   }
@@ -1075,7 +1074,7 @@ bool operator>(const Rational64& r1, const Rational64& r2)
 
 #ifdef VIA128
 
-#ifdef CHECK_COMP  
+#ifdef CHECK_COMP
   long double ratio1 = ((long double)r1.num_) / ((long double)r1.denom_);
   long double ratio2 = ((long double)r2.num_) / ((long double)r2.denom_);
   bool approx = (ratio1 > ratio2);
@@ -1084,30 +1083,30 @@ bool operator>(const Rational64& r1, const Rational64& r2)
   Int64 mul1_high, mul1_low, mul2_high, mul2_low;
   imul(r1.num_, r2.denom_, mul1_high, mul1_low);
   imul(r2.num_, r1.denom_, mul2_high, mul2_low);
-  
+
   if (mul1_high != mul2_high) {
-#ifdef CHECK_COMP      
+#ifdef CHECK_COMP
     if ( (mul1_high < mul2_high) != approx) {
-       std::cerr << "differs1: > " << r1 << ", " << r2 << std::endl;
-    }        
-#endif    
+      std::cerr << "differs1: > " << r1 << ", " << r2 << std::endl;
+    }
+#endif
     return (mul1_high > mul2_high);
   }
   if (neg1 && neg2) {
-    
+
     //-1 has the highest uint value
-#ifdef CHECK_COMP      
+#ifdef CHECK_COMP
     if ( (UInt64(mul1_low) > UInt64(mul2_low)) != approx) {
-       std::cerr << "differs2: > " << r1 << ", " << r2 << std::endl;
-    }        
-#endif    
+      std::cerr << "differs2: > " << r1 << ", " << r2 << std::endl;
+    }
+#endif
     return (UInt64(mul1_low) > UInt64(mul2_low));
   }
   else {
-#ifdef CHECK_COMP      
+#ifdef CHECK_COMP
     if ( (UInt64(mul1_low) > UInt64(mul2_low)) != approx) {
-       std::cerr << "differs3: > " << r1 << ", " << r2 << std::endl;
-    }        
+      std::cerr << "differs3: > " << r1 << ", " << r2 << std::endl;
+    }
 #endif
     return (UInt64(mul1_low) > UInt64(mul2_low));
   }
@@ -1140,7 +1139,7 @@ bool operator>=(const Rational64& r1, const Rational64& r2)
 
 #ifdef VIA128
 
-#ifdef CHECK_COMP  
+#ifdef CHECK_COMP
   long double ratio1 = ((long double)r1.num_) / ((long double)r1.denom_);
   long double ratio2 = ((long double)r2.num_) / ((long double)r2.denom_);
   bool approx = (ratio1 >= ratio2);
@@ -1149,30 +1148,30 @@ bool operator>=(const Rational64& r1, const Rational64& r2)
   Int64 mul1_high, mul1_low, mul2_high, mul2_low;
   imul(r1.num_, r2.denom_, mul1_high, mul1_low);
   imul(r2.num_, r1.denom_, mul2_high, mul2_low);
-  
+
   if (mul1_high != mul2_high) {
-#ifdef CHECK_COMP  
+#ifdef CHECK_COMP
     if ( (mul1_high > mul2_high) != approx) {
-       std::cerr << "differs1: >= " << r1 << ", " << r2 << std::endl;
-    }    
+      std::cerr << "differs1: >= " << r1 << ", " << r2 << std::endl;
+    }
 #endif
     return (mul1_high > mul2_high);
   }
   if (neg1 && neg2) {
-    
+
     //-1 has the highest uint value
-#ifdef CHECK_COMP  
+#ifdef CHECK_COMP
     if ( (UInt64(mul1_low) >= UInt64(mul2_low)) != approx) {
-       std::cerr << "differs2: >= " << r1 << ", " << r2 << std::endl;
-    }    
+      std::cerr << "differs2: >= " << r1 << ", " << r2 << std::endl;
+    }
 #endif
     return (UInt64(mul1_low) >= UInt64(mul2_low));
   }
   else {
-#ifdef CHECK_COMP  
+#ifdef CHECK_COMP
     if ( (UInt64(mul1_low) > UInt64(mul2_low)) != approx) {
-       std::cerr << "differs3: >= " << r1 << ", " << r2 << std::endl;
-    }    
+      std::cerr << "differs3: >= " << r1 << ", " << r2 << std::endl;
+    }
 #endif
     return (UInt64(mul1_low) > UInt64(mul2_low));
   }

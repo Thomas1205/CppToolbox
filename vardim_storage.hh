@@ -49,8 +49,7 @@ bool operator!=(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2);
 /*********** implementation *******/
 
 
-template <typename T> 
-VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim) : StorageBase<T>(), dim_(dim)
+template <typename T> VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim) : StorageBase<T>(), dim_(dim)
 {
   StorageBase<T>::size_ = (dim.size() == 0) ? 0 : 1;
 
@@ -60,8 +59,7 @@ VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim) : StorageBase
   StorageBase<T>::data_ = new T[StorageBase<T>::size_];
 }
 
-template <typename T> 
-VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim, T fill) : StorageBase<T>(), dim_(dim)
+template <typename T> VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim, T fill) : StorageBase<T>(), dim_(dim)
 {
   StorageBase<T>::size_ = (dim.size() == 0) ? 0 : 1;
 
@@ -73,8 +71,7 @@ VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim, T fill) : Sto
   std::fill_n(StorageBase<T>::data_,StorageBase<T>::data_+StorageBase<T>::size_,fill);
 }
 
-template <typename T> 
-VarDimStorage<T>::VarDimStorage(const VarDimStorage& toCopy)
+template <typename T> VarDimStorage<T>::VarDimStorage(const VarDimStorage& toCopy)
 {
   StorageBase<T>::size_ = toCopy.size();
   dim_ = toCopy.dim_vector();
@@ -85,8 +82,7 @@ VarDimStorage<T>::VarDimStorage(const VarDimStorage& toCopy)
   }
 }
 
-template <typename T> 
-VarDimStorage<T>::~VarDimStorage()
+template <typename T> VarDimStorage<T>::~VarDimStorage()
 {
 }
 
@@ -173,21 +169,21 @@ T& VarDimStorage<T>::operator()(Math1D::Vector<size_t>& pos)
 }
 
 template<typename T, typename ST>
-bool operator==(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2) 
+bool operator==(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2)
 {
   if (v1.dims() != v2.dims())
     return false;
-  
+
   for (size_t k = 0; k < v1.size(); k++) {
     if (v1.direct_access(k) != v2.direct_access(k))
       return false;
   }
-  
+
   return true;
 }
 
 template<typename T, typename ST>
-bool operator!=(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2) 
+bool operator!=(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2)
 {
   return !(v1 == v2);
 }

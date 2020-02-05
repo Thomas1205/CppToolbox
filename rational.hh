@@ -20,7 +20,7 @@ public:
   Rational64(Int64 num, Int64 denom);
 
   Rational64 inverse() const;
-    
+
   Rational64 rabs() const;
 
   Rational64 negative() const;
@@ -46,8 +46,8 @@ public:
   inline bool is_nonzero() const;
 
   inline bool is_one() const;
-  
-  inline bool is_integer() const;  
+
+  inline bool is_integer() const;
 
   Int64 toInt() const;
 
@@ -104,18 +104,18 @@ Rational64 approx_sqrt(const Rational64& r);
 Rational64 approx_r64(double d);
 
 namespace Makros {
-  
+
   template<>
   inline Rational64 abs(Rational64 arg)
   {
     return rabs(arg);
   }
-  
+
   template<>
-  inline void unified_assign(Rational64* attr_restrict dest, const Rational64* attr_restrict source, size_t size) 
+  inline void unified_assign(Rational64* attr_restrict dest, const Rational64* attr_restrict source, size_t size)
   {
     memcpy(dest, source, size * sizeof(Rational64));
-  }    
+  }
 }
 
 /******* implementation ******/
@@ -129,7 +129,7 @@ inline bool Rational64::is_negative() const
 inline bool Rational64::is_positive() const
 {
   assert(denom_ > 0);
-  return (num_ > 0);  
+  return (num_ > 0);
 }
 
 inline bool Rational64::is_one() const

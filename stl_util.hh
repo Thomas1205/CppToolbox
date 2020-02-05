@@ -48,7 +48,7 @@ template <typename T>
 inline void vec_replace(std::vector<T>& vec, T toErase, T toInsert);
 
 template <typename T>
-inline void vec_replace_maintainsort(std::vector<T>& vec, T toErase, T toInsert);
+inline void vec_replace_maintainsort(std::vector<T>& vec, const T toErase, const T toInsert);
 
 //binary search, returns MAX_UINT if key is not found, otherwise the position in the vector
 template<typename T>
@@ -76,8 +76,6 @@ public:
 
   bool operator()(const std::pair<T1,T2>& p1, const std::pair<T1,T2>& p2);
 };
-
-
 
 
 namespace Makros {
@@ -200,7 +198,7 @@ inline void vec_sort(std::vector<T>& vec)
 }
 
 template <typename T>
-inline void vec_bubble_sort(std::vector<T>& vec) 
+inline void vec_bubble_sort(std::vector<T>& vec)
 {
   bubble_sort(vec.data(), vec.size());
 }
@@ -225,15 +223,15 @@ inline void vec_replace(std::vector<T>& vec, T toErase, T toInsert)
 }
 
 template <typename T>
-inline void vec_replace_maintainsort(std::vector<T>& vec, T toErase, T toInsert)
+inline void vec_replace_maintainsort(std::vector<T>& vec, const T toErase, const T toInsert)
 {
   const size_t size = vec.size();
   size_t i = 0;
   for (; i < size; i++) {
     if (vec[i] == toErase) {
-      
+
       if (i > 0 && toInsert < vec[i-1]) {
-   			size_t npos = i-1;
+        size_t npos = i-1;
         while (npos > 0 && toInsert < vec[npos-1])
           npos--;
 
@@ -242,22 +240,22 @@ inline void vec_replace_maintainsort(std::vector<T>& vec, T toErase, T toInsert)
         vec[npos] = toInsert;
       }
       else if (i+1 < size && vec[i+1] < toInsert) {
-   			size_t npos = i+1;
+        size_t npos = i+1;
         while (npos+1 < size && vec[npos+1] < toInsert)
           npos++;
 
         for (size_t k = i; k < npos; k++)
           vec[k] = vec[k+1];
-        vec[npos] = toInsert;			
+        vec[npos] = toInsert;
       }
       else {
         vec[i] = toInsert;
       }
-      
+
       break;
     }
   }
-  
+
   assert(i < size);
   //assert(is_sorted(vec.data(), size));
 }
@@ -282,7 +280,7 @@ bool ComparePairBySecond<T1,T2>::operator()(const std::pair<T1,T2>& p1, const st
 
 //binary search, returns MAX_UINT if key is not found, otherwise the position in the vector
 template<typename T>
-size_t binsearch(const std::vector<T>& vec, T key)
+size_t binsearch(const std::vector<T>& vec, const T key)
 {
   const size_t size = vec.size();
   if (size == 0 || key < vec[0] || key > vec[size-1])
@@ -299,7 +297,7 @@ size_t binsearch(const std::vector<T>& vec, T key)
     assert(vec[lower] < key);
     assert(vec[upper] > key);
 
-    size_t middle = (lower+upper)/2;
+    const size_t middle = (lower+upper) >> 1;  // (lower+upper)/2;
     assert(middle > lower && middle < upper);
     if (vec[middle] == key)
       return middle;
@@ -313,7 +311,7 @@ size_t binsearch(const std::vector<T>& vec, T key)
 }
 
 template<typename T>
-size_t binsearch_insertpos(const std::vector<T>& vec, T key)
+size_t binsearch_insertpos(const std::vector<T>& vec, const T key)
 {
   const size_t size = vec.size();
   if (size == 0 || key <= vec[0])
@@ -321,7 +319,7 @@ size_t binsearch_insertpos(const std::vector<T>& vec, T key)
 
   if (key > vec[size-1])
     return size;
-  
+
   size_t lower = 0;
   size_t upper = size-1;
   if (vec[upper] == key)
@@ -331,7 +329,7 @@ size_t binsearch_insertpos(const std::vector<T>& vec, T key)
     assert(vec[lower] < key);
     assert(vec[upper] > key);
 
-    size_t middle = (lower+upper)/2;
+    const size_t middle = (lower+upper) >> 1;  // (lower+upper)/2;
     assert(middle > lower && middle < upper);
     if (vec[middle] == key)
       return middle;
@@ -342,7 +340,7 @@ size_t binsearch_insertpos(const std::vector<T>& vec, T key)
   }
 
   assert(lower+1 == upper);
-  return upper;  
+  return upper;
 }
 
 template<typename TK, typename TV>
@@ -363,7 +361,7 @@ size_t binsearch_keyvalue(const std::vector<std::pair<TK,TV> >& vec, TK key)
     assert(vec[lower].first < key);
     assert(vec[upper].first > key);
 
-    size_t middle = (lower+upper)/2;
+    const size_t middle = (lower+upper) >> 1;  // (lower+upper)/2;
     assert(middle > lower && middle < upper);
     if (vec[middle].first == key)
       return middle;
