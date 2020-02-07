@@ -199,6 +199,10 @@ public:
 
   inline T& operator[](ST i) const;
 
+  inline ST size() const;
+
+  inline ST reserved_size() const;
+
   void resize(ST size, bool exact_fit = false);
 
   void shrink(ST size);
@@ -229,9 +233,9 @@ public:
 
   void append(FlexibleStorage1D<T,ST>& toAppend);
 
-  inline ST size() const;
+  void erase(ST pos);
 
-  inline ST reserved_size() const;
+  void insert(ST pos, T val);
 
   T* direct_access();
 
@@ -910,6 +914,27 @@ inline T& FlexibleStorage1D<T,ST>::operator[](ST i) const
   }
 #endif
   return data_[i];
+}
+
+template<typename T, typename ST>
+void FlexibleStorage1D<T,ST>::erase(ST pos)
+{
+  if (pos < size_)
+  {
+    Makros::downshift_array(data_, pos, size_, 1);
+    shrink_by(1);
+  }
+}
+
+template<typename T, typename ST>
+void FlexibleStorage1D<T,ST>::insert(ST pos, T val)
+{
+  if (pos <= size_)
+  {
+    append(T());
+    Makros::upshift_array(data_, pos, size_, 1);
+    data_[pos] = val;
+  }
 }
 
 template<typename T, typename ST>

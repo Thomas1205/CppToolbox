@@ -113,9 +113,10 @@ bool TreeSet<T>::contains(T val) const
     if (val == data_[i])
       return true;
     if (val < data_[i])
-      i *= 2;
-    else
-      i = 2*i+1;
+      i <<= 1; //i *= 2;
+    else {
+      i = (i << 1) | 1; //2*i+1;
+    }
   }
 }
 
@@ -128,9 +129,10 @@ T TreeSet<T>::min() const
 
   uint i = 1;
   while (true) {
-    if (2*i >= size)
+    //if (2*i >= size)
+    if (i << 1 >= size)
       break;
-    i *= 2;
+    i <<= 1; //i *= 2;
   }
 
   return data_[i];
@@ -145,9 +147,10 @@ T TreeSet<T>::max() const
 
   uint i = 1;
   while (true) {
-    if (2*i+1 >= size)
+    //if (2*i+1 >= size)
+    if (((i << 1) | 1) >= size)
       break;
-    i = 2*i+1;
+    i = (i << 1) | 1; //2*i+1;
   }
 
   return data_[i];
@@ -173,10 +176,11 @@ size_t TreeSet<T>::element_num(T val) const
     if (i >= size)
       return MAX_UINT;
     if (val < data_[i]) {
-      if (2*i >= size)
+      //if (2*i >= size)
+      if ((i << 1) >= size)
         return MAX_UINT;
 
-      i *= 2; //go to left
+      i <<= 1; //i *= 2; //go to left
       level++;
     }
     else {
@@ -199,15 +203,18 @@ size_t TreeSet<T>::element_num(T val) const
       }
 #else
       //left tree has root 2*i at level level+1
-      if (2*i < size) {
+      //if (2*i < size) {
+      if ((i << 1) < size) {
         //left tree exists
         //the levels level+1 to highestFullLevel are full
-        if (4*i < size) {
+        //if (4*i < size) {
+        if ((i << 2) < size) {
           const size_t exponent = (highestFullLevel - level); //number of fully filled levels
           num += (1 << exponent) - 1; //number of elements in the fully filled levels
           const size_t base = i * (1 << (exponent+1));
           if (base < size) {
-            const size_t next_base = (2*i+1) * (1 << exponent);
+            //const size_t next_base = (2*i+1) * (1 << exponent);
+            const size_t next_base = ((i << 1) + 1) * (1 << exponent);
             num += std::min(size,next_base)-base;
           }
         }
@@ -219,13 +226,14 @@ size_t TreeSet<T>::element_num(T val) const
       if (val == data_[i])
         return num;
 
-      if (2*i+1 >= size)
+      //if (2*i+1 >= size)
+      if (((i << 1) | 1) >= size)
         return MAX_UINT;
 
       //right exists
       num++; //for the current node
 
-      i = 2*i+1; // go to right
+      i = (i << 1) | 1; // 2*i+1; // go to right
       level++;
     }
   }
@@ -257,8 +265,8 @@ void TreeSet<T>::correct_leaf(size_t i)
   size_t j = i;
   while (j > 1) {
 
-    from_right = ((j % 2) == 1);
-    j /= 2;
+    from_right = ((j & 1) != 0); //((j % 2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+    j >>= 1; // j /= 2;
     if ((from_right && val < data_[j]) || (!from_right && data_[j] < val)) {
       highest = j;
       highest_from_right = from_right;
@@ -276,20 +284,24 @@ void TreeSet<T>::correct_leaf(size_t i)
       //need to check the left side of the tree: is val bigger than the largest in the left?
       // we know that highest has at least a left child
 
-      size_t k = 2*highest; //left once
+      size_t k = highest << 1; //2*highest; //left once
       //std::cerr << "start k: " << k << ", size: " << size << ", highest: " << highest << std::endl;
-      while (2*k < size) {
-        k = std::min(size-1,2*k+1); //right always, except when only the left leaf exists
-        //std::cerr << "k: " << k << std::endl;
+      //while (2*k < size) {
+      while ((k << 1) < size) {
+        //k = std::min(size-1,2*k+1); //right always, except when only the left leaf exists
+        k = std::min(size-1,(k << 1) | 1); //right always, except when only the left leaf exists
       }
 
       assert(k != highest);
       assert(k < data_.size() && 2*k >= data_.size()); //k must be leaf
 
-      if (k % 2 == 0 && k != 2*highest) {
+      //if (k % 2 == 0 && k != 2*highest) {
+      if ((k & 1) == 0 && k != (highest << 1)) {
         //ended in left where right should be, need additional swap
-        if (data_[highest] < data_[k/2]) {
-          std::swap(data_[k],data_[k/2]);
+        //if (data_[highest] < data_[k/2]) {
+        if (data_[highest] < data_[k >> 1]) {
+          //std::swap(data_[k],data_[k/2]);
+          std::swap(data_[k],data_[k >> 1]);
           std::swap(data_[highest], data_[k]);
           correct_leaf(k);
         }
@@ -302,10 +314,12 @@ void TreeSet<T>::correct_leaf(size_t i)
     else {
       //need to check the right side of the tree: is val smaller than the smallest in the right?
 
-      if (2*highest+1 < size) { // right children exist
-        size_t k = 2*highest+1; //right once
-        while (2*k < size) {
-          k *= 2; //left always
+      //if (2*highest+1 < size) { // right children exist
+      if (((highest << 1) | 1) < size) { // right children exist
+        size_t k = (highest << 1) | 1; // 2*highest+1; //right once
+        //while (2*k < size) {
+        while ((k << 1) < size) {
+          k <<= 1; //k *= 2; //left always
         }
         assert(k != highest);
         assert(k < data_.size() && 2*k >= data_.size()); //k must be leaf
@@ -318,7 +332,6 @@ void TreeSet<T>::correct_leaf(size_t i)
     }
   }
 }
-
 
 //returns true if val is new
 template<typename T>
@@ -351,9 +364,10 @@ bool TreeSet<T>::erase(T val)
     if (val == data_[i])
       break;
     if (val < data_[i])
-      i *= 2;
-    else
-      i = 2*i+1;
+      i <<= 1; //i *= 2;
+    else {
+      i = (i << 1) | 1; //2*i+1;
+    }
   }
 
   //std::cerr << "found at " << i << ", size: " << size << std::endl;
@@ -362,37 +376,46 @@ bool TreeSet<T>::erase(T val)
   if (i == size-1) {
     data_.resize(size-1);
   }
-  else if (2*i >= size) { //leaf
+  //else if (2*i >= size) { //leaf
+  else if ((i << 1) >= size) { //leaf
     std::swap(data_[i], data_[size-1]);
     data_.resize(size-1);
     correct_leaf(i);
   }
   else {
     //node is interior
-    if (2*i == size-1) {
+    //if (2*i == size-1) {
+    if ((i << 1) == size-1) {
       // node has only left child -> replace
-      std::swap(data_[i],data_[2*i]);
+      //std::swap(data_[i],data_[2*i]);
+      std::swap(data_[i],data_[i << 1]);
       data_.resize(size-1);
     }
     else {
-      size_t j = 2*i;
+      size_t j = i << 1; //2*i;
       if (val < data_[size-1]) {
         //std::cerr << "find right" << std::endl;
         //find smallest in right tree
-        j = 2*i+1; //right once
-        while (2*j < size) {
-          j *= 2; //left constantly
+        j = (i << 1) | 1; //2*i+1; //right once
+        //while (2*j < size) {
+        while ((j << 1) < size) {
+          j <<= 1; //j *= 2; //left constantly
         }
       }
       else {
         //std::cerr << "find left" << std::endl;
         //find largest in left tree
-        j = 2*i; //left once
-        while (2*j < size) {
-          j = std::min(size-1,2*j+1); //right always, except when only the left leaf exists
+        j = i << 1; //2*i; //left once
+        //while (2*j < size) {
+        while ((j << 1) < size) {
+          //j = std::min(size-1,2*j+1); //right always, except when only the left leaf exists
+          j = std::min(size-1,(j << 1) | 1); //right always, except when only the left leaf exists
         }
-        if (j % 2 == 0 && j != 2*i) //ended in left where right should be, need additional swap
-          std::swap(data_[j],data_[j/2]);
+        //if ((j % 2) == 0 && j != 2*i) //ended in left where right should be, need additional swap
+        if ((j & 1) == 0 && j != (i << 1)) { //ended in left where right should be, need additional swap
+          //std::swap(data_[j],data_[j/2]);
+          std::swap(data_[j],data_[j >> 1]);
+        }
       }
       //std::cerr << "found leaf " << j << std::endl;
 
@@ -429,9 +452,11 @@ bool TreeSet<T>::replace(T out, T in)
     if (out == data_[i])
       break;
     if (out < data_[i])
-      i *= 2;
-    else
-      i = 2*i+1;
+      i <<= 1; //i *= 2;
+    else {
+      //i = 2*i+1;
+      i = (i << 1) + 1;
+    }
   }
 
   if (i >= size) {
@@ -439,7 +464,8 @@ bool TreeSet<T>::replace(T out, T in)
     return false;
   }
   else {
-    if (2*i >= size) {
+    //if (2*i >= size) {
+    if ((i << 1) >= size) {
       //hit a leaf, easy
       assert(i < data_.size() && 2*i >= data_.size());
       data_[i] = in;
@@ -447,21 +473,28 @@ bool TreeSet<T>::replace(T out, T in)
     }
     else {
       size_t j = i;
-      if (in > out && 2*i+1 < size) {
+      //if (in > out && 2*i+1 < size) {
+      if (in > out && ((i << 1) | 1) < size) {
         //take lowest from right
-        j = 2*i+1; //right once
-        while (2*j < size) {
-          j *= 2; //left always
+        j = (i << 1) | 1; // 2*i+1; //right once
+        //while (2*j < size) {
+        while ((j << 1) < size) {
+          j <<= 1; //j *= 2; //left always
         }
       }
       else {
         //take highest from left
-        j = 2*i; //left once
-        while (2*j < size) {
-          j = std::min(size-1,2*j+1); //right always, except when only the left leaf exists
+        j <<= 1; //j = 2*i; //left once
+        //while (2*j < size) {
+        while ((j << 1) < size) {
+          //j = std::min(size-1,2*j+1); //right always, except when only the left leaf exists
+          j = std::min(size-1,(j << 1) | 1); //right always, except when only the left leaf exists
         }
-        if (j % 2 == 0 && j != 2*i) //ended in left where right should be, need additional swap
-          std::swap(data_[j],data_[j/2]);
+        //if ((j % 2) == 0 && j != 2*i) //ended in left where right should be, need additional swap
+        if ((j & 1) == 0 && j != (i << 1)) { //ended in left where right should be, need additional swap
+          //std::swap(data_[j],data_[j/2]);
+          std::swap(data_[j],data_[j >> 1]);
+        }
       }
       assert(j < data_.size() && 2*j >= data_.size());
       data_[i] = data_[j];
@@ -490,32 +523,34 @@ std::vector<T> TreeSet<T>::get_sorted_data() const
   bool from_right = true;
   while (i > 0) {
 
-    if (2*i >= size) {
+    //if (2*i >= size) {
+    if ((i << 1) >= size) {
       //leaf
       result.push_back(data_[i]);
       descending = false;
-      from_right = ((i%2) == 1);
-      i /= 2;
+      from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+      i >>= 1; //i /= 2;
     }
     else if (descending) {
-      i *= 2; //go to left child
+      i <<= 1; //i *= 2; //go to left child
     }
     else {
       if (from_right) {
-        from_right = ((i%2) == 1);
-        i /= 2;
+        from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+        i >>= 1; //i /= 2;
       }
       else {
         result.push_back(data_[i]);
-        if (i*2+1 < size) {
+        //if (i*2+1 < size) {
+        if (((i << 1) | 1) < size) {
           //go to right child
           descending = true;
-          i = i*2+1;
+          i = (i << 1) | 1; // i*2+1;
         }
         else {
           //there is no right child -> up
-          from_right = ((i%2) == 1);
-          i /= 2;
+          from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+          i >>= 1; //i /= 2;
         }
       }
     }
@@ -536,34 +571,37 @@ void TreeSet<T>::get_sorted_data(Storage1D<T>& result) const
   bool from_right = true;
   while (i > 0) {
 
-    if (2*i >= size) {
+    //if (2*i >= size) {
+    if ((i << 1) >= size) {
       //leaf
       result[k] = data_[i];
       k++;
       descending = false;
-      from_right = ((i%2) == 1);
-      i /= 2;
+      from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+      i >>= 1; //i /= 2;
     }
     else if (descending) {
-      i *= 2; //go to left child
+      i <<= 1; //i *= 2; //go to left child
     }
     else {
       if (from_right) {
-        from_right = ((i%2) == 1);
-        i /= 2;
+        from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+        i >>= 1; //i /= 2;
       }
       else {
         result[k] = data_[i];
         k++;
-        if (i*2+1 < size) {
+        //if (i*2+1 < size) {
+        if (((i << 1) | 1) < size) {
           //go to right child
           descending = true;
-          i = i*2+1;
+          i = (i << 1) | 1; // i*2+1;
         }
         else {
           //there is no right child -> up
-          from_right = ((i%2) == 1);
-          i /= 2;
+          //from_right = ((i%2) == 1);
+          from_right = ((i & 1) != 0); // != 0 is reflected in the zero flag -> better than == 1
+          i >>= 1; //i /= 2;
         }
       }
     }
@@ -582,32 +620,34 @@ std::vector<T> TreeSet<T>::get_sorted_head(size_t nElements) const
   bool from_right = true;
   while (i > 0 && result.size() < nElements) {
 
-    if (2*i >= size) {
+    //if (2*i >= size) {
+    if ((i << 1) >= size) {
       //leaf
       result.push_back(data_[i]);
       descending = false;
-      from_right = ((i%2) == 1);
-      i /= 2;
+      from_right = ((i & 1) == 1); //((i%2) == 1);
+      i >>= 1; //i /= 2;
     }
     else if (descending) {
-      i *= 2; //go to left child
+      i <<= 1; //i *= 2; //go to left child
     }
     else {
       if (from_right) {
-        from_right = ((i%2) == 1);
-        i /= 2;
+        from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+        i >>= 1; //i /= 2;
       }
       else {
         result.push_back(data_[i]);
-        if (i*2+1 < size) {
+        //if (i*2+1 < size) {
+        if (((i << 1) | 1) < size) {
           //go to right child
           descending = true;
-          i = i*2+1;
+          i = (i << 1) | 1; //i*2+1;
         }
         else {
           //there is no right child -> up
-          from_right = ((i%2) == 1);
-          i /= 2;
+          from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+          i >>= 1; //i /= 2;
         }
       }
     }
@@ -631,13 +671,13 @@ std::vector<T> TreeSet<T>::get_sorted_data_from_val(T val) const
     if (val == data_[i])
       break;
     if (val < data_[i])
-      i *= 2;
+      i <<= 1; //i *= 2;
     else
-      i = 2*i+1;
+      i = (i << 1) | 1; //2*i+1;
   }
 
   if (i >= size)
-    i /= 2; //back to the leaf
+    i >>= 1; //i /= 2; //back to the leaf
 
   result.reserve(size-1);
   bool descending = false; //start with false because we do not want to visit the left tree
@@ -648,31 +688,33 @@ std::vector<T> TreeSet<T>::get_sorted_data_from_val(T val) const
 
     while (i > 0) {
 
-      if (2*i >= size) {
+      //if (2*i >= size) {
+      if ((i << 1) >= size) {
         //leaf
         descending = false;
-        from_right = ((i%2) == 1);
-        i /= 2;
+        from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+        i >>= 1; //i /= 2;
         break;
       }
       else if (descending) {
-        i *= 2; //go to left child
+        i <<= 1; //i *= 2; //go to left child
       }
       else {
         if (from_right) {
-          from_right = ((i%2) == 1);
-          i /= 2;
+          from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+          i >>= 1; //i /= 2;
         }
         else {
-          if (i*2+1 < size) {
+          //if (i*2+1 < size) {
+          if (((i << 1) | 1) < size) {
             //go to right child
             descending = true;
-            i = i*2+1;
+            i = (i << 1) | 1; //i*2+1;
           }
           else {
             //there is no right child -> up
-            from_right = ((i%2) == 1);
-            i /= 2;
+            from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+            i >>= 1; //i /= 2;
           }
           break;
         }
@@ -682,32 +724,34 @@ std::vector<T> TreeSet<T>::get_sorted_data_from_val(T val) const
 
   while (i > 0) {
 
-    if (2*i >= size) {
+    //if (2*i >= size) {
+    if ((i << 1) >= size) {
       //leaf
       result.push_back(data_[i]);
       descending = false;
-      from_right = ((i%2) == 1);
+      from_right = ((i & 1) != 0); //((i%2) == 1);  // != 0 is reflected in the zero flag -> better than == 1
       i /= 2;
     }
     else if (descending) {
-      i *= 2; //go to left child
+      i <<= 1; //i *= 2; //go to left child
     }
     else {
       if (from_right) {
-        from_right = ((i%2) == 1);
-        i /= 2;
+        from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+        i >>= 1; //i /= 2;
       }
       else {
         result.push_back(data_[i]);
-        if (i*2+1 < size) {
+        //if (i*2+1 < size) {
+        if (((i << 1) | 1) < size) {
           //go to right child
           descending = true;
-          i = i*2+1;
+          i = (i << 1) | 1; //i*2+1;
         }
         else {
           //there is no right child -> up
-          from_right = ((i%2) == 1);
-          i /= 2;
+          from_right = ((i & 1) != 0); //((i%2) == 1); // != 0 is reflected in the zero flag -> better than == 1
+          i >>= 1; //i /= 2;
         }
       }
     }
@@ -736,16 +780,16 @@ std::ostream& operator<<(std::ostream& os, const TreeSet<T>& treeset)
       os << data[i];
       first = false;
       descending = false;
-      from_right = ((i%2) == 1);
-      i /= 2;
+      from_right = ((i & 1) == 1); //((i%2) == 1);
+      i >>= 1; //i /= 2;
     }
     else if (descending) {
-      i *= 2; //go to left child
+      i <<= 1; //i *= 2; //go to left child
     }
     else {
       if (from_right) {
-        from_right = ((i%2) == 1);
-        i /= 2;
+        from_right = ((i & 1) == 1); //((i%2) == 1);
+        i >>= 1; //i /= 2;
       }
       else {
         if (!first)
@@ -759,8 +803,8 @@ std::ostream& operator<<(std::ostream& os, const TreeSet<T>& treeset)
         }
         else {
           //there is no right child -> up
-          from_right = ((i%2) == 1);
-          i /= 2;
+          from_right = ((i & 1) == 1); //((i%2) == 1);
+          i >>= 1; //i /= 2;
         }
       }
     }

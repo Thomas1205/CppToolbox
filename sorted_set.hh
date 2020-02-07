@@ -13,7 +13,7 @@ public:
 
   SortedSet(const SortedSet<T>& toCopy);
 
-  void swap(TreeSet<T>& other)
+  void swap(SortedSet<T>& other)
   {
     data_.swap(other.data_);
   }
@@ -56,7 +56,8 @@ protected:
 
 /********************** implementation ************************/
 
-template<typename T> SortedSet<T>::SortedSet(const SortedSet<T>& toCopy)
+template<typename T> 
+SortedSet<T>::SortedSet(const SortedSet<T>& toCopy)
   : data_(toCopy.data_) {}
 
 template<typename T>
@@ -70,7 +71,6 @@ template<typename T>
 bool SortedSet<T>::insert(T val)
 {
   //std::cerr << "insert" << std::endl;
-
   const size_t size = data_.size();
   const size_t inspos = binsearch_insertpos(data_, val);
   if (inspos >= size) {
@@ -83,11 +83,11 @@ bool SortedSet<T>::insert(T val)
 
   data_.push_back(T());
 
+  Makros::upshift_array(data_.data(), inspos, 1, size);
   for (uint k = size; k > inspos; k--)
     data_[k] = data_[k-1];
 
   data_[inspos] = val;
-
   return true;
 }
 
@@ -95,18 +95,17 @@ bool SortedSet<T>::insert(T val)
 template<typename T>
 bool SortedSet<T>::erase(T val)
 {
-  //std::cerr << "erase" << std::endl;
-
+  //std::cerr << "erase " << val << " from " << data_ << std::endl;
   const size_t pos = binsearch(data_, val);
   if (pos == MAX_UINT)
     return false;
 
   const size_t size = data_.size();
-  for (uint k = pos; k < size-1; k++)
-    data_[k] = data_[k+1];
+  Makros::downshift_array(data_.data(), pos, 1, size);
+  //for (uint k = pos; k < size-1; k++)
+  //  data_[k] = data_[k+1];
 
   data_.resize(size-1);
-
   return true;
 }
 

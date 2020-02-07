@@ -540,6 +540,232 @@ inline void prefetcht2(const T* ptr)
 
 namespace Makros {
 
+  /***************** downshift *****************/
+
+  inline void downshift_uint_array(uint* data, const uint pos, const uint shift, const uint nData)
+  {
+    assert(shift <= nData);
+    uint i = pos;
+    const uint end = nData-shift;
+#if !defined(USE_SSE) || USE_SSE < 5
+    for (; i < end; i++)
+      data[i] = data[i+shift];
+#else
+
+#if USE_SSE >= 5
+    for (; i + 7 < end; i += 8) 
+    {
+      uint* out_ptr = data+i;
+      const uint* in_ptr = out_ptr + shift;
+
+      asm __volatile__ ("vmovdqu %[inp], %%ymm9 \n\t"
+                        "vmovdqu %%ymm9, %[outp] \n\t"
+                        : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "ymm9", "memory");
+    }
+#endif
+
+    for (; i + 3 < end; i += 4) 
+    {
+      uint* out_ptr = data+i;
+      const uint* in_ptr = out_ptr + shift;
+
+      asm __volatile__ ("movdqu %[inp], %%xmm9 \n\t"
+                        "movdqu %%xmm9, %[outp] \n\t"
+                        : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "xmm9", "memory");
+    }
+    for (; i < end; i++) {
+      data[i] = data[i+shift];
+    }
+#endif
+  }
+
+  inline void downshift_int_array(int* data, const uint pos, const uint shift, const uint nData)
+  {
+    downshift_uint_array((uint*) data, pos, shift, nData);
+  }
+
+  inline void downshift_float_array(float* data, const uint pos, const uint shift, const uint nData)
+  {
+    downshift_uint_array((uint*) data, pos, shift, nData);
+  }
+
+  inline void downshift_double_array(double* data, const uint pos, const uint shift, const uint nData)
+  {
+    uint i = pos;
+    const uint end = nData-shift;
+#if !defined(USE_SSE) || USE_SSE < 4
+    for (; i < end; i++)
+      data[i] = data[i+shift];
+#else
+
+#if USE_SSE >= 5
+    for (; i + 3 < end; i += 4) {
+
+      double* out_ptr = data+i;
+      const double* in_ptr = out_ptr + shift;
+
+      asm __volatile__ ("vmovdqu %[inp], %%ymm9 \n\t"
+                        "vmovdqu %%ymm9, %[outp] \n\t"
+                        : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "ymm9", "memory");
+    }
+#endif
+    for (; i + 1 < end; i += 2) {
+
+      double* out_ptr = data+i;
+      const double* in_ptr = out_ptr + shift;
+
+      asm __volatile__ ("movdqu %[inp], %%xmm9 \n\t"
+                        "movdqu %%xmm9, %[outp] \n\t"
+                        : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "xmm9", "memory");
+    }
+    for (; i < end; i++)
+      data[i] = data[i+shift];
+#endif
+  }
+
+  //routine for long double is TODO
+
+  template<typename T>
+  inline void downshift_array(T* data, const uint pos, const uint shift, const uint nData)
+  {
+    uint i = pos;
+    const uint end = nData-shift;
+    for (; i < end; i++)
+      data[i] = data[i+shift];
+  }
+
+  template<>
+  inline void downshift_array(uint* data, const uint pos, const uint shift, const uint nData)
+  {
+    downshift_uint_array(data, pos, shift, nData);
+  }
+
+  template<>
+  inline void downshift_array(int* data, const uint pos, const uint shift, const uint nData)
+  {
+    downshift_int_array(data, pos, shift, nData);
+  }
+
+  template<>
+  inline void downshift_array(float* data, const uint pos, const uint shift, const uint nData)
+  {
+    downshift_float_array(data, pos, shift, nData);
+  }
+
+  //specialization for double is TODO
+
+  /***************** upshift *****************/
+
+  inline void upshift_uint_array(uint* data, const int pos, const int last, const int shift)
+  {
+    assert(shift > 0);
+    int k = last;
+#if !defined(USE_SSE) || USE_SSE < 4
+    for (; k >= pos+shift; k--)
+      data[k] = data[k-shift];
+#else
+
+#if USE_SSE >= 5
+    for (; k-7 >= pos+shift; k -= 8) 
+    {
+      uint* out_ptr = data + k - 7;
+      const uint* in_ptr = out_ptr - shift;
+
+      asm __volatile__ ("vmovdqu %[inp], %%ymm9 \n\t"
+                        "vmovdqu %%ymm9, %[outp] \n\t"
+                        : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "ymm9", "memory");
+    }
+#endif
+    for (; k-3 >= pos+shift; k -= 4) 
+    {
+      uint* out_ptr = data + k - 3;
+      const uint* in_ptr = out_ptr - shift;
+
+      asm __volatile__ ("movdqu %[inp], %%xmm9 \n\t"
+                        "movdqu %%xmm9, %[outp] \n\t"
+                        : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "xmm9", "memory");
+    }
+    
+    for (; k >= pos+shift; k--) {
+      data[k] = data[k-shift];
+    }
+#endif
+  }
+
+  inline void upshift_int_array(int* data, const int pos, const int last, const int shift)
+  {
+    upshift_uint_array((uint*) data, pos, last, shift);
+  }
+
+  inline void upshift_float_array(float* data, const int pos, const int last, const int shift)
+  {
+    upshift_uint_array((uint*) data, pos, last, shift);
+  }
+
+  inline void upshift_double_array(double* data, const int pos, const int last, const int shift)
+  {
+    assert(shift > 0);
+    int k = last;
+#if !defined(USE_SSE) || USE_SSE < 4
+    for (; k >= pos+shift; k--)
+      data[k] = data[k-shift];
+#else
+
+#if USE_SSE >= 5
+    for (; k-4-shift > pos; k -= 4) 
+    {
+      double* out_ptr = data + k - 3;
+      const double* in_ptr = out_ptr - shift;
+
+      asm __volatile__ ("vmovdqu %[inp], %%ymm9 \n\t"
+                        "vmovdqu %%ymm9, %[outp] \n\t"
+                        : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "ymm9", "memory");
+    }
+#endif
+    for (; k-2-shift > pos; k -= 2) 
+    {
+      double* out_ptr = data + k - 1;
+      const double* in_ptr = out_ptr - shift;
+
+      asm __volatile__ ("movdqu %[inp], %%xmm9 \n\t"
+                        "movdqu %%xmm9, %[outp] \n\t"
+                        : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "xmm9", "memory");
+    }
+    for (; k >= pos+shift; k--)
+      data[k] = data[k-1];
+#endif
+  }
+
+  template<typename T>
+  inline void upshift_array(T* data, const int pos, const int last, const int shift)
+  {
+    assert(shift > 0);
+    for (int k = last; k >= pos+shift; k--)
+      data[k] = data[k-shift];
+  }
+
+  template<>
+  inline void upshift_array(uint* data, const int pos, const int last, const int shift)
+  {
+    upshift_uint_array(data, pos, last, shift);
+  }
+
+  template<>
+  inline void upshift_array(int* data, const int pos, const int shift, const int last)
+  {
+    upshift_int_array(data, pos, shift, last);
+  }
+
+  template<>
+  inline void upshift_array(float* data, const int pos, const int shift, const int last)
+  {
+    upshift_float_array(data, pos, shift, last);
+  }
+
+  //specialization for double is TODO
+
+  /***************** find *****************/
+
   //data should contain key at most once
   inline uint find_unique_uint(const uint* data, const uint key, const uint nData)
   {
@@ -551,12 +777,14 @@ namespace Makros {
     }
 #else
 
-    //NOTE: if data is not unique, i.e. contains key more than once, this may return incorrect results 
+    //NOTE: if data is not unique, i.e. contains key more than once, this may return incorrect results
     //  if occurences are close together, it may return the sum of their positions
+
+    //NOTE: we can go for ymm registers, if we use the AVX-2 command VPSRLD to send the data down when horizontally summing 
 
     //std::cerr << "find_unique_uint(key: " << key << ")" << std::endl;
 
-    if (nData >= 12) { 
+    if (nData >= 12) {
       static const uint ind[4] = {0, 1, 2, 3};
       //const uint inc[4] = {4, 4, 4, 4};
       //const uint keys[4] = {key, key, key, key};
@@ -571,7 +799,7 @@ namespace Makros {
                         "vbroadcastss %[finc], %%xmm4 \n\t"
                         //"movdqu %[key], %%xmm5  \n\t" //xmm5 contains the keys, broadcast would be better
                         "vbroadcastss %[fkey], %%xmm5 \n\t"
-                        : : [ind] "m" (ind[0]), /* [inc] "m" (inc[0]), [key] "m" (keys[0]), */ [finc] "m" (finc), [fkey] "m" (fkey) 
+                        : : [ind] "m" (ind[0]), /* [inc] "m" (inc[0]), [key] "m" (keys[0]), */ [finc] "m" (finc), [fkey] "m" (fkey)
                         : "xmm2", "xmm3", "xmm4", "xmm5");
 
       uint res = MAX_UINT;
@@ -580,8 +808,8 @@ namespace Makros {
         //NOTE: jumps outside of asm blocks are allowed only in asm goto, but that cannot have outputs
 
         const uint* ptr = data+i;
-        asm __volatile__ ("movdqu %1, %%xmm0  \n\t"                          
-                          "pcmpeqd %%xmm5, %%xmm0 \n\t" //xmm0 is overwritten with mask (all 1s on equal)                          
+        asm __volatile__ ("movdqu %1, %%xmm0  \n\t"
+                          "pcmpeqd %%xmm5, %%xmm0 \n\t" //xmm0 is overwritten with mask (all 1s on equal)
                           "pblendvb %%xmm3, %%xmm2  \n\t" //if xmm0 flags 1, the index is written
                           "ptest %%xmm0, %%xmm0 \n\t" //sets the zero flag iff xmm0 is all 0
                           "jz 1f \n\t" //jump if no equals
@@ -592,7 +820,7 @@ namespace Makros {
                           : "+g" (res) : "m" (ptr[0]) : "xmm0", "xmm2", "xmm3");
 
         if (res != MAX_UINT)
-          return res;                
+          return res;
       }
     }
 
@@ -603,12 +831,14 @@ namespace Makros {
 #endif
     return MAX_UINT;
   }
-  
+
   //data should contain key at most once
   inline uint find_unique_int(const int* data, const int key, const uint nData)
   {
     return find_unique_uint((const uint*) data, (const uint) key, nData);
   }
+
+  /******** min, max, min+arg_min, max+arg_max *******/
 
   inline float max(const float_A16* data, size_t nData)
   {
@@ -715,48 +945,54 @@ namespace Makros {
 
     //use AVX - align16 is no good, need align32 for aligned moves
 
-    const float val = MIN_FLOAT;
-    const uint one = 1;
-    const float inc = *reinterpret_cast<const float*>(&one);
     size_t i = 0;
-    const float* fptr;
-
-    asm __volatile__ ("vbroadcastss %[tmp], %%ymm6 \n\t" //ymm6 is max register
-                      "vxorps %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmax) to zero
-                      "vbroadcastss %[itemp], %%ymm4 \n\t" //ymm4 is increment register
-                      "vxorps %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
-                      : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
-
-    for (i=0; (i+8) <= nData; i += 8) {
-      fptr = data+i;
-
-      assertAligned16(fptr);
-
-      asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t"
-                        "vcmpnleps %%ymm6, %%ymm7, %%ymm0 \n\t"
-                        "vblendvps %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
-                        "vblendvps %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
-                        "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
-                        : : [fptr] "m" (fptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
-    }
-
-    float tmp[8];
-    uint itemp[8];
-
-    asm __volatile__ ("vmovups %%ymm6, %[tmp] \n\t"
-                      "vmovups %%ymm5, %[itemp]"
-                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
-
     float cur_val;
-    for (i=0; i < 8; i++) {
-      cur_val = tmp[i];
-      if (cur_val > max_val) {
-        max_val = cur_val;
-        arg_max = 8*itemp[i] + i;
+
+    if (nData >= 16) {
+      const float val = MIN_FLOAT;
+      const uint one = 1;
+      const float inc = *reinterpret_cast<const float*>(&one);
+      const float* fptr;
+      
+      //TODO: check out VPBROADCASTD (but it's AVX2)
+
+      asm __volatile__ ("vbroadcastss %[tmp], %%ymm6 \n\t" //ymm6 is max register
+                        "vxorps %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmax) to zero
+                        "vbroadcastss %[itemp], %%ymm4 \n\t" //ymm4 is increment register
+                        "vxorps %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
+                        : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
+
+      for (; (i+8) <= nData; i += 8) {
+        fptr = data+i;
+
+        assertAligned16(fptr);
+
+        asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t"
+                          "vcmpnleps %%ymm6, %%ymm7, %%ymm0 \n\t"
+                          "vblendvps %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
+                          "vblendvps %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
+                          "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
+                          : : [fptr] "m" (fptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
       }
+
+      float tmp[8];
+      uint itemp[8];
+
+      asm __volatile__ ("vmovups %%ymm6, %[tmp] \n\t"
+                        "vmovups %%ymm5, %[itemp]"
+                        : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
+
+      for (uint k=0; k < 8; k++) {
+        cur_val = tmp[k];
+        if (cur_val > max_val) {
+          max_val = cur_val;
+          arg_max = (itemp[k] << 3) + k; //8*itemp[k] + k;
+        }
+      }
+      assert(i == nData - (nData % 8));
     }
 
-    for (i= nData - (nData % 8); i < nData; i++) {
+    for (; i < nData; i++) {
       cur_val = data[i];
       if (cur_val > max_val) {
         max_val = cur_val;
@@ -767,46 +1003,50 @@ namespace Makros {
 #else
     //blendvps is part of SSE4
 
-    size_t i;
+    size_t i = 0;
     float cur_val;
 
-    assert(nData <= 17179869183);
+    if (nData >= 8) {
+      assert(nData <= 17179869183);
 
-    static const float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT};
-    static const wchar_t itemp[4] = {1,1,1,1}; //increment array
-    const float* fptr;
+      static const float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT};
+      assert(sizeof(uint) == 4);
+      static const uint itemp[4] = {1,1,1,1}; //increment array
+      const float* fptr;
 
-    asm __volatile__ ("movups %[tmp], %%xmm6 \n\t" //xmm6 is max register
-                      "xorps %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmax) to zero
-                      "movups %[itemp], %%xmm4 \n\t" //xmm4 is increment register
-                      "xorps %%xmm3, %%xmm3 \n\t" //sets xmm3 (= current set index) to zero
-                      : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) : "xmm3", "xmm4", "xmm5", "xmm6");
+      asm __volatile__ ("movups %[tmp], %%xmm6 \n\t" //xmm6 is max register
+                        "xorps %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmax) to zero
+                        "movups %[itemp], %%xmm4 \n\t" //xmm4 is increment register
+                        "xorps %%xmm3, %%xmm3 \n\t" //sets xmm3 (= current set index) to zero
+                        : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) : "xmm3", "xmm4", "xmm5", "xmm6");
 
-    for (i=0; (i+4) <= nData; i += 4) {
-      fptr = data+i;
+      for (; (i+4) <= nData; i += 4) {
+        fptr = data+i;
 
-      asm __volatile__ ("movaps %[fptr], %%xmm7 \n\t"
-                        "movaps %%xmm7, %%xmm0 \n\t"
-                        "cmpnleps %%xmm6, %%xmm0 \n\t"
-                        "blendvps %%xmm7, %%xmm6 \n\t"
-                        "blendvps %%xmm3, %%xmm5 \n\t"
-                        "paddd %%xmm4, %%xmm3 \n\t"
-                        : : [fptr] "m" (fptr[0]) : "xmm0", "xmm3", "xmm5", "xmm6", "xmm7");
-    }
-
-    asm __volatile__ ("movups %%xmm6, %[tmp] \n\t"
-                      "movups %%xmm5, %[itemp]"
-                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
-
-    for (i=0; i < 4; i++) {
-      cur_val = tmp[i];
-      if (cur_val > max_val) {
-        max_val = cur_val;
-        arg_max = 4*itemp[i] + i;
+        asm __volatile__ ("movaps %[fptr], %%xmm7 \n\t"
+                          "movaps %%xmm7, %%xmm0 \n\t"
+                          "cmpnleps %%xmm6, %%xmm0 \n\t"
+                          "blendvps %%xmm7, %%xmm6 \n\t"
+                          "blendvps %%xmm3, %%xmm5 \n\t"
+                          "paddd %%xmm4, %%xmm3 \n\t"
+                          : : [fptr] "m" (fptr[0]) : "xmm0", "xmm3", "xmm5", "xmm6", "xmm7");
       }
+
+      asm __volatile__ ("movups %%xmm6, %[tmp] \n\t"
+                        "movups %%xmm5, %[itemp]"
+                        : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
+
+      for (uint k=0; k < 4; k++) {
+        cur_val = tmp[k];
+        if (cur_val > max_val) {
+          max_val = cur_val;
+          arg_max = 4*itemp[k] + k;
+        }
+      }
+      assert(i == nData - (nData % 4));
     }
 
-    for (i= nData - (nData % 4); i < nData; i++) {
+    for (; i < nData; i++) {
       cur_val = data[i];
       if (cur_val > max_val) {
         max_val = cur_val;
@@ -843,53 +1083,56 @@ namespace Makros {
 
     //use AVX  - align16 is no good, need align32 for aligned moves
 
-    assert(sizeof(size_t) == 8);
-
-    const double val = MIN_DOUBLE;
-    const size_t one = 1;
-    const double inc = *reinterpret_cast<const double*>(&one);
     size_t i = 0;
-    const double* dptr;
-
-    asm __volatile__ ("vbroadcastsd %[tmp], %%ymm6 \n\t" //ymm6 is max register
-                      "vxorpd %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmax) to zero
-                      "vbroadcastsd %[itemp], %%ymm4 \n\t" //ymm4 is increment register
-                      "vxorpd %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
-                      : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
-
-    for (i=0; (i+4) <= nData; i += 4) {
-      dptr = data+i;
-
-      asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t"
-                        "vcmpnlepd %%ymm6, %%ymm7, %%ymm0 \n\t"
-                        "vblendvpd %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
-                        "vblendvpd %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
-                        "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
-                        : : [dptr] "m" (dptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
-    }
-
-
-    double tmp[4];
-    size_t itemp[4];
-
-    asm __volatile__ ("vmovups %%ymm6, %[tmp] \n\t"
-                      "vmovups %%ymm5, %[itemp]"
-                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
-
     double cur_val;
 
-    for (i=0; i < 4; i++) {
-      cur_val = tmp[i];
-      //std::cerr << "cur val: " << cur_val << std::endl;
-      if (cur_val > max_val) {
-        max_val = cur_val;
-        arg_max = 4*itemp[i] + i;
+    if (nData >= 8) {
+      assert(sizeof(size_t) == 8);
+
+      const double val = MIN_DOUBLE;
+      const size_t one = 1;
+      const double inc = *reinterpret_cast<const double*>(&one);
+      const double* dptr;
+
+      asm __volatile__ ("vbroadcastsd %[tmp], %%ymm6 \n\t" //ymm6 is max register
+                        "vxorpd %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmax) to zero
+                        "vbroadcastsd %[itemp], %%ymm4 \n\t" //ymm4 is increment register
+                        "vxorpd %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
+                        : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
+
+      for (; (i+4) <= nData; i += 4) {
+        dptr = data+i;
+
+        asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t"
+                          "vcmpnlepd %%ymm6, %%ymm7, %%ymm0 \n\t"
+                          "vblendvpd %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
+                          "vblendvpd %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
+                          "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
+                          : : [dptr] "m" (dptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
       }
+
+
+      double tmp[4];
+      size_t itemp[4];
+
+      asm __volatile__ ("vmovups %%ymm6, %[tmp] \n\t"
+                        "vmovups %%ymm5, %[itemp]"
+                        : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
+
+      for (uint k=0; k < 4; k++) {
+        cur_val = tmp[k];
+        //std::cerr << "cur val: " << cur_val << std::endl;
+        if (cur_val > max_val) {
+          max_val = cur_val;
+          arg_max = (itemp[k] << 2) + k; //4*itemp[k] + k;
+        }
+      }
+      assert(i == nData - (nData % 4));
     }
 
     //std::cerr << "minval: " << min_val << std::endl;
 
-    for (i = nData - (nData % 4); i < nData; i++) {
+    for (; i < nData; i++) {
       cur_val = data[i];
       if (cur_val > max_val) {
         max_val = cur_val;
@@ -899,9 +1142,10 @@ namespace Makros {
 
 #else
 
-    size_t i;
+    size_t i = 0;
     double cur_val;
 
+    if (nData >= 4) {
     assert(nData < 8589934592);
 
     static const volatile double tmp[2] = {MIN_DOUBLE,MIN_DOUBLE};
@@ -914,7 +1158,7 @@ namespace Makros {
                       "xorpd %%xmm3, %%xmm3 \n\t" //sets xmm3 (= current set index)
                       : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
 
-    for (i=0; (i+2) <= nData; i += 2) {
+    for (; (i+2) <= nData; i += 2) {
       dptr = data+i;
 
 
@@ -934,22 +1178,24 @@ namespace Makros {
     assert(itemp[0] == 0);
     assert(itemp[2] == 0);
 
-    for (i=0; i < 2; i++) {
-      cur_val = tmp[i];
+    for (uint k=0; k < 2; k++) {
+      cur_val = tmp[k];
       //std::cerr << "cur val: " << cur_val << std::endl;
       if (cur_val > max_val) {
         max_val = cur_val;
-        arg_max = 2*itemp[2*i+1] + i;
+        arg_max = 2*itemp[2*k+1] + k;
       }
     }
 
     //std::cerr << "minval: " << min_val << std::endl;
+    assert(i == nData - (nData % 2));
+    }
 
-    if ((nData % 2) == 1) {
-      cur_val = data[nData-1];
+    for (; i < nData; i++) {
+      cur_val = data[i];
       if (cur_val > max_val) {
         max_val = cur_val;
-        arg_max = nData-1;
+        arg_max = i;
       }
     }
 #endif
@@ -981,51 +1227,53 @@ namespace Makros {
 #elif USE_SSE >= 5
 
     //use AVX  - align16 is no good, need align32 for aligned moves
-
-    const float val = MAX_FLOAT;
-    const uint one = 1;
-    const float inc = *reinterpret_cast<const float*>(&one);
     size_t i = 0;
-    const float* fptr;
-
-    asm __volatile__ ("vbroadcastss %[tmp], %%ymm6 \n\t" //ymm6 is min register
-                      "vxorps %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmin) to zero
-                      "vbroadcastss %[itemp], %%ymm4 \n\t" //ymm4 is increment register
-                      "vxorps %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
-                      : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
-
-    for (i=0; (i+8) <= nData; i += 8) {
-      fptr = data+i;
-
-      asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t"
-                        "vcmpltps %%ymm6, %%ymm7, %%ymm0 \n\t" //destination is last
-                        "vblendvps %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
-                        "vblendvps %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
-                        "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
-                        : : [fptr] "m" (fptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
-    }
-
-    float tmp[8];
-    uint itemp[8];
-
-    asm __volatile__ ("vmovups %%ymm6, %[tmp] \n\t"
-                      "vmovups %%ymm5, %[itemp]"
-                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
-
     float cur_val;
 
-    for (i=0; i < 8; i++) {
-      cur_val = tmp[i];
-      //std::cerr << "cur val: " << cur_val << std::endl;
-      if (cur_val < min_val) {
-        min_val = cur_val;
-        arg_min = 8*itemp[i] + i;
+    if (nData >= 16) {
+      const float val = MAX_FLOAT;
+      const uint one = 1;
+      const float inc = *reinterpret_cast<const float*>(&one);
+      const float* fptr;
+
+      asm __volatile__ ("vbroadcastss %[tmp], %%ymm6 \n\t" //ymm6 is min register
+                        "vxorps %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmin) to zero
+                        "vbroadcastss %[itemp], %%ymm4 \n\t" //ymm4 is increment register
+                        "vxorps %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
+                        : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
+
+      for (; (i+8) <= nData; i += 8) {
+        fptr = data+i;
+
+        asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t"
+                          "vcmpltps %%ymm6, %%ymm7, %%ymm0 \n\t" //destination is last
+                          "vblendvps %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
+                          "vblendvps %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
+                          "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
+                          : : [fptr] "m" (fptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
       }
+
+      float tmp[8];
+      uint itemp[8];
+
+      asm __volatile__ ("vmovups %%ymm6, %[tmp] \n\t"
+                        "vmovups %%ymm5, %[itemp]"
+                        : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
+
+      for (uint k=0; k < 8; k++) {
+        cur_val = tmp[k];
+        //std::cerr << "cur val: " << cur_val << std::endl;
+        if (cur_val < min_val) {
+          min_val = cur_val;
+          arg_min = (itemp[k] << 3) + k; //8*itemp[k] + k;
+        }
+      }
+      assert(i == nData - (nData % 8));
     }
 
     //std::cerr << "minval: " << min_val << std::endl;
 
-    for (i= nData - (nData % 8); i < nData; i++) {
+    for (; i < nData; i++) {
       cur_val = data[i];
       if (cur_val < min_val) {
         min_val = cur_val;
@@ -1036,52 +1284,56 @@ namespace Makros {
 #else
     //blendvps is part of SSE4
 
-    size_t i;
+    size_t i = 0;
     float cur_val;
 
-    assert(nData <= 17179869183);
+    if (nData >= 8) {
 
-    static const float tmp[4] = {MAX_FLOAT,MAX_FLOAT,MAX_FLOAT,MAX_FLOAT};
-    static const wchar_t itemp[4] = {1,1,1,1};
+      assert(nData <= 17179869183);
 
-    const float* fptr;
+      static const float tmp[4] = {MAX_FLOAT,MAX_FLOAT,MAX_FLOAT,MAX_FLOAT};
+      static const wchar_t itemp[4] = {1,1,1,1};
 
-    asm __volatile__ ("movups %[tmp], %%xmm6 \n\t"
-                      "xorps %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmin) to zero
-                      "movups %[itemp], %%xmm4 \n\t"
-                      "xorps %%xmm3, %%xmm3 \n\t" //contains candidate argmin
-                      : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
+      const float* fptr;
 
-    for (i=0; (i+4) <= nData; i += 4) {
-      fptr = data+i;
+      asm __volatile__ ("movups %[tmp], %%xmm6 \n\t"
+                        "xorps %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmin) to zero
+                        "movups %[itemp], %%xmm4 \n\t"
+                        "xorps %%xmm3, %%xmm3 \n\t" //contains candidate argmin
+                        : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
 
-      asm __volatile__ ("movaps %[fptr], %%xmm7 \n\t"
-                        "movaps %%xmm7, %%xmm0 \n\t"
-                        "cmpltps %%xmm6, %%xmm0 \n\t"
-                        "blendvps %%xmm7, %%xmm6 \n\t"
-                        "blendvps %%xmm3, %%xmm5 \n\t"
-                        "paddd %%xmm4, %%xmm3 \n\t"
-                        : : [fptr] "m" (fptr[0]) : "xmm0", "xmm3", "xmm5", "xmm6", "xmm7");
-    }
+      for (i=0; (i+4) <= nData; i += 4) {
+        fptr = data+i;
 
-    asm __volatile__ ("movups %%xmm6, %[tmp] \n\t"
-                      "movups %%xmm5, %[itemp] \n\t"
-                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
-
-    //std::cerr << "intermediate minval: " << min_val << std::endl;
-
-    for (i=0; i < 4; i++) {
-      cur_val = tmp[i];
-      //std::cerr << "cur val: " << cur_val << std::endl;
-      if (cur_val < min_val) {
-        min_val = cur_val;
-        arg_min = 4*itemp[i] + i;
+        asm __volatile__ ("movaps %[fptr], %%xmm7 \n\t"
+                          "movaps %%xmm7, %%xmm0 \n\t"
+                          "cmpltps %%xmm6, %%xmm0 \n\t"
+                          "blendvps %%xmm7, %%xmm6 \n\t"
+                          "blendvps %%xmm3, %%xmm5 \n\t"
+                          "paddd %%xmm4, %%xmm3 \n\t"
+                          : : [fptr] "m" (fptr[0]) : "xmm0", "xmm3", "xmm5", "xmm6", "xmm7");
       }
+
+      asm __volatile__ ("movups %%xmm6, %[tmp] \n\t"
+                        "movups %%xmm5, %[itemp] \n\t"
+                        : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
+
+      //std::cerr << "intermediate minval: " << min_val << std::endl;
+
+      for (uint k=0; k < 4; k++) {
+        cur_val = tmp[k];
+        //std::cerr << "cur val: " << cur_val << std::endl;
+        if (cur_val < min_val) {
+          min_val = cur_val;
+          arg_min = 4*itemp[k] + k;
+        }
+      }
+      assert(i == nData - (nData % 4));
     }
 
     //std::cerr << "minval: " << min_val << std::endl;
 
-    for (i= nData - (nData % 4); i < nData; i++) {
+    for (; i < nData; i++) {
       cur_val = data[i];
       if (cur_val < min_val) {
         min_val = cur_val;
@@ -1118,52 +1370,55 @@ namespace Makros {
 
     //use AVX  - align16 is no good, need align32 for aligned moves
 
-    assert(sizeof(size_t) == 8);
-
-    const double val = MAX_DOUBLE;
-    const size_t one = 1;
-    const double inc = *reinterpret_cast<const double*>(&one);
     size_t i = 0;
-    const double* dptr;
-
-    asm __volatile__ ("vbroadcastsd %[tmp], %%ymm6 \n\t" //ymm6 is min register
-                      "vxorpd %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmin) to zero
-                      "vbroadcastsd %[itemp], %%ymm4 \n\t" //ymm4 is increment register
-                      "vxorpd %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
-                      : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
-
-    for (i=0; (i+4) <= nData; i += 4) {
-      dptr = data+i;
-
-      asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t"
-                        "vcmpltpd %%ymm6, %%ymm7, %%ymm0 \n\t" //destination is last
-                        "vblendvpd %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
-                        "vblendvpd %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
-                        "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
-                        : : [dptr] "m" (dptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
-    }
-
-    double tmp[4];
-    size_t itemp[4];
-
-    asm __volatile__ ("vmovupd %%ymm6, %[tmp] \n\t"
-                      "vmovupd %%ymm5, %[itemp]"
-                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
-
     double cur_val;
 
-    for (i=0; i < 4; i++) {
-      cur_val = tmp[i];
-      //std::cerr << "cur val: " << cur_val << std::endl;
-      if (cur_val < min_val) {
-        min_val = cur_val;
-        arg_min = 4*itemp[i] + i;
+    if (nData >= 8) {
+      assert(sizeof(size_t) == 8);
+
+      const double val = MAX_DOUBLE;
+      const size_t one = 1;
+      const double inc = *reinterpret_cast<const double*>(&one);
+      const double* dptr;
+
+      asm __volatile__ ("vbroadcastsd %[tmp], %%ymm6 \n\t" //ymm6 is min register
+                        "vxorpd %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmin) to zero
+                        "vbroadcastsd %[itemp], %%ymm4 \n\t" //ymm4 is increment register
+                        "vxorpd %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
+                        : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
+
+      for (; (i+4) <= nData; i += 4) {
+        dptr = data+i;
+
+        asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t"
+                          "vcmpltpd %%ymm6, %%ymm7, %%ymm0 \n\t" //destination is last
+                          "vblendvpd %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
+                          "vblendvpd %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
+                          "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
+                          : : [dptr] "m" (dptr[0]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
       }
+
+      double tmp[4];
+      size_t itemp[4];
+
+      asm __volatile__ ("vmovupd %%ymm6, %[tmp] \n\t"
+                        "vmovupd %%ymm5, %[itemp]"
+                        : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
+
+      for (uint k=0; k < 4; k++) {
+        cur_val = tmp[k];
+        //std::cerr << "cur val: " << cur_val << std::endl;
+        if (cur_val < min_val) {
+          min_val = cur_val;
+          arg_min = (itemp[k] << 2) + k; //4*itemp[k] + k;
+        }
+      }
+
+      //std::cerr << "minval: " << min_val << std::endl;
+      assert(i == nData - (nData % 4));
     }
 
-    //std::cerr << "minval: " << min_val << std::endl;
-
-    for (i = nData - (nData % 4); i < nData; i++) {
+    for (; i < nData; i++) {
       cur_val = data[i];
       if (cur_val < min_val) {
         min_val = cur_val;
@@ -1172,61 +1427,67 @@ namespace Makros {
     }
 #else
 
-    size_t i;
+    size_t i = 0;
     double cur_val;
 
-    assert(nData < 8589934592);
+    if (nData >= 4) {
 
-    static const double tmp[2] = {MAX_DOUBLE,MAX_DOUBLE};
-    static const wchar_t itemp[4] = {0,1,0,1};
-    const double* dptr;
+      assert(nData < 8589934592);
 
-    asm __volatile__ ("movupd %[tmp], %%xmm6 \n\t"
-                      "xorpd %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmin) to zero
-                      "movupd %[itemp], %%xmm4 \n\t"
-                      "xorpd %%xmm3, %%xmm3 \n\t" //contains candidate argmin
-                      : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
+      static const double tmp[2] = {MAX_DOUBLE,MAX_DOUBLE};
+      static const uint itemp[4] = {0,1,0,1};
+      assert(sizeof(uint) == 4);
+      const double* dptr;
 
-    for (i=0; (i+2) <= nData; i += 2) {
-      dptr = data+i;
+      asm __volatile__ ("movupd %[tmp], %%xmm6 \n\t"
+                        "xorpd %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmin) to zero
+                        "movupd %[itemp], %%xmm4 \n\t"
+                        "xorpd %%xmm3, %%xmm3 \n\t" //contains candidate argmin
+                        : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
 
-      asm __volatile__ ("movapd %[dptr], %%xmm7 \n\t"
-                        "movapd %%xmm7, %%xmm0 \n\t"
-                        "cmpltpd %%xmm6, %%xmm0 \n\t"
-                        "blendvpd %%xmm7, %%xmm6 \n\t"
-                        "blendvpd %%xmm3, %%xmm5 \n\t"
-                        "paddd %%xmm4, %%xmm3 \n\t"
-                        : : [dptr] "m" (dptr[0]) : "xmm0", "xmm3", "xmm5", "xmm6", "xmm7");
-    }
+      for (; (i+2) <= nData; i += 2) {
+        dptr = data+i;
 
-    asm __volatile__ ("movupd %%xmm6, %[tmp] \n\t"
-                      "movupd %%xmm5, %[itemp] \n\t"
-                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
-
-    assert(itemp[0] == 0);
-    assert(itemp[2] == 0);
-
-    for (i=0; i < 2; i++) {
-      cur_val = tmp[i];
-      //std::cerr << "cur val: " << cur_val << std::endl;
-      if (cur_val < min_val) {
-        min_val = cur_val;
-        arg_min = 2*itemp[2*i+1] + i;
+        asm __volatile__ ("movapd %[dptr], %%xmm7 \n\t"
+                          "movapd %%xmm7, %%xmm0 \n\t"
+                          "cmpltpd %%xmm6, %%xmm0 \n\t"
+                          "blendvpd %%xmm7, %%xmm6 \n\t"
+                          "blendvpd %%xmm3, %%xmm5 \n\t"
+                          "paddd %%xmm4, %%xmm3 \n\t"
+                          : : [dptr] "m" (dptr[0]) : "xmm0", "xmm3", "xmm5", "xmm6", "xmm7");
       }
-    }
 
+      asm __volatile__ ("movupd %%xmm6, %[tmp] \n\t"
+                        "movupd %%xmm5, %[itemp] \n\t"
+                        : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
+
+      assert(itemp[0] == 0);
+      assert(itemp[2] == 0);
+
+      for (uint k=0; k < 2; k++) {
+        cur_val = tmp[k];
+        //std::cerr << "cur val: " << cur_val << std::endl;
+        if (cur_val < min_val) {
+          min_val = cur_val;
+          arg_min = 2*itemp[2*k+1] + k;
+        }
+      }
+      assert(i == nData - (nData%2));
+    }
     //std::cerr << "minval: " << min_val << std::endl;
 
-    if ((nData % 2) == 1) {
-      cur_val = data[nData-1];
+    for (; i < nData; i++) {
+      cur_val = data[i];
       if (cur_val < min_val) {
         min_val = cur_val;
-        arg_min = nData-1;
+        arg_min = i;
       }
     }
 
 #endif
   }
+
+  /******************** array mul *********************/
 
   inline void mul_array(float_A16* data, const size_t nData, const float constant)
   {
@@ -1326,6 +1587,8 @@ namespace Makros {
       data[i] *= constant;
 #endif
   }
+
+  /******** array additions with multiplications *************/
 
   //performs data[i] -= factor*data2[i] for each i
   //this is a frequent operation in the conjugate gradient algorithm
@@ -1478,9 +1741,11 @@ namespace Makros {
 #endif
   }
 
+  /******************** binary search *********************/
+
   //binary search, returns MAX_UINT if key is not found, otherwise the position in the vector
   template<typename T>
-  size_t binsearch(const T* data, const T key, const size_t nData)
+  inline size_t binsearch(const T* data, const T key, const size_t nData)
   {
     if (nData == 0 || key < data[0] || key > data[nData-1])
       return MAX_UINT;
@@ -1510,7 +1775,7 @@ namespace Makros {
   }
 
   template<typename T>
-  size_t binsearch_insertpos(const T* data, const T key, const size_t nData)
+  inline size_t binsearch_insertpos(const T* data, const T key, const size_t nData)
   {
     if (nData == 0 || key <= data[0])
       return 0;

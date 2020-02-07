@@ -225,6 +225,8 @@ inline void save_add(const Rational64& r1, const Rational64& r2, Int64 denom_gcd
     sdenom2 /= denom_gcd;
   }
 
+  //NOTE: one can use two argument imul as the high 64 bit are discarded anyway
+
   //assembler implementation with local labels, mapping r1.num_ initially to rax
   __asm__ volatile ("imulq %6               \n\t"
                     "jc 1f            \n\t"
@@ -547,6 +549,8 @@ inline void save_sub(const Rational64& r1, const Rational64& r2, Int64 denom_gcd
     sdenom1 /= denom_gcd;
     sdenom2 /= denom_gcd;
   }
+
+  //NOTE: one can use two argument imul as the high 64 bit are discarded anyway
 
   //assembler implementation, mapping r1.num_ to rax
   __asm__ volatile ("imulq %6               \n\t"
