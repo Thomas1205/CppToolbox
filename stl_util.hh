@@ -52,15 +52,15 @@ inline void vec_replace_maintainsort(std::vector<T>& vec, const T toErase, const
 
 //binary search, returns MAX_UINT if key is not found, otherwise the position in the vector
 template<typename T>
-size_t binsearch(const std::vector<T>& vec, T key);
+size_t binsearch(const std::vector<T>& vec, const T key);
 
 template<typename T>
-size_t binsearch_insertpos(const std::vector<T>& vec, T key);
+size_t binsearch_insertpos(const std::vector<T>& vec, const T key);
 
 //binary search in a vector with (key,value) pairs, sorted by key-values w.r.t. the operator <
 //returns MAX_UINT if key is not found, otherwise the position in the vector
 template<typename TK, typename TV>
-size_t binsearch_keyvalue(const std::vector<std::pair<TK,TV> >& vec, TK key);
+size_t binsearch_keyvalue(const std::vector<std::pair<TK,TV> >& vec, const TK key);
 
 
 template<typename T1, typename T2>
@@ -344,7 +344,7 @@ size_t binsearch_insertpos(const std::vector<T>& vec, const T key)
 }
 
 template<typename TK, typename TV>
-size_t binsearch_keyvalue(const std::vector<std::pair<TK,TV> >& vec, TK key)
+size_t binsearch_keyvalue(const std::vector<std::pair<TK,TV> >& vec, const TK key)
 {
   const size_t size = vec.size();
   if (size == 0 || key < vec[0].first || key > vec[size-1].first)

@@ -3,9 +3,8 @@
 #ifndef STORAGE_UTIL_HH
 #define STORAGE_UTIL_HH
 
-
-#include "storage1D.hh"
 #include "vector.hh"
+#include "flexible_storage1D.hh"
 #include "matrix.hh"
 #include "tensor.hh"
 #include "sorting.hh"

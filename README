@@ -33,6 +33,8 @@ BASIC ROUTINES
 
 - cast abs, log, exp and pow into templates (makros.hh).
 
+- upshift and downshift
+
 ALGORITHMS
 
 - sorting algorithms (sorting.hh)

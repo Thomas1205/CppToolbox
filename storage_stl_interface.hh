@@ -7,6 +7,7 @@
 #include <map>
 #include <set>
 #include "storage1D.hh"
+#include "flexible_storage1D.hh"
 #include "storage2D.hh"
 #include "storage3D.hh"
 

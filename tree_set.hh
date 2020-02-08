@@ -27,22 +27,32 @@ public:
 
   size_t size() const;
 
-  bool contains(T val) const;
+  size_t capacity() const;
 
-  size_t element_num(T val) const;
+  bool contains(const T val) const;
+
+  size_t element_num(const T val) const;
 
   T min() const;
 
   T max() const;
 
   //returns true if val is new
-  bool insert(T val);
+  bool insert(const T val);
+
+  void insert_new(const T val);
+
+  //for compatibility with the other sets (use in templates etc.)
+  inline void insert_largest(const T val)
+  {
+    insert_new(val);
+  }
 
   //returns true if val was in the tree
-  bool erase(T val);
+  bool erase(const T val);
 
   //returns true if out was in the tree
-  bool replace(T out, T in);
+  bool replace(const T out, const T in);
 
   void clear();
 
@@ -55,10 +65,10 @@ public:
 
   void get_sorted_data(Storage1D<T>& target) const;
 
-  std::vector<T> get_sorted_head(size_t nElements) const;
+  std::vector<T> get_sorted_head(const size_t nElements) const;
 
   //if val is found: all data >= val, otherwise empty vector
-  std::vector<T> get_sorted_data_from_val(T val) const;
+  std::vector<T> get_sorted_data_from_val(const T val) const;
 
   //future work may include:
   // - reverse sorted retrieval
@@ -84,6 +94,12 @@ size_t TreeSet<T>::size() const
 }
 
 template<typename T>
+size_t TreeSet<T>::capacity() const
+{
+  return data_.capacity() - 1;
+}
+
+template<typename T>
 void TreeSet<T>::swap(TreeSet<T>& other)
 {
   data_.swap(other.data_);
@@ -102,7 +118,7 @@ void TreeSet<T>::reserve(size_t size)
 }
 
 template<typename T>
-bool TreeSet<T>::contains(T val) const
+bool TreeSet<T>::contains(const T val) const
 {
   const size_t size = data_.size();
   size_t i = 1;
@@ -157,7 +173,7 @@ T TreeSet<T>::max() const
 }
 
 template<typename T>
-size_t TreeSet<T>::element_num(T val) const
+size_t TreeSet<T>::element_num(const T val) const
 {
   //std::cerr << "element_num(" << val << ")" << std::endl;
   //std::cerr << "data: " << data_ << std::endl;
@@ -335,7 +351,7 @@ void TreeSet<T>::correct_leaf(size_t i)
 
 //returns true if val is new
 template<typename T>
-bool TreeSet<T>::insert(T val)
+bool TreeSet<T>::insert(const T val)
 {
   if (contains(val))
     return false;
@@ -347,9 +363,20 @@ bool TreeSet<T>::insert(T val)
   return true;
 }
 
+template<typename T>
+void TreeSet<T>::insert_new(const T val)
+{
+  assert(!contains(val));
+
+  data_.push_back(val);
+  if (data_.size() > 2)
+    correct_leaf(data_.size()-1);
+}
+
+
 //returns true if val was in the tree
 template<typename T>
-bool TreeSet<T>::erase(T val)
+bool TreeSet<T>::erase(const T val)
 {
   //std::cerr << "erase (" << val << ")" << std::endl;
   //std::cerr << "data: " << data_ << std::endl;
@@ -432,7 +459,7 @@ bool TreeSet<T>::erase(T val)
 }
 
 template<typename T>
-bool TreeSet<T>::replace(T out, T in)
+bool TreeSet<T>::replace(const T out, const T in)
 {
   assert(!contains(in));
   assert(out != in);

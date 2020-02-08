@@ -23,6 +23,11 @@ public:
     return data_.size();
   }
 
+  size_t capacity() const
+  {
+    return data_.capacity();
+  }
+
   void reserve(size_t size)
   {
     data_.reserve(size);
@@ -38,16 +43,20 @@ public:
     return data_;
   }
 
-  bool contains(T val) const;
+  bool contains(const T val) const;
 
   //returns true if val is new
-  bool insert(T val);
+  bool insert(const T val);
+
+  void insert_new(const T val);
+  
+  void insert_largest(const T val);
 
   //returns true if val was in the tree
-  bool erase(T val);
+  bool erase(const T val);
 
   //returns true if out was in the tree
-  bool replace(T out, T in);
+  bool replace(const T out, const T in);
 
 protected:
 
@@ -61,14 +70,14 @@ SortedSet<T>::SortedSet(const SortedSet<T>& toCopy)
   : data_(toCopy.data_) {}
 
 template<typename T>
-bool SortedSet<T>::contains(T val) const
+bool SortedSet<T>::contains(const T val) const
 {
   return (binsearch(data_, val) != MAX_UINT);
 }
 
 //returns true if val is new
 template<typename T>
-bool SortedSet<T>::insert(T val)
+bool SortedSet<T>::insert(const T val)
 {
   //std::cerr << "insert" << std::endl;
   const size_t size = data_.size();
@@ -84,16 +93,44 @@ bool SortedSet<T>::insert(T val)
   data_.push_back(T());
 
   Makros::upshift_array(data_.data(), inspos, 1, size);
-  for (uint k = size; k > inspos; k--)
-    data_[k] = data_[k-1];
+  //for (uint k = size; k > inspos; k--)
+  //  data_[k] = data_[k-1];
 
   data_[inspos] = val;
   return true;
 }
 
+//returns true if val is new
+template<typename T>
+void SortedSet<T>::insert_new(const T val)
+{
+  //std::cerr << "insert" << std::endl;
+  const size_t size = data_.size();
+  const size_t inspos = binsearch_insertpos(data_, val);
+  assert(inspos >= size || data_[inspos] != val);
+  if (inspos >= size) {
+    data_.push_back(val);
+  }
+
+  data_.push_back(T());
+
+  Makros::upshift_array(data_.data(), inspos, 1, size);
+  //for (uint k = size; k > inspos; k--)
+  //  data_[k] = data_[k-1];
+
+  data_[inspos] = val;
+}
+
+template<typename T>
+void SortedSet<T>::insert_largest(const T val)
+{
+  assert(data_.size() == 0 || data_.back() < val);
+  data_.push_back(val);
+}
+
 //returns true if val was in the tree
 template<typename T>
-bool SortedSet<T>::erase(T val)
+bool SortedSet<T>::erase(const T val)
 {
   //std::cerr << "erase " << val << " from " << data_ << std::endl;
   const size_t pos = binsearch(data_, val);
@@ -111,8 +148,10 @@ bool SortedSet<T>::erase(T val)
 
 //returns true if out was in the tree
 template<typename T>
-bool SortedSet<T>::replace(T out, T in)
+bool SortedSet<T>::replace(const T out, const T in)
 {
+  assert(!contains(in));
+
 #if 0
   bool b = erase(out);
   insert(in);

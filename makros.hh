@@ -13,6 +13,7 @@
 #include <typeinfo>
 #include <cmath>
 #include <algorithm>
+#include <numeric>
 
 #include <string.h> //memcpy
 
@@ -79,6 +80,7 @@ typedef long long int Int64;
 typedef unsigned long long int UInt64;
 typedef double ALIGNED16 double_A16;
 typedef float ALIGNED16 float_A16;
+typedef char ALIGNED16 char_A16;
 
 #define MIN_DOUBLE -1.0*std::numeric_limits<double>::max()
 #define MAX_DOUBLE std::numeric_limits<double>::max()
@@ -267,6 +269,33 @@ namespace Makros {
   inline long double abs(long double arg)
   {
     return fabsl(arg);
+  }
+
+  inline void copy_byte_array(char_A16* attr_restrict dest, const char_A16* attr_restrict source, const size_t nBytes)
+  {
+#if !defined(USE_SSE) || USE_SSE < 4
+    memcpy(dest, source, nBytes);
+#else
+    //experimentally, memcpy is significantly faster
+    size_t i = 0;
+#if USE_SSE >= 5
+    for (; i + 31 < nBytes; i += 32) {
+      
+      asm __volatile__ ("vmovdqu %[d], %%ymm9 \n\t" 
+                        "vmovdqu %%ymm9, %[s] \n\t" 
+                        : [d] "=m" (dest[i]) : [s] "m" (source[i]) : "ymm9", "memory");
+    }
+#endif    
+    for (; i + 15 < nBytes; i += 16) {
+
+      asm __volatile__ ("movdqa %[d], %%xmm9 \n\t" 
+                        "movdqa %%xmm9, %[s] \n\t" 
+                        : [d] "=m" (dest[i]) : [s] "m" (source[i]) : "xmm9", "memory");    
+    }
+    
+    for (; i < nBytes; i++)
+      dest[i] = source[i]; 
+#endif    
   }
 
   template<typename T>
@@ -540,6 +569,51 @@ inline void prefetcht2(const T* ptr)
 
 namespace Makros {
 
+  /***************** dot product  *****************/  
+  
+  template<typename T>
+  inline T dotprod(const T* data1, const T* data2, const size_t size) 
+  {
+    return std::inner_product(data1, data1+size, data2, (T) 0);
+  }
+
+  template<>
+  inline double dotprod(const double* data1, const double* data2, const size_t size) 
+  {
+#if !defined(USE_SSE) || USE_SSE < 5          
+    return std::inner_product((double_A16*) data1, (double_A16*) data1+size, data2, 0.0);
+#else     
+    //checked: g++ does not use dppd. It uses 256 bit instead, but the running times are the same
+
+    //NOTE: unlike vpps, vppd is not available for 256 bit, not even in AVX-512
+
+    asm __volatile__ ("vxorpd %%xmm12, %%xmm12, %%xmm12 \n\t" : : : "xmm12"); 
+
+    double result = 0.0;
+
+    size_t i = 0;
+    for (; i + 1 < size; i += 2) 
+    {
+      //std::cerr << "i: " << i << std::endl;  
+        
+      asm __volatile__ ("vmovupd %[d1], %%xmm10 \n\t"
+                        "vmovupd %[d2], %%xmm11 \n\t"
+                        "vdppd $49, %%xmm10, %%xmm11, %%xmm13 \n\t" //include all, write in first (hence second is set to 0)
+                        "vaddsd %%xmm13, %%xmm12, %%xmm12 \n\t"
+                        : : [d1] "m" (data1[i]), [d2] "m" (data2[i]) : "xmm10", "xmm11", "xmm12", "xmm13");
+                        
+      //std::cerr << "state after add: " << temp[0] << "," << temp[1] << std::endl;
+    }
+
+    asm __volatile__ ("vmovlpd %%xmm12, %0 \n\t" : "+m" (result) : : );
+
+    for (; i < size; i++)
+      result += data1[i] * data2[i];
+    
+    return result;
+#endif
+  }
+  
   /***************** downshift *****************/
 
   inline void downshift_uint_array(uint* data, const uint pos, const uint shift, const uint nData)
@@ -547,7 +621,8 @@ namespace Makros {
     assert(shift <= nData);
     uint i = pos;
     const uint end = nData-shift;
-#if !defined(USE_SSE) || USE_SSE < 5
+#if !defined(USE_SSE) || USE_SSE < 2
+    //TODO: try out memmove
     for (; i < end; i++)
       data[i] = data[i+shift];
 #else
@@ -564,6 +639,7 @@ namespace Makros {
     }
 #endif
 
+    //movdqu is SSE2
     for (; i + 3 < end; i += 4) 
     {
       uint* out_ptr = data+i;
@@ -593,7 +669,8 @@ namespace Makros {
   {
     uint i = pos;
     const uint end = nData-shift;
-#if !defined(USE_SSE) || USE_SSE < 4
+#if !defined(USE_SSE) || USE_SSE < 2
+    //TODO: try out memmove
     for (; i < end; i++)
       data[i] = data[i+shift];
 #else
@@ -604,18 +681,20 @@ namespace Makros {
       double* out_ptr = data+i;
       const double* in_ptr = out_ptr + shift;
 
-      asm __volatile__ ("vmovdqu %[inp], %%ymm9 \n\t"
-                        "vmovdqu %%ymm9, %[outp] \n\t"
+      asm __volatile__ ("vmovupd %[inp], %%ymm9 \n\t"
+                        "vmovupd %%ymm9, %[outp] \n\t"
                         : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "ymm9", "memory");
     }
 #endif
+
+    //movupd is SSE2
     for (; i + 1 < end; i += 2) {
 
       double* out_ptr = data+i;
       const double* in_ptr = out_ptr + shift;
 
-      asm __volatile__ ("movdqu %[inp], %%xmm9 \n\t"
-                        "movdqu %%xmm9, %[outp] \n\t"
+      asm __volatile__ ("movupd %[inp], %%xmm9 \n\t"
+                        "movupd %%xmm9, %[outp] \n\t"
                         : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "xmm9", "memory");
     }
     for (; i < end; i++)
@@ -660,7 +739,8 @@ namespace Makros {
   {
     assert(shift > 0);
     int k = last;
-#if !defined(USE_SSE) || USE_SSE < 4
+#if !defined(USE_SSE) || USE_SSE < 2
+    //TODO: try out memmove
     for (; k >= pos+shift; k--)
       data[k] = data[k-shift];
 #else
@@ -676,6 +756,8 @@ namespace Makros {
                         : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "ymm9", "memory");
     }
 #endif
+
+    //movdqu is SSE2
     for (; k-3 >= pos+shift; k -= 4) 
     {
       uint* out_ptr = data + k - 3;
@@ -706,7 +788,8 @@ namespace Makros {
   {
     assert(shift > 0);
     int k = last;
-#if !defined(USE_SSE) || USE_SSE < 4
+#if !defined(USE_SSE) || USE_SSE < 2
+    //TODO: try out memmove
     for (; k >= pos+shift; k--)
       data[k] = data[k-shift];
 #else
@@ -717,18 +800,20 @@ namespace Makros {
       double* out_ptr = data + k - 3;
       const double* in_ptr = out_ptr - shift;
 
-      asm __volatile__ ("vmovdqu %[inp], %%ymm9 \n\t"
-                        "vmovdqu %%ymm9, %[outp] \n\t"
+      asm __volatile__ ("vmovupd %[inp], %%ymm9 \n\t"
+                        "vmovupd %%ymm9, %[outp] \n\t"
                         : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "ymm9", "memory");
     }
 #endif
+
+    //movupd is SSE2
     for (; k-2-shift > pos; k -= 2) 
     {
       double* out_ptr = data + k - 1;
       const double* in_ptr = out_ptr - shift;
 
-      asm __volatile__ ("movdqu %[inp], %%xmm9 \n\t"
-                        "movdqu %%xmm9, %[outp] \n\t"
+      asm __volatile__ ("movupd %[inp], %%xmm9 \n\t"
+                        "movupd %%xmm9, %[outp] \n\t"
                         : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "xmm9", "memory");
     }
     for (; k >= pos+shift; k--)
@@ -780,7 +865,7 @@ namespace Makros {
     //NOTE: if data is not unique, i.e. contains key more than once, this may return incorrect results
     //  if occurences are close together, it may return the sum of their positions
 
-    //NOTE: we can go for ymm registers, if we use the AVX-2 command VPSRLD to send the data down when horizontally summing 
+    //NOTE: we can go for ymm registers, if we use VEXTRACTF128 to send down the upper half
 
     //std::cerr << "find_unique_uint(key: " << key << ")" << std::endl;
 
@@ -805,7 +890,9 @@ namespace Makros {
       uint res = MAX_UINT;
       for (; i+3 < nData; i+=4) {
 
-        //NOTE: jumps outside of asm blocks are allowed only in asm goto, but that cannot have outputs
+        //NOTE: jumps outside of asm blocks are allowed only in asm goto, but that cannot have outputs (and local variables do not seem to get assembler names)
+
+        // Assembler wishlist: horizontal min and max -> would make the uniqueness assumption superflous (not even present in AVX-512)
 
         const uint* ptr = data+i;
         asm __volatile__ ("movdqu %1, %%xmm0  \n\t"
@@ -1148,8 +1235,9 @@ namespace Makros {
     if (nData >= 4) {
     assert(nData < 8589934592);
 
-    static const volatile double tmp[2] = {MIN_DOUBLE,MIN_DOUBLE};
-    static const volatile wchar_t itemp[4] = {0,1,0,1};
+    //note: broadcast is better implemented by movddup (SSE3). But this code is no longer improved
+    static const double tmp[2] = {MIN_DOUBLE,MIN_DOUBLE};
+    static const wchar_t itemp[4] = {0,1,0,1};
     const double* dptr;
 
     asm __volatile__ ("movupd %[tmp], %%xmm6 \n\t"
@@ -1439,7 +1527,9 @@ namespace Makros {
       assert(sizeof(uint) == 4);
       const double* dptr;
 
+      //note: broadcast is better implemented by movddup (SSE3). But this code is no longer improved
       asm __volatile__ ("movupd %[tmp], %%xmm6 \n\t"
+
                         "xorpd %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmin) to zero
                         "movupd %[itemp], %%xmm4 \n\t"
                         "xorpd %%xmm3, %%xmm3 \n\t" //contains candidate argmin
@@ -1572,6 +1662,8 @@ namespace Makros {
     double* dptr;
     for (i=0; i < 2; i++)
       temp[i] = constant;
+    
+    //note: broadcast is better implemented by movddup (SSE3). But this code is no longer improved
     asm volatile ("movupd %[temp], %%xmm7" : : [temp] "m" (temp[0]) : "xmm7" );
 
     for (i=0; i+2 <= nData; i+=2) {
@@ -1600,7 +1692,7 @@ namespace Makros {
     size_t i;
 #if !defined(USE_SSE) || USE_SSE < 2
     for (i=0; i < nData; i++)
-      data[i] -= factor*data2[i];
+      data[i] -= factor * data2[i];
 #elif USE_SSE >= 5
 
     // AVX  - align16 is no good, need align32 for aligned moves
@@ -1626,13 +1718,15 @@ namespace Makros {
     }
 
     for (i= nData - (nData % 4); i < nData; i++)
-      data[i] -= factor*data2[i];
+      data[i] -= factor * data2[i];
 #else
     double temp[2];
     double* dptr;
     const double* cdptr;
     for (i=0; i < 2; i++)
       temp[i] = factor;
+    
+    //note: broadcast is better implemented by movddup (SSE3). But this code is no longer improved
     asm volatile ("movupd %[temp], %%xmm7" : : [temp] "m" (temp[0]) : "xmm7" );
     for (i=0; i+2 <= nData; i+=2) {
       cdptr = data2+i;
@@ -1647,7 +1741,7 @@ namespace Makros {
     }
 
     for (i= nData - (nData % 2); i < nData; i++)
-      data[i] -= factor*data2[i];
+      data[i] -= factor * data2[i];
 #endif
   }
 
