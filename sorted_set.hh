@@ -92,7 +92,7 @@ bool SortedSet<T>::insert(const T val)
 
   data_.push_back(T());
 
-  Makros::upshift_array(data_.data(), inspos, 1, size);
+  Makros::upshift_array(data_.data(), inspos, size, 1);
   //for (uint k = size; k > inspos; k--)
   //  data_[k] = data_[k-1];
 
@@ -114,7 +114,7 @@ void SortedSet<T>::insert_new(const T val)
 
   data_.push_back(T());
 
-  Makros::upshift_array(data_.data(), inspos, 1, size);
+  Makros::upshift_array(data_.data(), inspos, size, 1);
   //for (uint k = size; k > inspos; k--)
   //  data_[k] = data_[k-1];
 

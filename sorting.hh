@@ -143,16 +143,24 @@ inline void bubble_sort(T* data, const size_t nData)
 
 template<typename T>
 inline void batch_bubble_sort(T* data, const size_t nData)
-{
+{ 
   size_t last_flip = nData;
 
   while (last_flip > 1) {
 
+    // std::cerr << "new iter, current data: ";
+    // for (uint i=0; i < nData; i++)
+      // std::cerr << data[i] << ", ";
+    // std::cerr << std::endl;
+
+    // std::cerr << "last flip: " << last_flip << std::endl;
     size_t flip = 0;
 
     for (size_t l=1; l < last_flip; l++) {
 
       if (data[l] < data[l-1]) {
+
+        //std::cerr << "found pair at " << l << std::endl;
 
         size_t end = l+1;
         for (; end < last_flip; end++) {
@@ -163,7 +171,12 @@ inline void batch_bubble_sort(T* data, const size_t nData)
 
         std::reverse(data+l-1, data+end);
 
-        flip = l;
+        // std::cerr << "after reverse: ";
+        // for (uint i=0; i < nData; i++)
+          // std::cerr << data[i] << ", ";
+        // std::cerr << std::endl;
+
+        flip = end-1;
         l = end-2; //the last swapped index needs to be compared again (l is incremented by the loop)
       }
     }
@@ -191,29 +204,17 @@ template<typename T>
 inline void shift_bubble_sort(T* data, const size_t nData)
 {
   for (size_t l=1; l < nData; l++) {
-#if 1
     const T curdat = data[l];
     size_t inspos = l;
     while (inspos > 0 && curdat < data[inspos-1])
       inspos--;
 
     if (inspos != l) {
-      for (size_t ll = l; ll > inspos; ll--)
-        data[ll] = data[ll-1];
+      Makros::upshift_array(data, inspos, l, 1);
+      //for (size_t ll = l; ll > inspos; ll--)
+      //  data[ll] = data[ll-1];
       data[inspos] = curdat;
     }
-#else
-    if (data[l] < data[l-1]) {
-
-      std::swap(data[l],data[l-1]);
-      for (size_t ll = l-1; ll > 0; ll--) {
-        if (data[ll] < data[ll-1])
-          std::swap(data[ll],data[ll-1]);
-        else
-          break;
-      }
-    }
-#endif
   }
 }
 
@@ -307,7 +308,6 @@ inline void bubble_sort_key_value(T1* key, T2* value, const size_t nData)
 template<typename T1, typename T2>
 inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
 {
-
   size_t last_flip = nData;
 
   while (last_flip > 1) {
@@ -336,7 +336,7 @@ inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
 
         std::reverse(key+l-1, key+end);
         std::reverse(value+l-1, value+end);
-        flip = l;
+        flip = end-1;
         l = end-2; //the last swapped index needs to be compared again (l is incremented by the loop)
       }
     }
@@ -370,7 +370,6 @@ template<typename T1, typename T2>
 inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
 {
   for (size_t j=1; j < nData; j++) {
-#if 1
     const T1 curkey = key[j];
     size_t inspos = j;
     while (inspos > 0 && curkey < key[inspos-1])
@@ -378,29 +377,15 @@ inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
 
     if (inspos != j) {
       const T2 curval = value[j];
-      for (size_t jj = j; jj > inspos; jj--) {
-        key[jj] = key[jj-1];
-        value[jj] = value[jj-1];
-      }
+      Makros::upshift_array(key, inspos, j, 1);
+      Makros::upshift_array(value, inspos, j, 1);
+      // for (size_t jj = j; jj > inspos; jj--) {
+        // key[jj] = key[jj-1];
+        // value[jj] = value[jj-1];
+      // }
       key[inspos] = curkey;
       value[inspos] = curval;
     }
-#else
-    if (key[j] < key[j-1]) {
-
-      std::swap(key[j],key[j-1]);
-      std::swap(value[j],value[j-1]);
-
-      for (size_t jj = j-1; jj > 0; jj--) {
-        if (key[jj] < key[jj-1]) {
-          std::swap(key[jj],key[jj-1]);
-          std::swap(value[jj],value[jj-1]);
-        }
-        else
-          break;
-      }
-    }
-#endif
   }
 }
 

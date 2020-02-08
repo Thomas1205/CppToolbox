@@ -622,10 +622,12 @@ namespace Makros {
     uint i = pos;
     const uint end = nData-shift;
 #if !defined(USE_SSE) || USE_SSE < 2
-    //TODO: try out memmove
-    for (; i < end; i++)
-      data[i] = data[i+shift];
+    //for (; i < end; i++)
+    //  data[i] = data[i+shift];
+    memmove(data[pos],data[pos+shift],(end-pos)*sizeof(uint));
 #else
+
+    //roughly the same performance as memmove
 
 #if USE_SSE >= 5
     for (; i + 7 < end; i += 8) 
@@ -657,11 +659,13 @@ namespace Makros {
 
   inline void downshift_int_array(int* data, const uint pos, const uint shift, const uint nData)
   {
+    assert(sizeof(int) == sizeof(uint));
     downshift_uint_array((uint*) data, pos, shift, nData);
   }
 
   inline void downshift_float_array(float* data, const uint pos, const uint shift, const uint nData)
   {
+    assert(sizeof(int) == sizeof(uint));
     downshift_uint_array((uint*) data, pos, shift, nData);
   }
 
@@ -670,10 +674,12 @@ namespace Makros {
     uint i = pos;
     const uint end = nData-shift;
 #if !defined(USE_SSE) || USE_SSE < 2
-    //TODO: try out memmove
-    for (; i < end; i++)
-      data[i] = data[i+shift];
+    //for (; i < end; i++)
+    //  data[i] = data[i+shift];
+    memmove(data[pos],data[pos+shift],(end-pos)*sizeof(double));
 #else
+
+    //roughly the same performance as memmove
 
 #if USE_SSE >= 5
     for (; i + 3 < end; i += 4) {
@@ -740,11 +746,13 @@ namespace Makros {
     assert(shift > 0);
     int k = last;
 #if !defined(USE_SSE) || USE_SSE < 2
-    //TODO: try out memmove
-    for (; k >= pos+shift; k--)
-      data[k] = data[k-shift];
+    //for (; k >= pos+shift; k--)
+    //  data[k] = data[k-shift];
+    memmove(data[pos+shift],data[pos],(last-pos+shift+1)*sizeof(uint));
 #else
 
+    //roughly the same performance as memmove
+    
 #if USE_SSE >= 5
     for (; k-7 >= pos+shift; k -= 8) 
     {
@@ -776,11 +784,13 @@ namespace Makros {
 
   inline void upshift_int_array(int* data, const int pos, const int last, const int shift)
   {
+    assert(sizeof(int) == sizeof(uint));
     upshift_uint_array((uint*) data, pos, last, shift);
   }
 
   inline void upshift_float_array(float* data, const int pos, const int last, const int shift)
   {
+    assert(sizeof(float) == sizeof(uint));
     upshift_uint_array((uint*) data, pos, last, shift);
   }
 
@@ -789,10 +799,12 @@ namespace Makros {
     assert(shift > 0);
     int k = last;
 #if !defined(USE_SSE) || USE_SSE < 2
-    //TODO: try out memmove
-    for (; k >= pos+shift; k--)
-      data[k] = data[k-shift];
+    //for (; k >= pos+shift; k--)
+    //  data[k] = data[k-shift];    
+    memmove(data[pos+shift],data[pos],(last-pos+shift+1)*sizeof(double));
 #else
+
+    //roughly the same speed as memove
 
 #if USE_SSE >= 5
     for (; k-4-shift > pos; k -= 4) 
