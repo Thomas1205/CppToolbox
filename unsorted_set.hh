@@ -5,6 +5,30 @@
 
 #include "sorting.hh"
 
+//find in a sequence without duplicates
+template<typename T>
+inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& vec, T val) {
+  return std::find(vec.begin(), vec.end(), val);
+}
+
+template<>
+inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, uint val) {
+  const uint pos = Makros::find_unique_uint(vec.data(), val, vec.size());
+  if (pos >= vec.size())
+    return vec.end();
+  else
+    return (vec.begin() + pos);
+}
+
+template<>
+inline std::vector<int>::const_iterator set_find(const std::vector<int>& vec, int val) {
+  const uint pos = Makros::find_unique_int(vec.data(), val, vec.size());
+  if (pos >= vec.size())
+    return vec.end();
+  else
+    return (vec.begin() + pos);
+}
+
 template<typename T>
 class UnsortedSet {
 public:	
@@ -87,14 +111,14 @@ UnsortedSet<T>::UnsortedSet(const UnsortedSet<T>& toCopy) {
 template<typename T>
 bool UnsortedSet<T>::contains(T val) const
 {
-  return (std::find(data_.begin(), data_.end(), val) != data_.end());
+  return (set_find(data_, val) != data_.end());
 }
 
 //returns true if val is new
 template<typename T>
 bool UnsortedSet<T>::insert(T val)
 {
-  if (std::find(data_.begin(), data_.end(), val) != data_.end())
+  if (set_find(data_, val) != data_.end())
     return false;
 
   data_.push_back(val);
@@ -104,7 +128,7 @@ bool UnsortedSet<T>::insert(T val)
 template<typename T>
 void UnsortedSet<T>::insert_new(T val)
 {
-  assert(std::find(data_.begin(), data_.end(), val) == data_.end());
+  assert(set_find(data_, val) == data_.end());
   data_.push_back(val);
 }
 
@@ -112,7 +136,7 @@ void UnsortedSet<T>::insert_new(T val)
 template<typename T>
 bool UnsortedSet<T>::erase(T val)
 {
-  typename std::vector<T>::const_iterator it = std::find(data_.begin(), data_.end(), val);
+  const typename std::vector<T>::const_iterator it = set_find(data_, val);
   if (it == data_.end())
     return false;
 
@@ -126,15 +150,15 @@ bool UnsortedSet<T>::erase(T val)
 template<typename T>
 bool UnsortedSet<T>::replace(T out, T in)
 {
-  assert(std::find(data_.begin(), data_.end(), in) == data_.end());
+  assert(set_find(data_, in) == data_.end());
 	
-  typename std::vector<T>::iterator it = std::find(data_.begin(), data_.end(), out);
+  typename std::vector<T>::const_iterator it = set_find(data_, out);
   if (it == data_.end()) {
     data_.push_back(in);
     return false;
   }
   
-  *it = in;
+  data_[it - data_.begin()] = in;
   return true;
 }
 

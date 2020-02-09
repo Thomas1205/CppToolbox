@@ -3,6 +3,7 @@
 
 - TreeSet: efficient search trees based on arrays. Functionality can be extended. No plans for a TreeMap so far.
 - SortedSet: must faster than TreeSet in practice, and simpler. No plans for a SortedMap so far.
+- UnsortedSet: roughly as efficient as SortedSet, even simpler. No plans for an UnsortedMap so far.
 - corrected and extended rational numbers, plus improved efficiency and cases that can be handled inside precision
 - released sorting, with many bubble sort variants
 - augmented binary search

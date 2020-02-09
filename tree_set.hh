@@ -61,7 +61,7 @@ public:
   //NOTE: element 0 is just a filler
   const std::vector<T>& unsorted_data() const;
 
-  std::vector<T> get_sorted_data() const;
+  std::vector<T> sorted_data() const;
 
   void get_sorted_data(Storage1D<T>& target) const;
 
@@ -539,7 +539,7 @@ const std::vector<T>& TreeSet<T>::unsorted_data() const
 }
 
 template<typename T>
-std::vector<T> TreeSet<T>::get_sorted_data() const
+std::vector<T> TreeSet<T>::sorted_data() const
 {
   const size_t size = data_.size();
   std::vector<T> result;

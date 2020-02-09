@@ -38,6 +38,12 @@ public:
     data_.clear();
   }
 
+  //for compatibility with the other sets, e.g. use in templates (data are always sorted)
+  const std::vector<T>& unsorted_data() const
+  {
+    return data_;
+  }
+
   const std::vector<T>& sorted_data() const
   {
     return data_;

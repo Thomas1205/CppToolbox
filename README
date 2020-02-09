@@ -20,7 +20,7 @@ DATA CLASSES
 - a generic application class to ease the parsing of command line arguments. This includes the specification of mandatory parameters 
   as well as default values. Filenames are checked for existence.
 
-- sets in two variants: based on array trees and based on sorted arrays.
+- sets in three variants: based on array trees, based on sorted arrays and based on unsorted arrays.
 
 BASIC ROUTINES
 
