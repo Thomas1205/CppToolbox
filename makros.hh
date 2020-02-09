@@ -621,7 +621,8 @@ namespace Makros {
     assert(shift <= nData);
     uint i = pos;
     const uint end = nData-shift;
-#if !defined(USE_SSE) || USE_SSE < 2
+//#if !defined(USE_SSE) || USE_SSE < 2
+#if 1
     //for (; i < end; i++)
     //  data[i] = data[i+shift];
     memmove(data+pos,data+pos+shift,(end-pos)*sizeof(uint));
@@ -748,7 +749,7 @@ namespace Makros {
 #if !defined(USE_SSE) || USE_SSE < 2
     //for (; k >= pos+shift; k--)
     //  data[k] = data[k-shift];
-    memmove(data+pos+shift,data+pos,(last-pos+shift+1)*sizeof(uint));
+    memmove(data+pos+shift,data+pos,(last-pos+shift)*sizeof(uint));
 #else
 
     //roughly the same performance as memmove
@@ -801,7 +802,7 @@ namespace Makros {
 #if !defined(USE_SSE) || USE_SSE < 2
     //for (; k >= pos+shift; k--)
     //  data[k] = data[k-shift];    
-    memmove(data+pos+shift,data+pos,(last-pos+shift+1)*sizeof(double));
+    memmove(data+pos+shift,data+pos,(last-pos+shift)*sizeof(double));
 #else
 
     //roughly the same speed as memove
