@@ -445,7 +445,7 @@ std::string operator+(std::string s, const Makros::Typename<T>& t)
 
 /***********************/
 
-template <typename T>
+template<typename T>
 inline T convert(const std::string s)
 {
   std::istringstream is(s);
@@ -489,6 +489,12 @@ inline uint convert<uint>(const std::string s)
   }
 
   return result;
+}
+
+template<typename T1, typename T2>
+T2 reinterpret(const T1 arg) {
+  assert(sizeof(T1) == sizeof(T2));
+  return *reinterpret_cast<T2*>(&arg);
 }
 
 template<typename T1, typename T2>
@@ -567,6 +573,7 @@ inline void prefetcht2(const T* ptr)
 #endif
 }
 
+//this block is being moved to routines.hh
 namespace Makros {
 
   /***************** dot product  *****************/  
@@ -746,8 +753,7 @@ namespace Makros {
   {
     assert(shift > 0);
     int k = last;
-//#if !defined(USE_SSE) || USE_SSE < 2
-#if 1
+#if !defined(USE_SSE) || USE_SSE < 2
     //for (; k >= pos+shift; k--)
     //  data[k] = data[k-shift];
     memmove(data+pos+shift,data+pos,(last-pos-shift+1)*sizeof(uint));
@@ -956,7 +962,7 @@ namespace Makros {
 #else
     //movaps is part of SSE2
 
-    const float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT};
+    float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT}; //reused as output, static not useful
     const float* fptr;
 
     asm __volatile__ ("movaps %[tmp], %%xmm6" : : [tmp] "m" (tmp[0]) : "xmm6");
@@ -995,7 +1001,7 @@ namespace Makros {
 #else
     //movaps is part of SSE2
 
-    const float tmp[4] = {MAX_FLOAT,MAX_FLOAT,MAX_FLOAT,MAX_FLOAT};
+    float tmp[4] = {MAX_FLOAT,MAX_FLOAT,MAX_FLOAT,MAX_FLOAT}; //reused as output, static not useful
     const float* fptr;
 
     asm __volatile__ ("movaps %[tmp], %%xmm6" : : [tmp] "m" (tmp[0]) : "xmm6");
@@ -1110,9 +1116,9 @@ namespace Makros {
     if (nData >= 8) {
       assert(nData <= 17179869183);
 
-      static const float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT};
+      float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT}; //reused as output, static not useful
       assert(sizeof(uint) == 4);
-      static const uint itemp[4] = {1,1,1,1}; //increment array
+      uint itemp[4] = {1,1,1,1}; //increment array, reused as output, static not useful
       const float* fptr;
 
       asm __volatile__ ("movups %[tmp], %%xmm6 \n\t" //xmm6 is max register
@@ -1247,50 +1253,50 @@ namespace Makros {
     double cur_val;
 
     if (nData >= 4) {
-    assert(nData < 8589934592);
+      assert(nData < 8589934592);
 
-    //note: broadcast is better implemented by movddup (SSE3). But this code is no longer improved
-    static const double tmp[2] = {MIN_DOUBLE,MIN_DOUBLE};
-    static const wchar_t itemp[4] = {0,1,0,1};
-    const double* dptr;
+      //note: broadcast is better implemented by movddup (SSE3). But this code is no longer improved
+      double tmp[2] = {MIN_DOUBLE,MIN_DOUBLE}; //reused as output, static not useful
+      uint itemp[4] = {0,1,0,1}; //reused as output, static not useful
+      const double* dptr;
 
-    asm __volatile__ ("movupd %[tmp], %%xmm6 \n\t"
-                      "xorpd %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmax) to zero
-                      "movupd %[itemp], %%xmm4 \n\t"
-                      "xorpd %%xmm3, %%xmm3 \n\t" //sets xmm3 (= current set index)
-                      : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
+      asm __volatile__ ("movupd %[tmp], %%xmm6 \n\t"
+                        "xorpd %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmax) to zero
+                        "movupd %[itemp], %%xmm4 \n\t"
+                        "xorpd %%xmm3, %%xmm3 \n\t" //sets xmm3 (= current set index)
+                        : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
 
-    for (; (i+2) <= nData; i += 2) {
-      dptr = data+i;
+      for (; (i+2) <= nData; i += 2) {
+        dptr = data+i;
 
 
-      asm __volatile__ ("movapd %[dptr], %%xmm7 \n\t"
-                        "movapd %%xmm7, %%xmm0 \n\t"
-                        "cmpnlepd %%xmm6, %%xmm0 \n\t"
-                        "blendvpd %%xmm7, %%xmm6 \n\t"
-                        "blendvpd %%xmm3, %%xmm5 \n\t"
-                        "paddd %%xmm4, %%xmm3 \n\t"
-                        : : [dptr] "m" (dptr[0]) : "xmm0", "xmm3", "xmm5", "xmm6", "xmm7");
-    }
-
-    asm __volatile__ ("movupd %%xmm6, %[tmp] \n\t"
-                      "movupd %%xmm5, %[itemp] \n\t"
-                      : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
-
-    assert(itemp[0] == 0);
-    assert(itemp[2] == 0);
-
-    for (uint k=0; k < 2; k++) {
-      cur_val = tmp[k];
-      //std::cerr << "cur val: " << cur_val << std::endl;
-      if (cur_val > max_val) {
-        max_val = cur_val;
-        arg_max = 2*itemp[2*k+1] + k;
+        asm __volatile__ ("movapd %[dptr], %%xmm7 \n\t"
+                          "movapd %%xmm7, %%xmm0 \n\t"
+                          "cmpnlepd %%xmm6, %%xmm0 \n\t"
+                          "blendvpd %%xmm7, %%xmm6 \n\t"
+                          "blendvpd %%xmm3, %%xmm5 \n\t"
+                          "paddd %%xmm4, %%xmm3 \n\t"
+                          : : [dptr] "m" (dptr[0]) : "xmm0", "xmm3", "xmm5", "xmm6", "xmm7");
       }
-    }
 
-    //std::cerr << "minval: " << min_val << std::endl;
-    assert(i == nData - (nData % 2));
+      asm __volatile__ ("movupd %%xmm6, %[tmp] \n\t"
+                        "movupd %%xmm5, %[itemp] \n\t"
+                        : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
+
+      assert(itemp[0] == 0);
+      assert(itemp[2] == 0);
+
+      for (uint k=0; k < 2; k++) {
+        cur_val = tmp[k];
+        //std::cerr << "cur val: " << cur_val << std::endl;
+        if (cur_val > max_val) {
+          max_val = cur_val;
+          arg_max = 2*itemp[2*k+1] + k;
+        }
+      }
+
+      //std::cerr << "minval: " << min_val << std::endl;
+      assert(i == nData - (nData % 2));
     }
 
     for (; i < nData; i++) {
@@ -1393,8 +1399,8 @@ namespace Makros {
 
       assert(nData <= 17179869183);
 
-      static const float tmp[4] = {MAX_FLOAT,MAX_FLOAT,MAX_FLOAT,MAX_FLOAT};
-      static const wchar_t itemp[4] = {1,1,1,1};
+      float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT}; //reused as output, static not useful
+      wchar_t itemp[4] = {1,1,1,1}; //reused as output, static not useful
 
       const float* fptr;
 
@@ -1536,8 +1542,8 @@ namespace Makros {
 
       assert(nData < 8589934592);
 
-      static const double tmp[2] = {MAX_DOUBLE,MAX_DOUBLE};
-      static const uint itemp[4] = {0,1,0,1};
+      double tmp[2] = {MAX_DOUBLE,MAX_DOUBLE}; //reused as output, static not useful
+      uint itemp[4] = {0,1,0,1}; //reused as output, static not useful
       assert(sizeof(uint) == 4);
       const double* dptr;
 
@@ -1742,7 +1748,8 @@ namespace Makros {
     
     //note: broadcast is better implemented by movddup (SSE3). But this code is no longer improved
     asm volatile ("movupd %[temp], %%xmm7" : : [temp] "m" (temp[0]) : "xmm7" );
-    for (i=0; i+2 <= nData; i+=2) {
+    i = 0;
+    for (; i+2 <= nData; i+=2) {
       cdptr = data2+i;
       dptr = data+i;
 
@@ -1754,7 +1761,7 @@ namespace Makros {
                     : [dptr] "+m" (dptr[0]) : [cdptr] "m" (cdptr[0]) : "xmm5", "xmm6", "memory");
     }
 
-    for (i= nData - (nData % 2); i < nData; i++)
+    for (; i < nData; i++)
       data[i] -= factor * data2[i];
 #endif
   }
@@ -1784,8 +1791,8 @@ namespace Makros {
     double* dest_ptr;
     const double* s1_ptr;
     const double* s2_ptr;
-    size_t i;
-    for (i=0; i+4 <= nData; i+= 4) {
+    size_t i = 0;
+    for (; i+4 <= nData; i+= 4) {
       dest_ptr = dest + i;
       s1_ptr = src1 + i;
       s2_ptr = src2 + i;
@@ -1803,7 +1810,7 @@ namespace Makros {
                     : [dest] "+m" (dest_ptr[0]) : [s1_ptr] "m" (s1_ptr[0]), [s2_ptr] "m" (s2_ptr[0]) : "ymm2", "ymm3", "memory");
     }
 
-    for (i= nData - (nData % 4); i < nData; i++)
+    for (; i < nData; i++)
       dest[i] = src1[i] - alpha * src2[i];
 #endif
   }
@@ -1825,8 +1832,8 @@ namespace Makros {
     double* dest_ptr;
     const double* s1_ptr;
     const double* s2_ptr;
-    size_t i;
-    for (i=0; i+4 <= nData; i+= 4) {
+    size_t i=0;
+    for (; i+4 <= nData; i+= 4) {
       dest_ptr = dest + i;
       s1_ptr = src1 + i;
       s2_ptr = src2 + i;
@@ -1844,7 +1851,7 @@ namespace Makros {
                     : [dest] "+m" (dest_ptr[0]) : [s1_ptr] "m" (s1_ptr[0]), [s2_ptr] "m" (s2_ptr[0]) : "ymm2", "ymm3", "memory");
     }
 
-    for (i= nData - (nData % 4); i < nData; i++)
+    for (; i < nData; i++)
       dest[i] = w1 * src1[i] + w2 * src2[i];
 #endif
   }
