@@ -24,7 +24,7 @@ inline void ineg(Int64 in_high, Int64 in_low, Int64& out_high, Int64& out_low)
   out_low = ~in_low;
 
   //assembler implementation with local labels
-  asm volatile ("incq %[ol] \n\t"
+  asm volatile ("addq $1, %[ol] \n\t" //inc doesn't update the carry flag!
                 "jnc 1f \n\t"
                 "incq %[oh] \n\t"
                 "1:  \n\t"
