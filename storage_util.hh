@@ -8,6 +8,7 @@
 #include "matrix.hh"
 #include "tensor.hh"
 #include "sorting.hh"
+#include "routines.hh"
 
 template<typename ST>
 inline void set_idfunc(Storage1D<uint, ST>& vec) {
@@ -139,7 +140,7 @@ template <typename T, typename ST>
 inline void large_vec_replace_maintainsort(FlexibleStorage1D<T,ST>& vec, const T toErase, const T toInsert)
 {
   const size_t size = vec.size();
-  size_t i = Makros::binsearch(vec.direct_access(), toErase, vec.size());
+  size_t i = Routines::binsearch(vec.direct_access(), toErase, vec.size());
   assert(i < size);
   
   if (i > 0 && toInsert < vec[i-1]) {
@@ -147,7 +148,7 @@ inline void large_vec_replace_maintainsort(FlexibleStorage1D<T,ST>& vec, const T
     while (npos > 0 && toInsert < vec[npos-1])
       npos--;
 
-    Makros::upshift_array(vec.direct_access(), i, 1, npos);
+    Routines::upshift_array(vec.direct_access(), i, 1, npos);
     //for (size_t k = i; k > npos; k--)
     //  vec[k] = vec[k-1];
     vec[npos] = toInsert;
@@ -157,7 +158,7 @@ inline void large_vec_replace_maintainsort(FlexibleStorage1D<T,ST>& vec, const T
     while (npos+1 < size && vec[npos+1] < toInsert)
       npos++;
 
-    Makros::downshift_array(vec.direct_access(), i, npos, 1);
+    Routines::downshift_array(vec.direct_access(), i, npos, 1);
     //for (size_t k = i; k < npos; k++)
     // vec[k] = vec[k+1];
     vec[npos] = toInsert;

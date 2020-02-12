@@ -6,6 +6,7 @@
 
 #include "makros.hh"
 
+//operators == and != need to be defined on T
 template<typename T, typename ST=size_t>
 class StorageBase {
 public:
@@ -31,6 +32,8 @@ public:
   inline const T& ref_attr_restrict direct_access(ST i) const;
 
   inline void set_constant(const T constant);
+
+  inline bool is_constant() const;
 
 protected:
 
@@ -102,6 +105,20 @@ template<typename T, typename ST>
 inline void StorageBase<T,ST>::set_constant(const T constant)
 {
   std::fill_n(data_,size_,constant);
+}
+
+template<typename T, typename ST>
+inline bool StorageBase<T,ST>::is_constant() const
+{
+  if (size_ <= 1)
+    return true;
+  
+  const T val = data_[0];
+  for (ST i = 1; i < size_; i++) {
+    if (val != data_[i])
+      return false;
+  }
+  return true;
 }
 
 template<typename T,typename ST>

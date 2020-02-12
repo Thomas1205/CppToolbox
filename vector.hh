@@ -132,7 +132,6 @@ namespace Math1D {
   //NOTE: dest can be the same as src1 or src2
   inline void go_in_neg_direction(Math1D::Vector<double>& dest, const Math1D::Vector<double>& src1, const Math1D::Vector<double>& src2, double alpha)
   {
-
     assert(dest.size() == src1.size());
     assert(dest.size() == src2.size());
     Makros::go_in_neg_direction(dest.direct_access(), dest.size(), src1.direct_access(), src2.direct_access(), alpha);
@@ -142,7 +141,6 @@ namespace Math1D {
   inline void assign_weighted_combination(Math1D::Vector<double>& dest, double w1, const Math1D::Vector<double>& src1,
                                           double w2, const Math1D::Vector<double>& src2)
   {
-
     assert(dest.size() == src1.size());
     assert(dest.size() == src2.size());
     Makros::assign_weighted_combination(dest.direct_access(), dest.size(), w1, src1.direct_access(), w2, src2.direct_access());
@@ -742,16 +740,9 @@ namespace Math1D {
     assertAligned16(data2);
 
     //g++ uses packed fused multiply-add, but ignores the alignment information
-    return std::inner_product(data1,data1+size,data2, (T) 0);
-
-    // T result = (T) 0;
-    // ST i;
-    // for (i=0; i < size; i++)
-    //   result += data1[i] * data2[i]; //v1.direct_access(i)*v2.direct_access(i);
-
-    // return result;
+    return Makros::dotprod(data1,data2,size);
+    //return std::inner_product(data1,data1+size,data2, (T) 0);
   }
-
 
   template<typename T,typename ST>
   std::ostream& operator<<(std::ostream& s, const Vector<T,ST>& v)

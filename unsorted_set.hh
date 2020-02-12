@@ -6,6 +6,10 @@
 #include "sorting.hh"
 #include "routines.hh"
 
+#ifndef USET_SORT_ALG
+#define USET_SORT_ALG bubble_sort
+#endif
+
 //find in a sequence without duplicates
 template<typename T>
 inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& vec, T val) {
@@ -14,7 +18,7 @@ inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& ve
 
 template<>
 inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, uint val) {
-  const uint pos = Makros::find_unique_uint(vec.data(), val, vec.size());
+  const uint pos = Routines::find_unique_uint(vec.data(), val, vec.size());
   if (pos >= vec.size())
     return vec.end();
   else
@@ -23,7 +27,7 @@ inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, 
 
 template<>
 inline std::vector<int>::const_iterator set_find(const std::vector<int>& vec, int val) {
-  const uint pos = Makros::find_unique_int(vec.data(), val, vec.size());
+  const uint pos = Routines::find_unique_int(vec.data(), val, vec.size());
   if (pos >= vec.size())
     return vec.end();
   else
@@ -71,11 +75,16 @@ public:
   const std::vector<T> sorted_data() const
   {
     std::vector<T> result = data_;
-    bubble_sort(result.data(), result.size());
-    //std::cerr << "result: " << result << std::endl;
+    USET_SORT_ALG(result.data(), result.size());
     assert(is_unique_sorted(result.data(), result.size()));
     
     return result;
+  }
+
+  void get_sorted_data(Storage1D<T>& target) const 
+  {
+    assign(target, data_);
+    USET_SORT_ALG(target.direct_access(), target.size());    
   }
 
   bool contains(T val) const;
@@ -146,13 +155,19 @@ public:
   const std::vector<T>& sorted_data()
   {
     if (!is_sorted_) {
-      bubble_sort(data_, data_.size());
+      USET_SORT_ALG(data_, data_.size());
       //std::cerr << "result: " << result << std::endl;
       assert(is_unique_sorted(data_, data_.size()));
       is_sorted_ = true;
     }
     
     return data_;
+  }
+
+  void get_sorted_data(Storage1D<T>& target) const 
+  {
+    assign(target, data_);
+    USET_SORT_ALG(target.direct_access(), target.size());    
   }
 
   bool contains(T val) const;

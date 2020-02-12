@@ -10,6 +10,7 @@
 #endif
 
 #include "storage1D.hh"
+#include "routines.hh"
 
 template<typename T>
 bool is_sorted(const T* data, const size_t nData);
@@ -210,7 +211,7 @@ inline void shift_bubble_sort(T* data, const size_t nData)
       inspos--;
 
     if (inspos != l) {
-      Makros::upshift_array(data, inspos, l, 1);
+      Routines::upshift_array(data, inspos, l, 1);
       //for (size_t ll = l; ll > inspos; ll--)
       //  data[ll] = data[ll-1];
       data[inspos] = curdat;
@@ -377,8 +378,8 @@ inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
 
     if (inspos != j) {
       const T2 curval = value[j];
-      Makros::upshift_array(key, inspos, j, 1);
-      Makros::upshift_array(value, inspos, j, 1);
+      Routines::upshift_array(key, inspos, j, 1);
+      Routines::upshift_array(value, inspos, j, 1);
       // for (size_t jj = j; jj > inspos; jj--) {
         // key[jj] = key[jj-1];
         // value[jj] = value[jj-1];

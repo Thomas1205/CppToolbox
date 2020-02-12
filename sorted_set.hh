@@ -4,6 +4,7 @@
 #define SORTEDSET_HH
 
 #include "stl_util.hh"
+#include "routines.hh"
 
 template<typename T>
 class SortedSet {
@@ -98,7 +99,7 @@ bool SortedSet<T>::insert(const T val)
 
   data_.push_back(T());
 
-  Makros::upshift_array(data_.data(), inspos, size, 1);
+  Routines::upshift_array(data_.data(), inspos, size, 1);
   //for (uint k = size; k > inspos; k--)
   //  data_[k] = data_[k-1];
 
@@ -120,7 +121,7 @@ void SortedSet<T>::insert_new(const T val)
 
   data_.push_back(T());
 
-  Makros::upshift_array(data_.data(), inspos, size, 1);
+  Routines::upshift_array(data_.data(), inspos, size, 1);
   //for (uint k = size; k > inspos; k--)
   //  data_[k] = data_[k-1];
 
@@ -144,7 +145,7 @@ bool SortedSet<T>::erase(const T val)
     return false;
 
   const size_t size = data_.size();
-  Makros::downshift_array(data_.data(), pos, 1, size);
+  Routines::downshift_array(data_.data(), pos, 1, size);
   //for (uint k = pos; k < size-1; k++)
   //  data_[k] = data_[k+1];
 

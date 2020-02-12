@@ -121,6 +121,8 @@ bool operator==(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2);
 template<typename T, typename ST>
 bool operator!=(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2);
 
+//NOTE: operators implement lexicographical order. If you want speed, you should compare sizes first!
+
 template<typename T,typename ST>
 bool operator<(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2);
 

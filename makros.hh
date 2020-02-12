@@ -628,8 +628,7 @@ namespace Makros {
     assert(shift <= nData);
     uint i = pos;
     const uint end = nData-shift;
-//#if !defined(USE_SSE) || USE_SSE < 2
-#if 1
+#if !defined(USE_SSE) || USE_SSE < 2
     //for (; i < end; i++)
     //  data[i] = data[i+shift];
     memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(uint));
