@@ -18,6 +18,8 @@
 //NOTE: [Intel® 64 and IA-32 Architectures Software Developer’s Manual Vol 2.] clarifies that use of z/y/xmm8-15 and r8-15 makes the instructions and hence the executable longer
 //  TODO: stop using these regs
 
+//  In contrast to the Intel manuals, AT&T syntax is inverted. That means that the destination is the last argument.
+
 namespace Routines {
   
   /***************** downshift *****************/
@@ -314,11 +316,12 @@ namespace Routines {
       for (; i+4 <= nData; i+=4) {
 
         //NOTE: jumps outside of asm blocks are allowed only in asm goto, but that cannot have outputs (and local variables do not seem to get assembler names)
+        // => probably best to write the loop in assembler, too
 
         // Assembler wishlist: horizontal min and max -> would make the uniqueness assumption superflous (not even present in AVX-512)
 
         asm __volatile__ ("vmovdqu %1, %%xmm0  \n\t"
-                          "pcmpeqd %%xmm5, %%xmm0 \n\t" //xmm0 is overwritten with mask (all 1s on equal)
+                          "vpcmpeqd %%xmm5, %%xmm0, %%xmm0 \n\t" //xmm0 is overwritten with mask (all 1s on equal)
                           "pblendvb %%xmm3, %%xmm2  \n\t" //if xmm0 flags 1, the index is written
                           "vptest %%xmm0, %%xmm0 \n\t" //sets the zero flag iff xmm0 is all 0
                           "jz 1f \n\t" //jump if no equals
@@ -369,43 +372,44 @@ namespace Routines {
 
     //NOTE: we can go for ymm registers, if we use VEXTRACTF128 to send down the upper half
 
-    //std::cerr << "find_unique_uint(key: " << key << ")" << std::endl;
+    std::cerr << "find_first_uint(key: " << key << ")" << std::endl;
 
     if (nData >= 12) {
       static const uint ind[4] = {0, 1, 2, 3};
 
       const float finc = reinterpret<const uint, const float>(4); //*reinterpret_cast<const float*>(&iinc);
       const float fkey = reinterpret<const uint, const float>(key); //*reinterpret_cast<const float*>(&key);
+      const float fmax = reinterpret<const uint, const float>(MAX_UINT);
 
-      asm __volatile__ ("xorps %%xmm2, %%xmm2 \n\t" // set xmm2 (the array of found positions) to zero
+      asm __volatile__ ("vbroadcastss %[fmax], %%xmm2 \n\t" // set xmm2 (the array of found positions) to MAX_UINT
                         "vmovdqu %[ind], %%xmm3  \n\t" //xmm3 contains the indices
                         "vbroadcastss %[finc], %%xmm4 \n\t"
                         "vbroadcastss %[fkey], %%xmm5 \n\t"
-                        : : [ind] "m" (ind[0]), [finc] "m" (finc), [fkey] "m" (fkey)
+                        : : [ind] "m" (ind[0]), [finc] "m" (finc), [fkey] "m" (fkey), [fmax] "m" (fmax)
                         : "xmm2", "xmm3", "xmm4", "xmm5");
 
       register uint res = MAX_UINT;
       for (; i+4 <= nData; i+=4) {
 
         //NOTE: jumps outside of asm blocks are allowed only in asm goto, but that cannot have outputs (and local variables do not seem to get assembler names)
+        // => probably best to write the loop in assembler, too
 
-        // Assembler wishlist: horizontal min and max -> would make the uniqueness assumption superflous (not even present in AVX-512)
+        // Assembler wishlist: horizontal min and max -> would save the lengthy manual code
 
-        asm __volatile__ ("vmovdqu %1, %%xmm0  \n\t"
-                          "pcmpeqd %%xmm5, %%xmm0 \n\t" //xmm0 is overwritten with mask (all 1s on equal)
+        asm __volatile__ ("vmovdqu %[dat], %%xmm0  \n\t"
+                          "vpcmpeqd %%xmm5, %%xmm0, %%xmm0 \n\t" //xmm0 is overwritten with mask (all 1s on equal)
                           "pblendvb %%xmm3, %%xmm2  \n\t" //if xmm0 flags 1, the index is written
-                          "ptest %%xmm0, %%xmm0 \n\t" //sets the zero flag iff xmm0 is all 0
+                          "vptest %%xmm0, %%xmm0 \n\t" //sets the zero flag iff xmm0 is all 0
                           "jz 1f \n\t" //jump if no equals
                           //manual phmin
-                          //"movhlps %%xmm2, %%xmm1 \n\t" //move high two ints of xmm2 to low in xmm1
-                          "vpshufd $14, %%xmm2, %%xmm1 \n\t" //move high two ints of xmm2 to low in xmm1 (lowest gets assigned 2, second lowest 3, rest irrelevant)
-                                                             //  -> byte value of 2 + 4*3 = 14
+                          "vmovhlps %%xmm2, %%xmm1, %%xmm1 \n\t" //move high two ints of xmm2 to low in xmm1
+                          //"vpsrldq $8, %%xmm2, %%xmm1 \n\t" //move high two ints of xmm2 to low in xmm1: dq is byte shift
                           "pminud %%xmm1, %%xmm2   \n\t"
-                          "pextrd $1, %%xmm2, %%xmm1 \n\t"
+                          "vpsrldq $4, %%xmm2, %%xmm1 \n\t"
                           "pminud %%xmm1, %%xmm2   \n\t"
-                          "pextrd $0, %%xmm2, %0 \n\t"
+                          "vpextrd $0, %%xmm2, %0 \n\t"
                           "1: paddd %%xmm4, %%xmm3 \n\t"
-                          : "+g" (res) : "m" (data[i]) : "xmm0", "xmm1", "xmm2", "xmm3");
+                          : "+g" (res) : [dat] "m" (data[i]) : "xmm0", "xmm1", "xmm2", "xmm3");
 
         if (res != MAX_UINT)
           return res;
