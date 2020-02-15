@@ -116,8 +116,6 @@ namespace Routines {
 #endif
   }
 
-  //routine for long double (based on memmove) is TODO
-
   template<typename T>
   inline void downshift_array(T* data, const uint pos, const uint shift, const uint nData)
   {
@@ -126,6 +124,38 @@ namespace Routines {
     for (; i < end; i++)
       data[i] = data[i+shift];
   }
+
+  template<>
+  inline void downshift_array(char* data, const uint pos, const uint shift, const uint nData)
+  {
+    //test of the specialized routine downshift_double_array is TODO
+    const uint end = nData-shift;
+    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(char));
+  }  
+
+  template<>
+  inline void downshift_array(uchar* data, const uint pos, const uint shift, const uint nData)
+  {
+    //test of the specialized routine downshift_double_array is TODO
+    const uint end = nData-shift;
+    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(uchar));
+  }  
+
+  template<>
+  inline void downshift_array(short* data, const uint pos, const uint shift, const uint nData)
+  {
+    //test of the specialized routine downshift_double_array is TODO
+    const uint end = nData-shift;
+    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(short));
+  }  
+
+  template<>
+  inline void downshift_array(ushort* data, const uint pos, const uint shift, const uint nData)
+  {
+    //test of the specialized routine downshift_double_array is TODO
+    const uint end = nData-shift;
+    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(ushort));
+  }  
 
   template<>
   inline void downshift_array(uint* data, const uint pos, const uint shift, const uint nData)
@@ -145,7 +175,20 @@ namespace Routines {
     downshift_float_array(data, pos, shift, nData);
   }
 
-  //specialization for double is TODO
+  template<>
+  inline void downshift_array(double* data, const uint pos, const uint shift, const uint nData)
+  {
+    //test of the specialized routine downshift_double_array is TODO
+    const uint end = nData-shift;
+    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(double));
+  }  
+
+  template<>
+  inline void downshift_array(long double* data, const uint pos, const uint shift, const uint nData)
+  {
+    const uint end = nData-shift;
+    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(long double));
+  }  
 
   /***************** upshift *****************/
 
@@ -267,7 +310,19 @@ namespace Routines {
     upshift_float_array(data, pos, shift, last);
   }
 
-  //specialization for double is TODO
+  template<>
+  inline void upshift_array(double* data, const int pos, const int shift, const int last)
+  {
+    //test of specialized routine is TODO
+    memmove(data+pos+shift,data+pos,(last-pos-shift+1)*sizeof(double));    
+  }
+
+  template<>
+  inline void upshift_array(long double* data, const int pos, const int shift, const int last)
+  {
+    //test of specialized routine is TODO
+    memmove(data+pos+shift,data+pos,(last-pos-shift+1)*sizeof(long double));    
+  }
 
   /***************** find unique *****************/
 
@@ -389,8 +444,8 @@ namespace Routines {
                         : "xmm2", "xmm3", "xmm4", "xmm5");
 
       register uint res = MAX_UINT;
-      for (; i+4 <= nData; i+=4) {
-
+      for (; i+4 <= nData; i+=4) 
+      {
         //NOTE: jumps outside of asm blocks are allowed only in asm goto, but that cannot have outputs (and local variables do not seem to get assembler names)
         // => probably best to write the loop in assembler, too
 
@@ -434,7 +489,8 @@ namespace Routines {
 
 //#if !defined(USE_SSE) || USE_SSE < 2
 #if 1 // g++ 4.8.5 uses avx instructions automatically
-    for (; i < nData; i++) {
+    for (; i < nData; i++) 
+    {
       cur_datum = data[i];
       max_val = std::max(max_val,cur_datum);
     }
@@ -454,7 +510,8 @@ namespace Routines {
     for (k=0; k < 4; k++)
       max_val = std::max(max_val,tmp[k]);
 
-    for (; i < nData; i++) {
+    for (; i < nData; i++) 
+    {
       cur_datum = data[i];
       if (cur_datum > max_val)
         max_val = cur_datum;
@@ -472,7 +529,8 @@ namespace Routines {
 
     //#if !defined(USE_SSE) || USE_SSE < 2
 #if 1 // g++ 4.8.5 uses avx instructions automatically
-    for (; i < nData; i++) {
+    for (; i < nData; i++) 
+    {
       cur_datum = data[i];
       min_val = std::min(min_val,cur_datum);
     }
@@ -483,7 +541,8 @@ namespace Routines {
 
     //minps can take an unaligned mem arg!
     asm __volatile__ ("movaps %[tmp], %%xmm6" : : [tmp] "m" (tmp[0]) : "xmm6");
-    for (; (i+4) <= nData; i += 4) {
+    for (; (i+4) <= nData; i += 4) 
+    {
       asm __volatile__ ("movaps %[fptr], %%xmm7 \n\t"
                         "minps %%xmm7, %%xmm6 \n\t" : : [fptr] "m" (data[i]) : "xmm6", "xmm7");
     }
@@ -533,7 +592,7 @@ namespace Routines {
 
     //use AVX - align16 is no good, need align32 for aligned moves
 
-    if (nData >= 16) {
+    if (nData >= 12) {
       const float val = MIN_FLOAT;
       //const uint one = 1;
       const float inc = reinterpret<const uint, const float>(1); //*reinterpret_cast<const float*>(&one);
@@ -546,15 +605,28 @@ namespace Routines {
                         "vxorps %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
                         : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
 
-      for (; (i+8) <= nData; i += 8) {
-
-        asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t"
+      for (; (i+8) <= nData; i += 8) 
+      {
+        asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t" //load needed, used multiple times
                           "vcmpnleps %%ymm6, %%ymm7, %%ymm0 \n\t"
                           "vblendvps %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
                           "vblendvps %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
                           "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
                           : : [fptr] "m" (data[i]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
       }
+
+#if 1
+      //if at least four remain, go for xmm. But AVX will zero the upper 128 Bit => either use SSE or blend needs to be for ymm
+      for (; (i+4) <= nData; i += 4) 
+      {
+        asm __volatile__ ("vmovups %[fptr], %%xmm7 \n\t" //load needed, used multiple times
+                          "vcmpnleps %%xmm6, %%xmm7, %%xmm0 \n\t"
+                          "vblendvps %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //needs to be ymm!
+                          "vblendvps %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //needs ti be ymm!
+                          "vpaddd %%xmm4, %%xmm3, %%xmm3 \n\t" //could be ymm
+                          : : [fptr] "m" (data[i]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
+      }
+#endif
 
       float tmp[8];
       uint itemp[8];
@@ -563,14 +635,14 @@ namespace Routines {
                         "vmovups %%ymm5, %[itemp]"
                         : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
 
-      for (uint k=0; k < 8; k++) {
+      for (uint k=0; k < 8; k++) 
+      {
         cur_val = tmp[k];
         if (cur_val > max_val) {
           max_val = cur_val;
           arg_max = (itemp[k] << 3) + k; //8*itemp[k] + k;
         }
       }
-      assert(i == nData - (nData % 8));
     }
 
 #else
@@ -589,9 +661,9 @@ namespace Routines {
                         "xorps %%xmm3, %%xmm3 \n\t" //sets xmm3 (= current set index) to zero
                         : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) : "xmm3", "xmm4", "xmm5", "xmm6");
 
-      for (; (i+4) <= nData; i += 4) {
-
-        asm __volatile__ ("movaps %[fptr], %%xmm7 \n\t"
+      for (; (i+4) <= nData; i += 4) 
+      {
+        asm __volatile__ ("movaps %[fptr], %%xmm7 \n\t" //load needed, used multiple times
                           "movaps %%xmm7, %%xmm0 \n\t"
                           "cmpnleps %%xmm6, %%xmm0 \n\t"
                           "blendvps %%xmm7, %%xmm6 \n\t"
@@ -604,7 +676,8 @@ namespace Routines {
                         "movups %%xmm5, %[itemp]"
                         : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
 
-      for (uint k=0; k < 4; k++) {
+      for (uint k=0; k < 4; k++) 
+      {
         cur_val = tmp[k];
         if (cur_val > max_val) {
           max_val = cur_val;
@@ -657,11 +730,11 @@ namespace Routines {
 
     //use AVX  - align16 is no good, need align32 for aligned moves
 
-    if (nData >= 8) {
+    if (nData >= 6) {
       assert(sizeof(size_t) == 8);
 
       const double val = MIN_DOUBLE;
-      const size_t one = 1;
+      //const size_t one = 1;
       const double inc = reinterpret<const size_t, const double>(1); //*reinterpret_cast<const double*>(&one);
 
       asm __volatile__ ("vbroadcastsd %[tmp], %%ymm6 \n\t" //ymm6 is max register
@@ -670,15 +743,28 @@ namespace Routines {
                         "vxorpd %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
                         : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
 
-      for (; (i+4) <= nData; i += 4) {
-
-        asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t"
+      for (; (i+4) <= nData; i += 4) 
+      {
+        asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t" //load needed, used multiple times
                           "vcmpnlepd %%ymm6, %%ymm7, %%ymm0 \n\t"
                           "vblendvpd %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
                           "vblendvpd %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
                           "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
                           : : [dptr] "m" (data[i]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
       }
+
+#if 1
+      //if two or three remain, go for xmm. But AVX will zero the upper 128 Bit => either use SSE or blend needs to be for ymm
+      for (; (i+2) <= nData; i += 2) 
+      {
+        asm __volatile__ ("vmovupd %[dptr], %%xmm7 \n\t" //load needed, used multiple times
+                          "vcmpnlepd %%xmm6, %%xmm7, %%xmm0 \n\t" //high 128 bit are zeroed (no flags)
+                          "vblendvpd %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //needs to be ymm!
+                          "vblendvpd %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //needs to be ymm!
+                          "vpaddd %%xmm4, %%xmm3, %%xmm3 \n\t" //could also be ymm
+                          : : [dptr] "m" (data[i]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
+      }
+#endif
 
       double tmp[4];
       size_t itemp[4];
@@ -687,7 +773,8 @@ namespace Routines {
                         "vmovups %%ymm5, %[itemp]"
                         : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
 
-      for (uint k=0; k < 4; k++) {
+      for (uint k=0; k < 4; k++) 
+      {
         cur_val = tmp[k];
         //std::cerr << "cur val: " << cur_val << std::endl;
         if (cur_val > max_val) {
@@ -696,7 +783,6 @@ namespace Routines {
         }
       }
       //std::cerr << "minval: " << min_val << std::endl;
-      assert(i == nData - (nData % 4));
     }
 
 #else
@@ -715,9 +801,9 @@ namespace Routines {
                         "xorpd %%xmm3, %%xmm3 \n\t" //sets xmm3 (= current set index)
                         : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
 
-      for (; (i+2) <= nData; i += 2) {
-
-        asm __volatile__ ("movapd %[dptr], %%xmm7 \n\t"
+      for (; (i+2) <= nData; i += 2) 
+      {
+        asm __volatile__ ("movapd %[dptr], %%xmm7 \n\t" //load needed, used multiple times
                           "movapd %%xmm7, %%xmm0 \n\t"
                           "cmpnlepd %%xmm6, %%xmm0 \n\t"
                           "blendvpd %%xmm7, %%xmm6 \n\t"
@@ -733,7 +819,8 @@ namespace Routines {
       assert(itemp[0] == 0);
       assert(itemp[2] == 0);
 
-      for (uint k=0; k < 2; k++) {
+      for (uint k=0; k < 2; k++) 
+      {
         cur_val = tmp[k];
         //std::cerr << "cur val: " << cur_val << std::endl;
         if (cur_val > max_val) {
@@ -790,7 +877,7 @@ namespace Routines {
 
     //use AVX  - align16 is no good, need align32 for aligned moves
 
-    if (nData >= 16) {
+    if (nData >= 12) {
       const float val = MAX_FLOAT;
       //const uint one = 1;
       const float inc = reinterpret<const uint, const float>(1); //*reinterpret_cast<const float*>(&one);
@@ -801,15 +888,28 @@ namespace Routines {
                         "vxorps %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
                         : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
 
-      for (; (i+8) <= nData; i += 8) {
-
-        asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t"
-                          "vcmpltps %%ymm6, %%ymm7, %%ymm0 \n\t" //destination is last
+      for (; (i+8) <= nData; i += 8) 
+      {
+        asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t" //load needed, used multiple times
+                          "vcmpltps %%ymm6, %%ymm7, %%ymm0 \n\t" //destination is last                          
                           "vblendvps %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
                           "vblendvps %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
                           "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
                           : : [fptr] "m" (data[i]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
       }
+
+#if 1
+      //if at least four remain, go for xmm. But AVX will zero the upper 128 Bit => either use SSE or blend needs to be for ymm
+      for (; (i+4) <= nData; i += 4) 
+      {
+        asm __volatile__ ("vmovups %[fptr], %%xmm7 \n\t" //load needed, used multiple times
+                          "vcmpltps %%xmm6, %%xmm7, %%xmm0 \n\t"
+                          "vblendvps %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //needs to be ymm!
+                          "vblendvps %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //needs ti be ymm!
+                          "vpaddd %%xmm4, %%xmm3, %%xmm3 \n\t" //could be ymm
+                          : : [fptr] "m" (data[i]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
+      }
+#endif
 
       float tmp[8];
       uint itemp[8];
@@ -818,7 +918,8 @@ namespace Routines {
                         "vmovups %%ymm5, %[itemp]"
                         : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
 
-      for (uint k=0; k < 8; k++) {
+      for (uint k=0; k < 8; k++) 
+      {
         cur_val = tmp[k];
         //std::cerr << "cur val: " << cur_val << std::endl;
         if (cur_val < min_val) {
@@ -846,9 +947,9 @@ namespace Routines {
                         "xorps %%xmm3, %%xmm3 \n\t" //contains candidate argmin
                         : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
 
-      for (; (i+4) <= nData; i += 4) {
-
-        asm __volatile__ ("movaps %[fptr], %%xmm7 \n\t"
+      for (; (i+4) <= nData; i += 4) 
+      {
+        asm __volatile__ ("movaps %[fptr], %%xmm7 \n\t" //load needed, used multiple times
                           "movaps %%xmm7, %%xmm0 \n\t"
                           "cmpltps %%xmm6, %%xmm0 \n\t"
                           "blendvps %%xmm7, %%xmm6 \n\t"
@@ -863,7 +964,8 @@ namespace Routines {
 
       //std::cerr << "intermediate minval: " << min_val << std::endl;
 
-      for (uint k=0; k < 4; k++) {
+      for (uint k=0; k < 4; k++) 
+      {
         cur_val = tmp[k];
         //std::cerr << "cur val: " << cur_val << std::endl;
         if (cur_val < min_val) {
@@ -920,7 +1022,6 @@ namespace Routines {
 
     //use AVX  - align16 is no good, need align32 for aligned moves
 
-
     if (nData >= 8) {
       assert(sizeof(size_t) == 8);
 
@@ -934,15 +1035,28 @@ namespace Routines {
                         "vxorpd %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
                         : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
 
-      for (; (i+4) <= nData; i += 4) {
-
-        asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t"
+      for (; (i+4) <= nData; i += 4) 
+      {
+        asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t" //load needed, used multiple times
                           "vcmpltpd %%ymm6, %%ymm7, %%ymm0 \n\t" //destination is last
                           "vblendvpd %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //destination is last
                           "vblendvpd %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //destination is last
                           "vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t" //destination is last
                           : : [dptr] "m" (data[i]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
       }
+
+#if 1
+      //if two or three remain, go for xmm. But AVX will zero the upper 128 Bit => either use SSE or blend needs to be for ymm
+      for (; (i+2) <= nData; i += 2) 
+      {
+        asm __volatile__ ("vmovupd %[dptr], %%xmm7 \n\t" //load needed, used multiple times
+                          "vcmpltpd %%xmm6, %%xmm7, %%xmm0 \n\t" //high 128 bit are zeroed (no flags)
+                          "vblendvpd %%ymm0, %%ymm7, %%ymm6, %%ymm6 \n\t" //needs to be ymm!
+                          "vblendvpd %%ymm0, %%ymm3, %%ymm5, %%ymm5 \n\t" //needs to be ymm!
+                          "vpaddd %%xmm4, %%xmm3, %%xmm3 \n\t" //could also be ymm
+                          : : [dptr] "m" (data[i]) : "ymm0", "ymm3", "ymm5", "ymm6", "ymm7");
+      }
+#endif
 
       double tmp[4];
       size_t itemp[4];
@@ -951,7 +1065,8 @@ namespace Routines {
                         "vmovupd %%ymm5, %[itemp]"
                         : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
 
-      for (uint k=0; k < 4; k++) {
+      for (uint k=0; k < 4; k++) 
+      {
         cur_val = tmp[k];
         //std::cerr << "cur val: " << cur_val << std::endl;
         if (cur_val < min_val) {
@@ -980,9 +1095,9 @@ namespace Routines {
                         "xorpd %%xmm3, %%xmm3 \n\t" //contains candidate argmin
                         : : [tmp] "m" (tmp[0]), [itemp] "m" (itemp[0]) :  "xmm3", "xmm4", "xmm5", "xmm6");
 
-      for (; (i+2) <= nData; i += 2) {
-
-        asm __volatile__ ("movapd %[dptr], %%xmm7 \n\t"
+      for (; (i+2) <= nData; i += 2) 
+      {
+        asm __volatile__ ("movapd %[dptr], %%xmm7 \n\t" //load needed, used multiple times
                           "movapd %%xmm7, %%xmm0 \n\t"
                           "cmpltpd %%xmm6, %%xmm0 \n\t"
                           "blendvpd %%xmm7, %%xmm6 \n\t"
@@ -1041,13 +1156,24 @@ namespace Routines {
                       : : [tmp] "m" (constant) : "ymm7");
 
     //vmulps can take an unaligned mem arg!
-    for (; i+8 <= nData; i+=8) {
-      asm volatile ("vmovups %[fptr], %%ymm6 \n\t"
-                    "vmulps %%ymm7, %%ymm6, %%ymm6 \n\t"
+    for (; i+8 <= nData; i+=8) 
+    {
+      asm volatile (//"vmovups %[fptr], %%ymm6 \n\t"
+                    //"vmulps %%ymm6, %%ymm7, %%ymm6 \n\t"
+                    "vmulps %[fptr], %%ymm7, %%ymm6 \n\t"
                     "vmovups %%ymm6, %[fptr] \n\t"
                     : [fptr] "+m" (data[i]) : : "ymm6", "memory");
     }
 
+    for (; i+4 <= nData; i+=4) 
+    {
+      asm volatile (//"vmovups %[fptr], %%xmm6 \n\t"
+                    //"vmulps %%xmm6, %%xmm7, %%xmm6 \n\t"
+                    "vmulps %[fptr], %%xmm7, %%xmm6 \n\t"
+                    "vmovups %%xmm6, %[fptr] \n\t"
+                    : [fptr] "+m" (data[i]) : : "ymm6", "memory");
+    }
+    
     for (; i < nData; i++) 
       data[i] *= constant;
 #else
@@ -1057,7 +1183,8 @@ namespace Routines {
     asm volatile ("movaps %[temp], %%xmm7" : : [temp] "m" (temp[0]) : "xmm7" );
 
     i = 0;
-    for (; i+4 <= nData; i+=4) {
+    for (; i+4 <= nData; i+=4) 
+    {
       asm volatile ("movaps %[fptr], %%xmm6 \n\t"
                     "mulps %%xmm7, %%xmm6 \n\t"
                     "movaps %%xmm6, %[fptr] \n\t"
@@ -1085,12 +1212,22 @@ namespace Routines {
                       : : [tmp] "m" (constant) : "ymm7");
 
     //vmulpd can take an unaligned mem arg!
-    for (; i+4 <= nData; i+=4) {
-
-      asm volatile ("vmovupd %[dptr], %%ymm6 \n\t"
-                    "vmulpd %%ymm7, %%ymm6, %%ymm6 \n\t"
+    for (; i+4 <= nData; i+=4) 
+    {
+      asm volatile (//"vmovupd %[dptr], %%ymm6 \n\t"
+                    //"vmulpd %%ymm6, %%ymm7, %%ymm6 \n\t"
+                    "vmulpd %[dptr], %%ymm7, %%ymm6 \n\t"
                     "vmovupd %%ymm6, %[dptr] \n\t"
                     : [dptr] "+m" (data[i]) : : "ymm6", "memory");
+    }
+
+    for (; i+2 <= nData; i+=2) 
+    {
+      asm volatile (//"vmovupd %[dptr], %%xmm6 \n\t"
+                    //"vmulpd %%xmm6, %%xmm7, %%xmm6 \n\t"
+                    "vmulpd %[dptr], %%xmm7, %%xmm6 \n\t"
+                    "vmovupd %%xmm6, %[dptr] \n\t"
+                    : [dptr] "+m" (data[i]) : : "ymm6", "memory");      
     }
 
 #else
@@ -1099,8 +1236,8 @@ namespace Routines {
     //note: broadcast is better implemented by movddup (SSE3). But this code is no longer improved
     asm volatile ("movupd %[temp], %%xmm7" : : [temp] "m" (temp[0]) : "xmm7" );
 
-    for (; i+2 <= nData; i+=2) {
-
+    for (; i+2 <= nData; i+=2) 
+    {
       asm volatile ("movapd %[dptr], %%xmm6 \n\t"
                     "mulpd %%xmm7, %%xmm6 \n\t"
                     "movupd %%xmm6, %[dptr] \n\t"
@@ -1127,32 +1264,48 @@ namespace Routines {
     for (; i < nData; i++)
       data[i] -= factor * data2[i];
 #else    
+  
 #if USE_SSE >= 5
-
     // AVX  - align16 is no good, need align32 for aligned moves
 
     asm __volatile__ ("vbroadcastsd %[tmp], %%ymm7 \n\t"
                       : : [tmp] "m" (factor) : "ymm7");
 
-    for (; i+4 <= nData; i+=4) {
-
-      //TODO: check for usage of VFNADD
-
+    for (; i+4 <= nData; i+=4) 
+    {
       //vmulpd can take an unaligned mem arg, vfnadd too!
-      asm volatile ("vmovupd %[cdptr], %%ymm6 \n\t"
-                    "vmulpd %%ymm7, %%ymm6, %%ymm6 \n\t" //destination goes last
-                    "vmovupd %[dptr], %%ymm5 \n\t"
-                    "vsubpd %%ymm6, %%ymm5, %%ymm5 \n\t" //destination goes last
+      asm volatile ("vmovupd %[dptr], %%ymm5 \n\t"      
+#if USE_SSE >= 6
+                    "vmulpd %[cdptr], %%ymm7, %%ymm6 \n\t" //destination goes last
+                    "vsubpd %%ymm6, %%ymm5, %%ymm5 \n\t" //destination goes last (cannot use memarg here, first isn't dptr!)
+#else
+                    "vfnmadd231pd %[cdptr], %%ymm7, %%ymm5 \n\t"
+#endif  
                     "vmovupd %%ymm5, %[dptr] \n\t"
                     : [dptr] "+m" (data[i]) : [cdptr] "m" (data2[i]) : "ymm5", "ymm6", "memory");
     }
+    
+    for (; i+2 <= nData; i+=2) 
+    {
+      //vmulpd can take an unaligned mem arg, vfnadd too!
+      asm volatile ("vmovupd %[dptr], %%xmm5 \n\t"      
+#if USE_SSE >= 6
+                    "vmulpd %[cdptr], %%xmm7, %%xmm6 \n\t" //destination goes last
+                    "vsubpd %%xmm6, %%xmm5, %%xmm5 \n\t" //destination goes last (cannot use memarg here, first isn't dptr!)
+#else
+                    "vfnmadd231pd %[cdptr], %%xmm7, %%xmm5 \n\t"
+#endif  
+                    "vmovupd %%xmm5, %[dptr] \n\t"
+                    : [dptr] "+m" (data[i]) : [cdptr] "m" (data2[i]) : "ymm5", "ymm6", "memory");
+    }
+        
 #else
     double temp[2] = {factor, factor};
     
     //note: broadcast is better implemented by movddup (SSE3). But this code is no longer improved
     asm volatile ("movupd %[temp], %%xmm7" : : [temp] "m" (temp[0]) : "xmm7" );
-    for (; i+2 <= nData; i+=2) {
-
+    for (; i+2 <= nData; i+=2) 
+    {
       asm volatile ("movapd %[cdptr], %%xmm6 \n\t"
                     "mulpd %%xmm7, %%xmm6 \n\t"
                     "movapd %[dptr], %%xmm5 \n\t"
@@ -1191,20 +1344,37 @@ namespace Routines {
                       : : [w1] "m" (alpha) : "ymm0");
 
     //vmulpd can take an unaligned mem arg, vfnmadd too!
-    //vsubpd can take an unaligned mem arg!
-    for (; i+4 <= nData; i+= 4) {
-
-      asm volatile ("vmovupd %[s2_ptr], %%ymm3 \n\t"
+    //vsubpd can take an unaligned mem arg
+    for (; i+4 <= nData; i+= 4) 
+    {
+      asm volatile (//"vmovupd %[s2_ptr], %%ymm3 \n\t"
 #if USE_SSE < 6
-                    "vmulpd %%ymm0, %%ymm3, %%ymm3 \n\t" //destination goes last
-                    "vmovupd %[s1_ptr], %%ymm2 \n\t"
-                    "vsubpd %%ymm3, %%ymm2, %%ymm2 \n\t" //destination goes last
+                    //"vmulpd %%ymm0, %%ymm3, %%ymm3 \n\t" //destination goes last
+                    "vmulpd %[s2_ptr], %%ymm0, %%ymm3 \n\t" //destination goes last
+                    //"vmovupd %[s1_ptr], %%ymm2 \n\t"
+                    //"vsubpd %%ymm3, %%ymm2, %%ymm2 \n\t" //destination goes last
+                    "vsubpd %[s1_ptr], %%ymm3 %%ymm2 \n\t" //destination goes last
 #else
                     "vmovupd %[s1_ptr], %%ymm2 \n\t"
-                    "vfnmadd231pd %%ymm0, %%ymm3, %%ymm2 \n\t" //destination goes last
+                    //"vfnmadd231pd %%ymm0, %%ymm3, %%ymm2 \n\t" //destination goes last
+                    "vfnmadd231pd %[s2_ptr], %%ymm0, %%ymm2 \n\t" //destination goes last
 #endif
-                    "vmovupd %%ymm2, %[dest]"
+                    "vmovupd %%ymm2, %[dest] \n\t"
                     : [dest] "+m" (dest[i]) : [s1_ptr] "m" (src1[i]), [s2_ptr] "m" (src2[i]) : "ymm2", "ymm3", "memory");
+    }
+
+    for (; i+2 < nData; i+= 2) 
+    {
+      asm volatile (
+#if USE_SSE < 6
+                    "vmulpd %[s2_ptr], %%xmm0, %%xmm3 \n\t" //destination goes last
+                    "vsubpd %[s1_ptr], %%xmm3, %%xmm2 \n\t" //destination goes last
+#else
+                    "vmovupd %[s1_ptr], %%xmm2 \n\t"
+                    "vfnmadd231pd %[s2_ptr], %%xmm0, %%xmm2 \n\t" //destination goes last
+#endif
+                    "vmovupd %%xmm2, %[dest] \n\t"
+                    : [dest] "+m" (dest[i]) : [s1_ptr] "m" (src1[i]), [s2_ptr] "m" (src2[i]) : "ymm2", "ymm3", "memory");      
     }
 
     for (; i < nData; i++)
@@ -1229,18 +1399,32 @@ namespace Routines {
 
     //vmulpd can take an unaligned mem arg, vfnmadd too!
     //vaddpd can take an unaligned mem arg!
-    for (; i+4 <= nData; i+= 4) {
-
-      asm volatile ("vmovupd %[s1_ptr], %%ymm2 \n\t"
-                    "vmulpd %%ymm0, %%ymm2, %%ymm2 \n\t" //destination goes last
-                    "vmovupd %[s2_ptr], %%ymm3 \n\t"
+    for (; i+4 <= nData; i+= 4) 
+    {
+      asm volatile ("vmulpd %[s1_ptr], %%ymm0, %%ymm2 \n\t" //destination goes last
+                    //"vmovupd %[s2_ptr], %%ymm3 \n\t"
 #if USE_SSE < 6
-                    "vmulpd %%ymm1, %%ymm3, %%ymm3 \n\t" //destination goes last
+                    //"vmulpd %%ymm1, %%ymm3, %%ymm3 \n\t" //destination goes last
+                    "vmulpd %[s2_ptr], %%ymm1, %%ymm3 \n\t" //destination goes last
                     "vaddpd %%ymm3, %%ymm2, %%ymm2 \n\t" //destination goes last
 #else
-                    "vfmadd231pd %%ymm3, %%ymm1, %%ymm2 \n\t" //destination goes last
+                    //"vfmadd231pd %%ymm3, %%ymm1, %%ymm2 \n\t" //destination goes last
+                    "vfmadd231pd %[s2_ptr], %%ymm1, %%ymm2 \n\t" //destination goes last  
 #endif
-                    "vmovupd %%ymm2, %[dest]"
+                    "vmovupd %%ymm2, %[dest] \n\t"
+                    : [dest] "+m" (dest[i]) : [s1_ptr] "m" (src1[i]), [s2_ptr] "m" (src2[i]) : "ymm2", "ymm3", "memory");
+    }
+
+    for (; i+2 < nData; i+= 2) 
+    {
+      asm volatile ("vmulpd %[s1_ptr], %%xmm0, %%xmm2 \n\t"
+#if USE_SSE < 6
+                    "vmulpd %[s2_ptr], %%xmm1, %%xmm3 \n\t" //destination goes last
+                    "vaddpd %%xmm3, %%xmm2, %%xmm2 \n\t" //destination goes last
+#else
+                    "vfmadd231pd %[s2_ptr], %%xmm1, %%xmm2 \n\t" //destination goes last  
+#endif
+                    "vmovupd %%xmm2, %[dest] \n\t"
                     : [dest] "+m" (dest[i]) : [s1_ptr] "m" (src1[i]), [s2_ptr] "m" (src2[i]) : "ymm2", "ymm3", "memory");
     }
 
@@ -1267,7 +1451,7 @@ namespace Routines {
 
     //NOTE: unlike vpps, vppd is not available for 256 bit, not even in AVX-512
 
-    asm __volatile__ ("vxorpd %%xmm12, %%xmm12, %%xmm12 \n\t" : : : "xmm12"); 
+    asm __volatile__ ("vxorpd %%xmm4, %%xmm4, %%xmm4 \n\t" : : : "xmm4"); 
 
     double result = 0.0;
 
@@ -1277,16 +1461,15 @@ namespace Routines {
       //std::cerr << "i: " << i << std::endl;  
         
       //vdppd can take a mem arg!
-      asm __volatile__ ("vmovupd %[d1], %%xmm10 \n\t"
-                        "vmovupd %[d2], %%xmm11 \n\t"
-                        "vdppd $49, %%xmm10, %%xmm11, %%xmm13 \n\t" //include all, write in first (hence second is set to 0)
-                        "vaddsd %%xmm13, %%xmm12, %%xmm12 \n\t"
-                        : : [d1] "m" (data1[i]), [d2] "m" (data2[i]) : "xmm10", "xmm11", "xmm12", "xmm13");
+      asm __volatile__ ("vmovupd %[d2], %%xmm7 \n\t"
+                        "vdppd $49, %[d1], %%xmm7, %%xmm5 \n\t" //include all, write in first (hence second is set to 0)
+                        "vaddsd %%xmm5, %%xmm4, %%xmm4 \n\t"
+                        : : [d1] "m" (data1[i]), [d2] "m" (data2[i]) : "xmm7", "xmm4", "xmm5");
                         
       //std::cerr << "state after add: " << temp[0] << "," << temp[1] << std::endl;
     }
 
-    asm __volatile__ ("vmovlpd %%xmm12, %0 \n\t" : "+m" (result) : : );
+    asm __volatile__ ("vmovlpd %%xmm4, %0 \n\t" : "+m" (result) : : );
 
     for (; i < size; i++)
       result += data1[i] * data2[i];

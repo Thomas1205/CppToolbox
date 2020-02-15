@@ -12,6 +12,8 @@
 #include "storage1D.hh"
 #include "routines.hh"
 
+#include <algorithm>
+
 template<typename T>
 bool is_sorted(const T* data, const size_t nData);
 
@@ -40,6 +42,10 @@ inline void shift_bubble_sort(T* data, const size_t nData);
 
 template<typename T>
 void merge_sort(T* data, const size_t nData);
+
+//interface to std::sort
+template<typename T>
+void std_sort(T* data, const size_t nData);
 
 /***** key-value sort *****/
 
@@ -279,6 +285,13 @@ void merge_sort(T* data, const size_t nData)
 
     delete[] aux_data;
   }
+}
+
+//interface to std::sort
+template<typename T>
+void std_sort(T* data, const size_t nData)
+{
+  std::sort(data, data+nData);
 }
 
 /**** key-value ****/

@@ -14,6 +14,7 @@
 **** = means an operand is written
 **** cc means the flag register (in the list of modified registers)
 **** g means a variable can lie in memory or a register
+**** In contrast to the Intel manuals, AT&T syntax is inverted. That means that the destination is the last argument.
 ****/
 
 /****************** negate ****************/

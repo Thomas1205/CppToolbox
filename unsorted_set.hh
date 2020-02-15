@@ -155,9 +155,9 @@ public:
   const std::vector<T>& sorted_data()
   {
     if (!is_sorted_) {
-      USET_SORT_ALG(data_, data_.size());
+      USET_SORT_ALG(data_.data(), data_.size());
       //std::cerr << "result: " << result << std::endl;
-      assert(is_unique_sorted(data_, data_.size()));
+      assert(is_unique_sorted(data_.data(), data_.size()));
       is_sorted_ = true;
     }
     

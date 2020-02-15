@@ -769,7 +769,7 @@ inline void save_mul(Int64 n1, Int64 d1, Int64 n2, Int64 d2, Int64& num, Int64& 
                     "movl $0, %2          \n\t"
                     "2:                   \n\t"
                     : "=a"(num), "=c"(denom), "+m"(rational_res_is_save) //0,1,2
-                    : "%a"(n1), [n2] "g"(n2), "c"(d1), [d2] "g"(d2) //declare n1 and n2 commitative with the percent sign (marks also the following operand)
+                    : "%a"(n1), [n2] "g"(n2), "c"(d1), [d2] "g"(d2) //declare n1 and n2 commutative with the percent sign (marks also the following operand)
                     : "cc");
 #endif
 }

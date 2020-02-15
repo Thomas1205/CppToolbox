@@ -7,6 +7,7 @@
 
 #include "storage2D.hh"
 #include "vector.hh"
+#include "routines.hh"
 
 namespace Math2D {
 
@@ -82,6 +83,10 @@ namespace Math2D {
     //multiplication with a scalar
     void operator*=(const T scalar);
 
+    void elem_mul(const Matrix<T,ST>& v);
+    
+    void elem_div(const Matrix<T,ST>& v);
+
     //returns if the operation was successful
     bool savePGM(const std::string& filename, size_t max_intensity, bool fit_to_range = true) const;
 
@@ -127,7 +132,7 @@ namespace Math2D {
 
     assert(dest.dims() == src1.dims());
     assert(dest.dims() == src2.dims());
-    Makros::go_in_neg_direction(dest.direct_access(), dest.size(), src1.direct_access(), src2.direct_access(), alpha);
+    Routines::go_in_neg_direction(dest.direct_access(), dest.size(), src1.direct_access(), src2.direct_access(), alpha);
   }
 
   //NOTE: dest can be the same as src1 or src2
@@ -137,7 +142,7 @@ namespace Math2D {
 
     assert(dest.dims() == src1.dims());
     assert(dest.dims() == src2.dims());
-    Makros::assign_weighted_combination(dest.direct_access(), dest.size(), w1, src1.direct_access(), w2, src2.direct_access());
+    Routines::assign_weighted_combination(dest.direct_access(), dest.size(), w1, src1.direct_access(), w2, src2.direct_access());
   }
 
   /***************** stand-alone operators and routines ********************/
@@ -439,7 +444,7 @@ namespace Math2D {
     }
 #endif
 
-    Makros::array_add_multiple(Base::data_, Base::size_, alpha, toAdd.direct_access());
+    Routines::array_add_multiple(Base::data_, Base::size_, alpha, toAdd.direct_access());
   }
 
   //addition of another matrix of equal dimensions
@@ -518,6 +523,21 @@ namespace Math2D {
   template<>
   void Matrix<double>::operator*=(const double scalar);
 
+  template<typename T, typename ST>
+  void Matrix<T,ST>::elem_mul(const Matrix<T,ST>& v)
+  {
+    assert(Base::xDim_ == v.xDim() && Base::yDim_ == v.yDim());
+    for (ST i = 0; i < Base::size_; i++)
+      Base::data_[i] *= v.direct_access(i);
+  }
+    
+  template<typename T, typename ST>
+  void Matrix<T,ST>::elem_div(const Matrix<T,ST>& v)
+  {
+    assert(Base::xDim_ == v.xDim() && Base::yDim_ == v.yDim());
+    for (ST i = 0; i < Base::size_; i++)
+      Base::data_[i] /= v.direct_access(i);    
+  }
 
   //@returns if the operation was successful
   template<typename T, typename ST>

@@ -6,6 +6,7 @@
 #include "makros.hh"
 #include "storage1D.hh"
 #include "sorting.hh"
+#include "routines.hh"
 #include <numeric>
 
 namespace Math1D {
@@ -90,6 +91,10 @@ namespace Math1D {
 
     void operator*=(const T constant);
 
+    void elem_mul(const Vector<T,ST>& v);
+    
+    void elem_div(const Vector<T,ST>& v);
+
     virtual const std::string& name() const;
 
   protected:
@@ -134,7 +139,7 @@ namespace Math1D {
   {
     assert(dest.size() == src1.size());
     assert(dest.size() == src2.size());
-    Makros::go_in_neg_direction(dest.direct_access(), dest.size(), src1.direct_access(), src2.direct_access(), alpha);
+    Routines::go_in_neg_direction(dest.direct_access(), dest.size(), src1.direct_access(), src2.direct_access(), alpha);
   }
 
   //NOTE: dest can be the same as src1 or src2
@@ -143,7 +148,7 @@ namespace Math1D {
   {
     assert(dest.size() == src1.size());
     assert(dest.size() == src2.size());
-    Makros::assign_weighted_combination(dest.direct_access(), dest.size(), w1, src1.direct_access(), w2, src2.direct_access());
+    Routines::assign_weighted_combination(dest.direct_access(), dest.size(), w1, src1.direct_access(), w2, src2.direct_access());
   }
 
   /***********************************************/
@@ -517,7 +522,7 @@ namespace Math1D {
     }
 #endif
 
-    Makros::array_add_multiple(Base::data_, size, alpha, v.direct_access());
+    Routines::array_add_multiple(Base::data_, size, alpha, v.direct_access());
   }
 
 
@@ -602,6 +607,21 @@ namespace Math1D {
     return Vector<T,ST>::vector_name_;
   }
 
+  template<typename T,typename ST>
+  void Vector<T,ST>::elem_mul(const Vector<T,ST>& v)
+  {
+    assert(Base::size_ == v.size());
+    for (ST i = 0; i < Base::size_; i++)
+      Base::data_[i] *= v.direct_access(i);
+  }
+    
+  template<typename T,typename ST>
+  void Vector<T,ST>::elem_div(const Vector<T,ST>& v)
+  {
+    assert(Base::size_ == v.size());
+    for (ST i = 0; i < Base::size_; i++)
+      Base::data_[i] /= v.direct_access(i);    
+  }
 
   /************** implementation of NamedVector **********/
 
@@ -740,7 +760,7 @@ namespace Math1D {
     assertAligned16(data2);
 
     //g++ uses packed fused multiply-add, but ignores the alignment information
-    return Makros::dotprod(data1,data2,size);
+    return Routines::dotprod(data1,data2,size);
     //return std::inner_product(data1,data1+size,data2, (T) 0);
   }
 

@@ -20,13 +20,13 @@ namespace Math3D {
   template<>
   void Tensor<float>::operator*=(const float scalar)
   {
-    Makros::mul_array(Storage3D<float>::data_, Storage3D<float>::size_, scalar);
+    Routines::mul_array(Storage3D<float>::data_, Storage3D<float>::size_, scalar);
   }
 
   template<>
   void Tensor<double>::operator*=(const double scalar)
   {
-    Makros::mul_array(Storage3D<double>::data_, Storage3D<double>::size_, scalar);
+    Routines::mul_array(Storage3D<double>::data_, Storage3D<double>::size_, scalar);
   }
 
 }

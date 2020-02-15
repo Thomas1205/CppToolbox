@@ -31,7 +31,7 @@ inline UInt64 gcd64(UInt64 n1, UInt64 n2)
     std::swap(n1,n2);
 
   while (n2 != 0) {
-    UInt64 t = n2;
+    const UInt64 t = n2;
     n2 = n1 % n2;
     n1 = t;
   }

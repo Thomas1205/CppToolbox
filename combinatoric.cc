@@ -105,7 +105,7 @@ uint gcd(uint n1, uint n2)
     std::swap(n1,n2);
 
   while (n2 != 0) {
-    uint t = n2;
+    const uint t = n2;
     n2 = n1 % n2;
     n1 = t;
   }

@@ -50,6 +50,9 @@ inline void vec_replace(std::vector<T>& vec, T toErase, T toInsert);
 template <typename T>
 inline void vec_replace_maintainsort(std::vector<T>& vec, const T toErase, const T toInsert);
 
+template <typename T>
+inline void sorted_vec_insert(std::vector<T>& vec, const T toInsert);
+
 //binary search, returns MAX_UINT if key is not found, otherwise the position in the vector
 template<typename T>
 size_t binsearch(const std::vector<T>& vec, const T key);
@@ -258,6 +261,13 @@ inline void vec_replace_maintainsort(std::vector<T>& vec, const T toErase, const
 
   assert(i < size);
   //assert(is_sorted(vec.data(), size));
+}
+
+template <typename T>
+inline void sorted_vec_insert(std::vector<T>& vec, const T toInsert)
+{
+  uint inspos = binsearch_insertpos(vec, toInsert);
+  vec.insert(vec.begin() + inspos, toInsert);
 }
 
 template<typename T1, typename T2>
