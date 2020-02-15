@@ -5,6 +5,7 @@
 #define ROUTINES_HH
 
 #include "makros.hh"
+#include <algorithm> //for reverse, max, min, could also use find
 
 //Explanations for USE_SSE:
 // - values 1-4 are SSE1-4 (note that x86_64 always has at least 2), 4 includes 4.1 and 4.2
@@ -15,12 +16,119 @@
 //NOTE: [Kusswurm, Modern X86 assembly language programming] recommends to use 128-bit AVX instructions instead of SSE, even though they often list one or two more arguments
 //  My own experiments have shown that that does not require more space in the executable. But rigorously moving to AVX is TODO
 
+//NOTE: imul and umul produce the exact same low integer. Only the high one differs
+
 //NOTE: [Intel® 64 and IA-32 Architectures Software Developer’s Manual Vol 2.] clarifies that use of z/y/xmm8-15 and r8-15 makes the instructions and hence the executable longer
-//  TODO: stop using these regs
 
 //  In contrast to the Intel manuals, AT&T syntax is inverted. That means that the destination is the last argument.
+//   As for addressing: (https://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html)
+//    Intel mov     eax,[ecx]            AT&T  movl    (%ecx),%eax               
+//    Intel mov     eax,[ebx+3]          AT&T  movl    3(%ebx),%eax               
+//    Intel add     eax,[ebx+ecx*2h]     AT&T  addl    (%ebx,%ecx,0x2),%eax 
 
 namespace Routines {
+  
+  /***************** reverse *******************/
+  
+  inline void reverse_uint_array(uint* data, size_t nData) 
+  {
+#if !defined(USE_SSE) || USE_SSE < 5
+    std::reverse(data, data + nData);
+#else    
+    if (nData < 8) 
+      std::reverse(data, data + nData);
+    else {
+      
+      size_t low = 0;
+      size_t high = nData - 4;
+      for (; low + 4 <= high; low += 4, high -= 4) {
+
+        // lowest gets 3, second lowest 2, third lowest 1, highest 0 => immediate byte = 3 + 2*4 + 1*16 = 27        
+        asm __volatile__ ("vmovdqu %[l], %%xmm0 \n\t"
+                          "vmovdqu %[h], %%xmm1 \n\t"
+                          "vpshufd $27, %%xmm0, %%xmm0 \n\t"
+                          "vpshufd $27, %%xmm1, %%xmm1 \n\t"
+                          "vmovdqu %%xmm1, %[l] \n\t"
+                          "vmovdqu %%xmm0, %[h] \n\t"
+                          : [l] "+m" (data[low]), [h] "+m" (data[high]) : : "xmm0", "xmm1", "memory");
+      }
+      
+      for (; low + 1 < high; low++, high--)
+        std::swap(data[low],data[high]);
+    }
+#endif  
+  }
+
+  inline void reverse_double_array(double* data, size_t nData) 
+  {
+#if !defined(USE_SSE) || USE_SSE < 5
+    std::reverse(data, data + nData);
+#else    
+    if (nData < 8) 
+      std::reverse(data, data + nData);
+    else {
+
+      size_t low = 0;
+      size_t high = nData - 4;
+      for (; low + 4 <= high; low += 4, high -= 4) {
+
+        // lowest gets 3, second lowest 2, third lowest 1, highest 0 => immediate byte = 3 + 2*4 + 1*16 = 27        
+        asm __volatile__ ("vmovupd %[l], %%ymm0 \n\t"
+                          "vmovupd %[h], %%ymm1 \n\t"
+                          "vpshufd $27, %%ymm0, %%ymm0 \n\t"
+                          "vpshufd $27, %%ymm1, %%ymm1 \n\t"
+                          "vmovupd %%ymm1, %[l] \n\t"
+                          "vmovupd %%ymm0, %[h] \n\t"
+                          : [l] "+m" (data[low]), [h] "+m" (data[high]) : : "ymm0", "ymm1", "memory");
+      }
+      
+      for (; low + 1 < high; low++, high--)
+        std::swap(data[low],data[high]);      
+    }
+#endif  
+  }
+  
+  template<typename T>
+  inline void reverse(T* data, const size_t nData) 
+  {    
+    std::reverse(data, data + nData);
+  }
+  
+  template<>
+  inline void reverse(uint* data, const size_t nData) 
+  {
+    reverse_uint_array(data, nData);
+  }
+  
+  template<>
+  inline void reverse(int* data, const size_t nData) 
+  {
+    reverse_uint_array((uint*) data, nData);
+  }
+
+  template<>
+  inline void reverse(float* data, const size_t nData) 
+  {
+    reverse_uint_array((uint*) data, nData);
+  }
+
+  template<>
+  inline void reverse(double* data, const size_t nData) 
+  {
+    reverse_double_array(data, nData);
+  }
+  
+  template<>
+  inline void reverse(Int64* data, const size_t nData) 
+  {
+    reverse_double_array((double*) data, nData);
+  }
+
+  template<>
+  inline void reverse(UInt64* data, const size_t nData) 
+  {
+    reverse_double_array((double*) data, nData);
+  }
   
   /***************** downshift *****************/
 
@@ -119,6 +227,8 @@ namespace Routines {
   template<typename T>
   inline void downshift_array(T* data, const uint pos, const uint shift, const uint nData)
   {
+    //c++-20 offers shift_left and shift_right in <algorithm>
+    
     uint i = pos;
     const uint end = nData-shift;
     for (; i < end; i++)
@@ -287,6 +397,8 @@ namespace Routines {
   template<typename T>
   inline void upshift_array(T* data, const int pos, const int last, const int shift)
   {
+    //c++-20 offers shift_left and shift_right in <algorithm>
+    
     assert(shift > 0);
     for (int k = last; k >= pos+shift; k--)
       data[k] = data[k-shift];
@@ -344,21 +456,50 @@ namespace Routines {
 
     //std::cerr << "find_unique_uint(key: " << key << ")" << std::endl;
 
+    static const uint ind[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+
+    const float finc = reinterpret<const uint, const float>(4);
+    const float fkey = reinterpret<const uint, const float>(key);
+
 #if USE_SSE >= 7
     //need AVX2 for 256 bit packed integers. AVX2 has vpbroadcastd 
 
     if (nData >= 48) {
+      
+      asm __volatile__ ("vxorps %%ymm2, %%ymm2, %%ymm2 \n\t" // set ymm2 (the array of found positions) to zero
+                        "vmovdqu %[ind], %%ymm3  \n\t" //ymm3 contains the indices
+                        "vbroadcastss %[finc], %%ymm4 \n\t"
+                        "vbroadcastss %[fkey], %%ymm5 \n\t"
+                        : : [ind] "m" (ind[0]), [finc] "m" (finc), [fkey] "m" (fkey)
+                        : "ymm2", "ymm3", "ymm4", "ymm5");
 
-      static const uint ind[8] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+      register uint res = MAX_UINT;
+      for (; i+8 <= nData; i+=8) {
 
-      //TODO
+        //NOTE: jumps outside of asm blocks are allowed only in asm goto, but that cannot have outputs (and local variables do not seem to get assembler names)
+        // => probably best to write the loop in assembler, too
+
+        // Assembler wishlist: horizontal min and max -> would make the uniqueness assumption superflous (not even present in AVX-512)
+
+        asm __volatile__ ("vmovdqu %1, %%ymm0  \n\t"
+                          "vpcmpeqd %%ymm5, %%ymm0, %%xmm0 \n\t" //xmm0 is overwritten with mask (all 1s on equal)
+                          "pblendvb %%ymm3, %%ymm2  \n\t" //if xmm0 flags 1, the index is written
+                          "vptest %%ymm0, %%ymm0 \n\t" //sets the zero flag iff xmm0 is all 0
+                          "jz 1f \n\t" //jump if no equals
+                          "vextracti128 $1, %%ymm2, %%xmm0 \n\t"
+                          "phaddd %%ymm0, %%ymm2 \n\t"
+                          "phaddd %%ymm0, %%ymm2 \n\t" //(ymm0 is irrelevant)
+                          "phaddd %%ymm0, %%ymm2 \n\t" //(ymm0 is irrelevant)
+                          "vpextrd $0, %%ymm2, %0 \n\t"
+                          "1: paddd %%ymm4, %%ymm3 \n\t"
+                          : "+g" (res) : "m" (data[i]) : "ymm0", "ymm2", "ymm3");
+
+        if (res != MAX_UINT)
+          return res;
+      }
     }
 #endif
     if (nData - i >= 12) {
-      static const uint ind[4] = {0, 1, 2, 3};
-
-      const float finc = reinterpret<const uint, const float>(4);
-      const float fkey = reinterpret<const uint, const float>(key);
 
       asm __volatile__ ("vxorps %%xmm2, %%xmm2, %%xmm2 \n\t" // set xmm2 (the array of found positions) to zero
                         "vmovdqu %[ind], %%xmm3  \n\t" //xmm3 contains the indices
@@ -927,7 +1068,6 @@ namespace Routines {
           arg_min = (itemp[k] << 3) + k; //8*itemp[k] + k;
         }
       }
-      assert(i == nData - (nData % 8));
     }
 
 #else
@@ -1074,8 +1214,6 @@ namespace Routines {
           arg_min = (itemp[k] << 2) + k; //4*itemp[k] + k;
         }
       }
-
-      assert(i == nData - (nData % 4));
     }
 
 #else

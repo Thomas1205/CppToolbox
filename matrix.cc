@@ -8,13 +8,13 @@ namespace Math2D {
   template<>
   float Matrix<float>::max() const
   {
-    return Makros::max(Storage2D<float>::data_, Storage2D<float>::size_);
+    return Routines::max(Storage2D<float>::data_, Storage2D<float>::size_);
   }
 
   template<>
   float Matrix<float>::min() const
   {
-    return Makros::min(Storage2D<float>::data_, Storage2D<float>::size_);
+    return Routines::min(Storage2D<float>::data_, Storage2D<float>::size_);
   }
 
   template<>

@@ -1,3 +1,6 @@
+
+ANNOUNCEMENT: after the 1.15 release, the C++ toolbox will be C++-11, with many template exploitations
+
 This package contains the following features, all written in C++
 
 SIMPLE TYPES

@@ -1,4 +1,6 @@
 
+ANNOUNCEMENT: after the 1.15 release, the C++ toolbox will be C++-11, with many template exploitations
+
 /***** changes for the upcoming release (1.15?) ******/
 
 - TreeSet: efficient search trees based on arrays. Functionality can be extended. No plans for a TreeMap so far.
