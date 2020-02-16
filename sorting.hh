@@ -14,6 +14,7 @@
 
 #include <algorithm>
 
+//c++-11 provides this in <algorithm>
 template<typename T>
 bool is_sorted(const T* data, const size_t nData);
 

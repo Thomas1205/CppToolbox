@@ -266,6 +266,7 @@ inline void vec_replace_maintainsort(std::vector<T>& vec, const T toErase, const
 template <typename T>
 inline void sorted_vec_insert(std::vector<T>& vec, const T toInsert)
 {
+  //standard find may be faster for short vectors
   uint inspos = binsearch_insertpos(vec, toInsert);
   vec.insert(vec.begin() + inspos, toInsert);
 }

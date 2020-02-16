@@ -17,6 +17,8 @@ long double ldchoose(uint n, uint k);
 
 long double ldchoose(uint n, uint k, const Math1D::Vector<long double>& ld_fac);
 
+//NOTE: C++-17 provides std::gcd in <numeric>
+
 // greatest common divisor via the Euclidean algorithm
 uint gcd(uint n1, uint n2);
 

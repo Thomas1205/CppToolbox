@@ -491,7 +491,7 @@ inline uint convert<uint>(const std::string s)
   return result;
 }
 
-//C++20 has bit_cast in <numeric>
+//C++20 has bit_cast in <bit>
 template<typename T1, typename T2>
 T2 reinterpret(const T1 arg) {
   assert(sizeof(T1) == sizeof(T2));

@@ -35,7 +35,18 @@ namespace Routines {
 #if !defined(USE_SSE) || USE_SSE < 5
     std::reverse(data, data + nData);
 #else    
-    if (nData < 8) 
+    if (nData < 2)
+      return;
+    else if (nData < 4) 
+      std::swap(data[0], data[nData-1]);
+    else if (nData == 4) 
+    {  
+      asm __volatile__ ("vmovdqu %[d], %%xmm0 \n\t"
+                        "vpshufd $27, %%xmm0, %%xmm0 \n\t"
+                        "vmovdqu %%xmm0, %[d] \n\t"
+                        : [d] "+m" (data[0]) : : "xmm0", "memory");      
+    }
+    else if (nData < 8)
       std::reverse(data, data + nData);
     else {
       
@@ -52,11 +63,30 @@ namespace Routines {
                           "vmovdqu %%xmm0, %[h] \n\t"
                           : [l] "+m" (data[low]), [h] "+m" (data[high]) : : "xmm0", "xmm1", "memory");
       }
-      
-      for (; low + 1 < high; low++, high--)
+
+      high += 3;
+      //std::cerr << "low: " << low << ", high: " << high << std::endl;
+      for (; low < high; low++, high--) {
+        if (low + 3 == high) {
+          asm __volatile__ ("vmovdqu %[d], %%xmm0 \n\t"
+                            "vpshufd $27, %%xmm0, %%xmm0 \n\t"
+                            "vmovdqu %%xmm0, %[d] \n\t"
+                            : [d] "+m" (data[low]) : : "xmm0", "memory");                
+          break;
+        }
         std::swap(data[low],data[high]);
+      }
     }
 #endif  
+  }
+
+  inline void reverse_4doubles(double* data) {
+
+    asm __volatile__ ("vmovupd %[d], %%ymm0 \n\t"
+                      "vperm2f128 $1, %%ymm0, %%ymm0, %%ymm0 \n\t"
+                      "vpermilpd $5, %%ymm0, %%ymm0 \n\t"
+                      "vmovupd %%ymm0, %[d] \n\t"
+                      : [d] "+m" (data[0]) : : "ymm0", "memory");          
   }
 
   inline void reverse_double_array(double* data, size_t nData) 
@@ -64,7 +94,15 @@ namespace Routines {
 #if !defined(USE_SSE) || USE_SSE < 5
     std::reverse(data, data + nData);
 #else    
-    if (nData < 8) 
+    if (nData < 2)
+      return;
+    else if (nData < 4) 
+      std::swap(data[0], data[nData-1]);
+    else if (nData == 4) {
+
+      reverse_4doubles(data);
+    }
+    else if (nData < 8) 
       std::reverse(data, data + nData);
     else {
 
@@ -72,18 +110,25 @@ namespace Routines {
       size_t high = nData - 4;
       for (; low + 4 <= high; low += 4, high -= 4) {
 
-        // lowest gets 3, second lowest 2, third lowest 1, highest 0 => immediate byte = 3 + 2*4 + 1*16 = 27        
         asm __volatile__ ("vmovupd %[l], %%ymm0 \n\t"
                           "vmovupd %[h], %%ymm1 \n\t"
-                          "vpshufd $27, %%ymm0, %%ymm0 \n\t"
-                          "vpshufd $27, %%ymm1, %%ymm1 \n\t"
+                          "vperm2f128 $1, %%ymm0, %%ymm0, %%ymm0 \n\t"
+                          "vperm2f128 $1, %%ymm1, %%ymm1, %%ymm1 \n\t"
+                          "vpermilpd $5, %%ymm0, %%ymm0 \n\t"
+                          "vpermilpd $5, %%ymm1, %%ymm1 \n\t"
                           "vmovupd %%ymm1, %[l] \n\t"
                           "vmovupd %%ymm0, %[h] \n\t"
                           : [l] "+m" (data[low]), [h] "+m" (data[high]) : : "ymm0", "ymm1", "memory");
       }
       
-      for (; low + 1 < high; low++, high--)
-        std::swap(data[low],data[high]);      
+      high += 3;
+      for (; low < high; low++, high--) {
+        if (low + 3 == high) {
+          reverse_4doubles(data + low);
+          break;
+        }
+        std::swap(data[low],data[high]); 
+      }        
     }
 #endif  
   }
@@ -461,7 +506,8 @@ namespace Routines {
     const float finc = reinterpret<const uint, const float>(4);
     const float fkey = reinterpret<const uint, const float>(key);
 
-#if USE_SSE >= 7
+//#if USE_SSE >= 7
+#if 0
     //need AVX2 for 256 bit packed integers. AVX2 has vpbroadcastd 
 
     if (nData >= 48) {
@@ -482,16 +528,16 @@ namespace Routines {
         // Assembler wishlist: horizontal min and max -> would make the uniqueness assumption superflous (not even present in AVX-512)
 
         asm __volatile__ ("vmovdqu %1, %%ymm0  \n\t"
-                          "vpcmpeqd %%ymm5, %%ymm0, %%xmm0 \n\t" //xmm0 is overwritten with mask (all 1s on equal)
-                          "pblendvb %%ymm3, %%ymm2  \n\t" //if xmm0 flags 1, the index is written
+                          "vpcmpeqd %%ymm5, %%ymm0, %%ymm0 \n\t" //xmm0 is overwritten with mask (all 1s on equal)
+                          "vpblendvb %%ymm0, %%ymm3, %%ymm2, %%ymm2  \n\t" //if xmm0 flags 1, the index is written
                           "vptest %%ymm0, %%ymm0 \n\t" //sets the zero flag iff xmm0 is all 0
                           "jz 1f \n\t" //jump if no equals
                           "vextracti128 $1, %%ymm2, %%xmm0 \n\t"
-                          "phaddd %%ymm0, %%ymm2 \n\t"
-                          "phaddd %%ymm0, %%ymm2 \n\t" //(ymm0 is irrelevant)
-                          "phaddd %%ymm0, %%ymm2 \n\t" //(ymm0 is irrelevant)
-                          "vpextrd $0, %%ymm2, %0 \n\t"
-                          "1: paddd %%ymm4, %%ymm3 \n\t"
+                          "vphaddd %%ymm0, %%ymm2, %%ymm2 \n\t"
+                          "vphaddd %%ymm0, %%ymm2, %%ymm2 \n\t" //(ymm0 is irrelevant)
+                          "vphaddd %%ymm0, %%ymm2, %%ymm2 \n\t" //(ymm0 is irrelevant)
+                          "vpextrd $0, %%xmm2, %0 \n\t" //here xmm!
+                          "1: vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t"
                           : "+g" (res) : "m" (data[i]) : "ymm0", "ymm2", "ymm3");
 
         if (res != MAX_UINT)
@@ -518,13 +564,13 @@ namespace Routines {
 
         asm __volatile__ ("vmovdqu %1, %%xmm0  \n\t"
                           "vpcmpeqd %%xmm5, %%xmm0, %%xmm0 \n\t" //xmm0 is overwritten with mask (all 1s on equal)
-                          "pblendvb %%xmm3, %%xmm2  \n\t" //if xmm0 flags 1, the index is written
+                          "vpblendvb %%xmm0, %%xmm3, %%xmm2, %%xmm2  \n\t" //if xmm0 flags 1, the index is written
                           "vptest %%xmm0, %%xmm0 \n\t" //sets the zero flag iff xmm0 is all 0
                           "jz 1f \n\t" //jump if no equals
-                          "phaddd %%xmm0, %%xmm2 \n\t" //(xmm0 is irrelevant)
-                          "phaddd %%xmm0, %%xmm2 \n\t" //(xmm0 is irrelevant)
+                          "vphaddd %%xmm0, %%xmm2, %%xmm2 \n\t" //(xmm0 is irrelevant)
+                          "vphaddd %%xmm0, %%xmm2, %%xmm2 \n\t" //(xmm0 is irrelevant)
                           "vpextrd $0, %%xmm2, %0 \n\t"
-                          "1: paddd %%xmm4, %%xmm3 \n\t"
+                          "1: vpaddd %%xmm4, %%xmm3, %%xmm3 \n\t"
                           : "+g" (res) : "m" (data[i]) : "xmm0", "xmm2", "xmm3");
 
         if (res != MAX_UINT)
@@ -548,6 +594,7 @@ namespace Routines {
 
   inline uint find_unique_float(const float* data, const float key, const uint nData)
   {
+    //NOTE: raw byte equality compare gives non-standard treatment of nan and +/- inf
     return find_unique_uint((const uint*) data, reinterpret<const uint, const float>(key), nData);
   }
 
@@ -734,19 +781,19 @@ namespace Routines {
     //use AVX - align16 is no good, need align32 for aligned moves
 
     if (nData >= 12) {
-      const float val = MIN_FLOAT;
+      
       //const uint one = 1;
       const float inc = reinterpret<const uint, const float>(1); //*reinterpret_cast<const float*>(&one);
       
-      //TODO: check out VPBROADCASTD (but it's AVX2)
+      //TODO: check out VPBROADCASTD for inc (but it's AVX2)
 
-      asm __volatile__ ("vbroadcastss %[tmp], %%ymm6 \n\t" //ymm6 is max register
+      asm __volatile__ ("vmovups %[d], %%ymm6 \n\t" //ymm6 is max register
                         "vxorps %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmax) to zero
                         "vbroadcastss %[itemp], %%ymm4 \n\t" //ymm4 is increment register
-                        "vxorps %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
-                        : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
+                        "vmovups %%ymm4, %%ymm3 \n\t" //sets ymm3 (= current set index) to ones (next batch)
+                        : : [d] "m" (data[i]), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
 
-      for (; (i+8) <= nData; i += 8) 
+      for (i += 8; (i+8) <= nData; i += 8) 
       {
         asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t" //load needed, used multiple times
                           "vcmpnleps %%ymm6, %%ymm7, %%ymm0 \n\t"
@@ -866,25 +913,26 @@ namespace Routines {
 
     size_t i = 0;
     double cur_val;
+
+    assert(sizeof(size_t) == 8);
     
 #if USE_SSE >= 5
 
     //use AVX  - align16 is no good, need align32 for aligned moves
 
     if (nData >= 6) {
-      assert(sizeof(size_t) == 8);
 
-      const double val = MIN_DOUBLE;
       //const size_t one = 1;
       const double inc = reinterpret<const size_t, const double>(1); //*reinterpret_cast<const double*>(&one);
 
-      asm __volatile__ ("vbroadcastsd %[tmp], %%ymm6 \n\t" //ymm6 is max register
+      //write first line directly -> save broadcast for ymm6, ymm3 starts like ymm4
+      asm __volatile__ ("vmovupd %[dptr], %%ymm6 \n\t" //ymm6 is max register
                         "vxorpd %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmax) to zero
                         "vbroadcastsd %[itemp], %%ymm4 \n\t" //ymm4 is increment register
-                        "vxorpd %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
-                        : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
+                        "vmovupd %%ymm4, %%ymm3 \n\t" // current set indices start at 1 (next batch)
+                        : : [dptr] "m" (data[i]), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
 
-      for (; (i+4) <= nData; i += 4) 
+      for (i += 4; (i+4) <= nData; i += 4) 
       {
         asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t" //load needed, used multiple times
                           "vcmpnlepd %%ymm6, %%ymm7, %%ymm0 \n\t"
@@ -911,7 +959,8 @@ namespace Routines {
       size_t itemp[4];
 
       asm __volatile__ ("vmovups %%ymm6, %[tmp] \n\t"
-                        "vmovups %%ymm5, %[itemp]"
+                        "vpsllq $2, %%ymm5, %%ymm5 \n\t" //for 64 bit we can do the shifting in AVX without reducing the maximal nData
+                        "vmovups %%ymm5, %[itemp] \n\t"
                         : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
 
       for (uint k=0; k < 4; k++) 
@@ -920,7 +969,7 @@ namespace Routines {
         //std::cerr << "cur val: " << cur_val << std::endl;
         if (cur_val > max_val) {
           max_val = cur_val;
-          arg_max = (itemp[k] << 2) + k; //4*itemp[k] + k;
+          arg_max = itemp[k] + k;
         }
       }
       //std::cerr << "minval: " << min_val << std::endl;
@@ -1019,17 +1068,18 @@ namespace Routines {
     //use AVX  - align16 is no good, need align32 for aligned moves
 
     if (nData >= 12) {
-      const float val = MAX_FLOAT;
+
       //const uint one = 1;
       const float inc = reinterpret<const uint, const float>(1); //*reinterpret_cast<const float*>(&one);
 
-      asm __volatile__ ("vbroadcastss %[tmp], %%ymm6 \n\t" //ymm6 is min register
-                        "vxorps %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmin) to zero
+      asm __volatile__ ("vmovups %[d], %%ymm6 \n\t" //ymm6 is max register
+                        "vxorps %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmax) to zero
                         "vbroadcastss %[itemp], %%ymm4 \n\t" //ymm4 is increment register
-                        "vxorps %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
-                        : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
+                        "vmovups %%ymm4, %%ymm3 \n\t" //sets ymm3 (= current set index) to ones (next batch)
+                        : : [d] "m" (data[i]), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
 
-      for (; (i+8) <= nData; i += 8) 
+
+      for (i += 8; (i+8) <= nData; i += 8) 
       {
         asm __volatile__ ("vmovups %[fptr], %%ymm7 \n\t" //load needed, used multiple times
                           "vcmpltps %%ymm6, %%ymm7, %%ymm0 \n\t" //destination is last                          
@@ -1157,25 +1207,26 @@ namespace Routines {
 
     size_t i = 0;
     double cur_val;
+
+    assert(sizeof(size_t) == 8);
     
 #if USE_SSE >= 5
 
     //use AVX  - align16 is no good, need align32 for aligned moves
 
     if (nData >= 8) {
-      assert(sizeof(size_t) == 8);
 
-      const double val = MAX_DOUBLE;
       //const size_t one = 1;
       const double inc = reinterpret<const size_t, const double>(1); //*reinterpret_cast<const double*>(&one);
 
-      asm __volatile__ ("vbroadcastsd %[tmp], %%ymm6 \n\t" //ymm6 is min register
-                        "vxorpd %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmin) to zero
+      //write first line directly -> save broadcast for ymm6, ymm3 starts like ymm4
+      asm __volatile__ ("vmovupd %[dptr], %%ymm6 \n\t" //ymm6 is max register
+                        "vxorpd %%ymm5, %%ymm5, %%ymm5 \n\t" //sets ymm5 (= argmax) to zero
                         "vbroadcastsd %[itemp], %%ymm4 \n\t" //ymm4 is increment register
-                        "vxorpd %%ymm3, %%ymm3, %%ymm3 \n\t" //sets ymm3 (= current set index) to zero
-                        : : [tmp] "m" (val), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
-
-      for (; (i+4) <= nData; i += 4) 
+                        "vmovupd %%ymm4, %%ymm3 \n\t" // current set indices start at 1 (next batch)
+                        : : [dptr] "m" (data[i]), [itemp] "m" (inc) : "ymm3", "ymm4", "ymm5", "ymm6");
+                        
+      for (i += 4; (i+4) <= nData; i += 4) 
       {
         asm __volatile__ ("vmovupd %[dptr], %%ymm7 \n\t" //load needed, used multiple times
                           "vcmpltpd %%ymm6, %%ymm7, %%ymm0 \n\t" //destination is last
@@ -1202,6 +1253,7 @@ namespace Routines {
       size_t itemp[4];
 
       asm __volatile__ ("vmovupd %%ymm6, %[tmp] \n\t"
+                        "vpsllq $2, %%ymm5, %%ymm5 \n\t" //for 64 bit we can do the shifting in AVX without reducing the maximal nData
                         "vmovupd %%ymm5, %[itemp]"
                         : [tmp] "=m" (tmp[0]), [itemp] "=m" (itemp[0]) : : "memory");
 
@@ -1211,7 +1263,7 @@ namespace Routines {
         //std::cerr << "cur val: " << cur_val << std::endl;
         if (cur_val < min_val) {
           min_val = cur_val;
-          arg_min = (itemp[k] << 2) + k; //4*itemp[k] + k;
+          arg_min = itemp[k] + k;
         }
       }
     }

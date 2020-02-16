@@ -10,36 +10,20 @@
 #include "sorting.hh"
 #include "routines.hh"
 
-template<typename ST>
-inline void set_idfunc(Storage1D<uint, ST>& vec) {
-  const uint size = vec.size();
-  uint i;
+template<typename T, typename ST>
+inline void set_idfunc(Storage1D<T, ST>& vec) {
+  const ST size = vec.size();
+  ST i;
   for (i = 0; i < size; i++)
-    vec[i] = i;
+    vec[i] = (T) i;
 }
 
-template<typename ST>
-inline void set_idfunc(Storage1D<int, ST>& vec) {
-  const uint size = vec.size();
-  uint i;
+template<typename T, typename ST>
+inline void set_idfunc(FlexibleStorage1D<T, ST>& vec) {
+  const ST size = vec.size();
+  ST i;
   for (i = 0; i < size; i++)
-    vec[i] = i;
-}
-
-template<typename ST>
-inline void set_idfunc(FlexibleStorage1D<uint, ST>& vec) {
-  const uint size = vec.size();
-  uint i;
-  for (i = 0; i < size; i++)
-    vec[i] = i;
-}
-
-template<typename ST>
-inline void set_idfunc(FlexibleStorage1D<int, ST>& vec) {
-  const uint size = vec.size();
-  uint i;
-  for (i = 0; i < size; i++)
-    vec[i] = i;
+    vec[i] = (T) i;
 }
 
 template<typename T>
