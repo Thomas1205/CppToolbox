@@ -24,11 +24,11 @@ namespace Math1D {
 
     typedef T ALIGNED16 T_A16;
 
-    Vector();
+    explicit Vector();
 
-    Vector(ST size);
+    explicit Vector(ST size);
 
-    Vector(ST size, const T default_value);
+    explicit Vector(ST size, const T default_value);
 
     Vector(const Vector<T,ST>& toCopy);
 
@@ -223,16 +223,20 @@ namespace Math1D {
   template<typename T,typename ST>
   /*static*/ const std::string Vector<T,ST>::vector_name_ = "unnamed vector";
 
-  template<typename T,typename ST> Vector<T,ST>::Vector() : Storage1D<T,ST>() {}
+  template<typename T,typename ST> 
+  Vector<T,ST>::Vector() : Storage1D<T,ST>() {}
 
-  template<typename T,typename ST> Vector<T,ST>::Vector(ST size) : Storage1D<T,ST>(size) {}
+  template<typename T,typename ST> 
+  Vector<T,ST>::Vector(ST size) : Storage1D<T,ST>(size) {}
 
-  template<typename T,typename ST> Vector<T,ST>::Vector(ST size, const T default_value) : Storage1D<T,ST>(size)
+  template<typename T,typename ST> 
+  Vector<T,ST>::Vector(ST size, const T default_value) : Storage1D<T,ST>(size)
   {
     set_constant(default_value);
   }
 
-  template<typename T,typename ST> Vector<T,ST>::Vector(const Vector<T,ST>& toCopy) : Storage1D<T,ST>(static_cast<const Storage1D<T,ST>&>(toCopy)) {}
+  template<typename T,typename ST> 
+  Vector<T,ST>::Vector(const Vector<T,ST>& toCopy) : Storage1D<T,ST>(static_cast<const Storage1D<T,ST>&>(toCopy)) {}
 
   template<typename T,typename ST> Vector<T,ST>::~Vector() {}
 

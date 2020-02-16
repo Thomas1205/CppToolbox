@@ -19,11 +19,11 @@ public:
   typedef StorageBase<T,ST> Base;
 
   //default constructor
-  TriStorage2D();
+  explicit TriStorage2D();
 
-  TriStorage2D(ST dim);
+  explicit TriStorage2D(ST dim);
 
-  TriStorage2D(ST dim, T default_value);
+  explicit TriStorage2D(ST dim, T default_value);
 
   //copy constructor
   TriStorage2D(const TriStorage2D<T,ST>& toCopy);

@@ -23,15 +23,15 @@ namespace Math2D {
     typedef T ALIGNED16 T_A16;
 
     /*---- constructors -----*/
-    Matrix();
+    explicit Matrix();
 
-    Matrix(ST xDim, ST yDim);
+    explicit Matrix(ST xDim, ST yDim);
 
-    Matrix(ST xDim, ST yDim, const T default_value);
+    explicit Matrix(ST xDim, ST yDim, const T default_value);
 
-    Matrix(const std::pair<ST,ST> dims);
+    explicit Matrix(const std::pair<ST,ST> dims);
 
-    Matrix(const std::pair<ST,ST> dims, T default_value);
+    explicit Matrix(const std::pair<ST,ST> dims, T default_value);
 
     /*---- destructor ----*/
     ~Matrix();

@@ -18,9 +18,9 @@ public:
 
   typedef StorageBase<T,ST> Base;
 
-  FlexibleStorage1D();
+  explicit FlexibleStorage1D();
 
-  FlexibleStorage1D(ST reserved_size);
+  explicit FlexibleStorage1D(ST reserved_size);
 
   //copy constructor
   FlexibleStorage1D(const FlexibleStorage1D<T,ST>& toCopy);

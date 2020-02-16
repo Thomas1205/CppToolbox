@@ -36,15 +36,17 @@ BASIC ROUTINES
 
 - cast abs, log, exp and pow into templates (makros.hh).
 
-- upshift and downshift
+- upshift and downshift (routines.hh)
 
 ALGORITHMS
 
 - sorting algorithms (sorting.hh)
 
-- binary search algorithms (makros.hh and stl_util.hh)
+- find (routines.hh)
 
-- some routines for combinatorics (combinatoric.hh), including choose(n,k), factorial and greatest common divisor
+- binary search algorithms (routines.hh and stl_util.hh)
+
+- some routines for combinatorics (combinatoric.hh), including choose(n,k), factorial, greatest common divisor, test of prime numbers
 
 ---------
 

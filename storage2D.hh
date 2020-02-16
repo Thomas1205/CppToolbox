@@ -18,15 +18,15 @@ public:
   typedef StorageBase<T,ST> Base;
 
   //default constructor
-  Storage2D();
+  explicit Storage2D();
 
-  Storage2D(ST xDim, ST yDim);
+  explicit Storage2D(ST xDim, ST yDim);
 
-  Storage2D(ST xDim, ST yDim, T default_value);
+  explicit Storage2D(ST xDim, ST yDim, T default_value);
 
-  Storage2D(const std::pair<ST,ST> dims);
+  explicit Storage2D(const std::pair<ST,ST> dims);
 
-  Storage2D(const std::pair<ST,ST> dims, T default_value);
+  explicit Storage2D(const std::pair<ST,ST> dims, T default_value);
 
   //copy constructor
   Storage2D(const Storage2D<T,ST>& toCopy);

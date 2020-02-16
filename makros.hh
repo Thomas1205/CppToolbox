@@ -67,9 +67,9 @@ inline void print_trace (void)
 inline void print_trace (void) {}
 #endif
 
-//because c++ is missing those keywords:
+//because c++ is missing those keywords: (C++-11 has final and override)
 #define abstract
-#define overide
+#define overide //exists in C++-11!
 #define overrides
 
 /******************** Data Macros *****************************/

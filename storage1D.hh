@@ -38,11 +38,11 @@ public:
 
   typedef StorageBase<T,ST> Base;
 
-  Storage1D();
+  explicit Storage1D();
 
-  Storage1D(ST size);
+  explicit Storage1D(ST size);
 
-  Storage1D(ST size, const T default_value);
+  explicit Storage1D(ST size, const T default_value);
 
   //copy constructor
   Storage1D(const Storage1D<T,ST>& toCopy);
@@ -56,12 +56,6 @@ public:
   inline T& operator[](ST i);
 
   void operator=(const Storage1D<T,ST>& toCopy);
-
-#ifdef SAFE_MODE
-  //for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
-  // => define this operator in safe mode, only to check that such an assignment is not made
-  void operator=(const T& invalid_object);
-#endif
 
   T back() const;
 
@@ -294,18 +288,6 @@ void Storage1D<T,ST>::operator=(const Storage1D<T,ST>& toCopy)
   //this is faster for basic types but it fails for complex types where e.g. arrays have to be copied
   //memcpy(data_,toCopy.direct_access(),size_*sizeof(T));
 }
-
-#ifdef SAFE_MODE
-//for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
-// => define this operator in safe mode, only to check that such an assignment is not made
-template<typename T,typename ST>
-void Storage1D<T,ST>::operator=(const T& invalid_object)
-{
-  INTERNAL_ERROR << "assignment of an atomic entity to Storage1D \"" << this->name() << "\" of type "
-                 << Makros::Typename<T>()
-                 << " with " << Base::size_ << " elements. exiting." << std::endl;
-}
-#endif
 
 //maintains the values of existing positions, new ones are undefined
 template<typename T,typename ST>

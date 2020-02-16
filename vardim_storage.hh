@@ -9,9 +9,9 @@ template <typename T>
 class VarDimStorage : public StorageBase<T> {
 public:
 
-  VarDimStorage(const Math1D::Vector<size_t>& dim);
+  explicit VarDimStorage(const Math1D::Vector<size_t>& dim);
 
-  VarDimStorage(const Math1D::Vector<size_t>& dim, T fill);
+  explicit VarDimStorage(const Math1D::Vector<size_t>& dim, T fill);
 
   //copy constructor
   VarDimStorage(const VarDimStorage& toCopy);

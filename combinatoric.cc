@@ -107,3 +107,23 @@ bool is_prime(const uint n)
   
   return true;
 }
+
+//returns 1 for primes
+uint lowest_divisor(const uint n) {
+  
+  if (n <= 3)
+    return 1;
+  if ((n & 1) == 0) {    
+    //room for improvements here
+    return 2 * lowest_divisor(n >> 1); //even an >= 4
+  }
+  
+  const uint limit = sqrt(n + 0.1); //a non-prime must have a divisor <= its square root
+  for (uint i = 5; i <= limit; i += 2) { //even numbers are no use
+    if ( (n % i) == 0)
+      return i;
+  }
+  
+  return 1;  
+}
+

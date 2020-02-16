@@ -21,15 +21,15 @@ namespace Math3D {
 
     typedef T ALIGNED16 T_A16;
 
-    Tensor();
+    explicit Tensor();
 
-    Tensor(ST xDim, ST yDim, ST zDim);
+    explicit Tensor(ST xDim, ST yDim, ST zDim);
 
-    Tensor(const Dim3D<ST> dims);
+    explicit Tensor(const Dim3D<ST> dims);
 
-    Tensor(ST xDim, ST yDim, ST zDim, const T default_value);
+    explicit Tensor(ST xDim, ST yDim, ST zDim, const T default_value);
 
-    Tensor(const Dim3D<ST> dims, T default_value);
+    explicit Tensor(const Dim3D<ST> dims, T default_value);
 
     ~Tensor();
 

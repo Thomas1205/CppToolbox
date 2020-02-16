@@ -6,10 +6,13 @@ ANNOUNCEMENT: after the 1.15 release, the C++ toolbox will be C++-11, with many 
 - TreeSet: efficient search trees based on arrays. Functionality can be extended. No plans for a TreeMap so far.
 - SortedSet: must faster than TreeSet in practice, and simpler. No plans for a SortedMap so far.
 - UnsortedSet: roughly as efficient as SortedSet, even simpler. No plans for an UnsortedMap so far.
+- UnsortedSetExploitSort
+- many new basic routines (routines.hh, some moved from macros.hh), most of them with SIMD implementation
 - corrected and extended rational numbers, plus improved efficiency and cases that can be handled inside precision
 - released sorting, with many bubble sort variants
-- augmented binary search
+- augmented binary search (routines.hh)
 - fixes and extensions for rational numbers
+- added test for prime numbers
 
 /***** changes for version 1.1 (December 20 2019) ****/
 

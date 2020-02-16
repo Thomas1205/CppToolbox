@@ -28,6 +28,9 @@ inline UInt64 gcd64(UInt64 n1, UInt64 n2);
 //returns if n is a prime number (0,1,2,3 all count as prime)
 bool is_prime(const uint n);
 
+//returns 1 for primes
+uint lowest_divisor(const uint n);
+
 /**** implementation ****/
 
 inline UInt64 gcd64(UInt64 n1, UInt64 n2)

@@ -39,18 +39,18 @@ public:
 
   typedef StorageBase<T,ST> Base;
 
-  Storage3D();
+  explicit Storage3D();
 
   //copy constructor
   Storage3D(const Storage3D& toCopy);
 
-  Storage3D(ST xDim, ST yDim, ST zDim);
+  explicit Storage3D(ST xDim, ST yDim, ST zDim);
 
-  Storage3D(const Dim3D<ST> dims);
+  explicit Storage3D(const Dim3D<ST> dims);
 
-  Storage3D(ST xDim, ST yDim, ST zDim, const T default_value);
+  explicit Storage3D(ST xDim, ST yDim, ST zDim, const T default_value);
 
-  Storage3D(const Dim3D<ST> dims, const T default_value);
+  explicit Storage3D(const Dim3D<ST> dims, const T default_value);
 
   ~Storage3D();
 

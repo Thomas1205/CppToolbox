@@ -181,19 +181,19 @@ namespace Routines {
   template<>
   inline void nontrivial_reverse(double* data, const size_t nData) 
   {
-    reverse_double_array(data, nData);
+    nontrivial_reverse_double_array(data, nData);
   }
   
   template<>
   inline void nontrivial_reverse(Int64* data, const size_t nData) 
   {
-    reverse_double_array((double*) data, nData);
+    nontrivial_reverse_double_array((double*) data, nData);
   }
 
   template<>
   inline void nontrivial_reverse(UInt64* data, const size_t nData) 
   {
-    reverse_double_array((double*) data, nData);
+    nontrivial_reverse_double_array((double*) data, nData);
   }
   
   template<typename T>
@@ -531,20 +531,18 @@ namespace Routines {
 
     static const uint ind[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
-    const float fkey = reinterpret<const uint, const float>(key);
-
 #if USE_SSE >= 7
     //need AVX2 for 256 bit packed integers. AVX2 has vpbroadcastd 
 
     if (nData >= 48) {
 
-      const float finc = reinterpret<const uint, const float>(8);
+      const uint uinc = 8;
       
       asm __volatile__ ("vxorps %%ymm2, %%ymm2, %%ymm2 \n\t" // set ymm2 (the array of found positions) to zero
                         "vmovdqu %[ind], %%ymm3  \n\t" //ymm3 contains the indices
-                        "vbroadcastss %[finc], %%ymm4 \n\t"
-                        "vbroadcastss %[fkey], %%ymm5 \n\t"
-                        : : [ind] "m" (ind[0]), [finc] "m" (finc), [fkey] "m" (fkey)
+                        "vpbroadcastd %[uinc], %%ymm4 \n\t"
+                        "vpbroadcastd %[ukey], %%ymm5 \n\t"
+                        : : [ind] "m" (ind[0]), [uinc] "m" (uinc), [ukey] "m" (key)
                         : "ymm2", "ymm3", "ymm4", "ymm5");
 
       register uint res = MAX_UINT;
@@ -576,6 +574,7 @@ namespace Routines {
 
     if (nData - i >= 12) {
 
+      const float fkey = reinterpret<const uint, const float>(key);
       const float finc = reinterpret<const uint, const float>(4);
 
       if (i == 0) {

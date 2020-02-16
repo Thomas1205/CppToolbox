@@ -29,11 +29,11 @@ namespace Math2D {
     typedef T ALIGNED16 T_A16;
 
     /*---- constructors -----*/
-    TriMatrix();
+    explicit TriMatrix();
 
-    TriMatrix(ST dim);
+    explicit TriMatrix(ST dim);
 
-    TriMatrix(ST dim, const T default_value);
+    explicit TriMatrix(ST dim, const T default_value);
 
     /*---- destructor ----*/
     ~TriMatrix();
@@ -107,11 +107,11 @@ namespace Math2D {
     typedef T ALIGNED16 T_A16;
 
     /*---- constructors -----*/
-    TriangularMatrix(bool lower_triangular=true);
+    explicit TriangularMatrix(bool lower_triangular=true);
 
-    TriangularMatrix(ST dim, bool lower_triangular);
+    explicit TriangularMatrix(ST dim, bool lower_triangular);
 
-    TriangularMatrix(ST dim, const T default_value, bool lower_triangular);
+    explicit TriangularMatrix(ST dim, const T default_value, bool lower_triangular);
 
     /*---- destructor ----*/
     ~TriangularMatrix();
@@ -182,11 +182,11 @@ namespace Math2D {
     typedef T ALIGNED16 T_A16;
 
     /*---- constructors -----*/
-    TriangularMatrixAsymAccess(bool lower_triangular=true);
+    explicit TriangularMatrixAsymAccess(bool lower_triangular=true);
 
-    TriangularMatrixAsymAccess(ST dim, bool lower_triangular);
+    explicit TriangularMatrixAsymAccess(ST dim, bool lower_triangular);
 
-    TriangularMatrixAsymAccess(ST dim, const T default_value, bool lower_triangular);
+    explicit TriangularMatrixAsymAccess(ST dim, const T default_value, bool lower_triangular);
 
     /*---- destructor ----*/
     ~TriangularMatrixAsymAccess();
@@ -215,11 +215,11 @@ namespace Math2D {
     typedef T ALIGNED16 T_A16;
 
     /*---- constructors -----*/
-    SymmetricMatrix();
+    explicit SymmetricMatrix();
 
-    SymmetricMatrix(ST dim);
+    explicit SymmetricMatrix(ST dim);
 
-    SymmetricMatrix(ST dim, const T default_value);
+    explicit SymmetricMatrix(ST dim, const T default_value);
 
     /*---- destructor ----*/
     ~SymmetricMatrix();
