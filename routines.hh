@@ -30,14 +30,13 @@ namespace Routines {
   
   /***************** reverse *******************/
   
-  inline void reverse_uint_array(uint* data, size_t nData) 
+  inline void nontrivial_reverse_uint_array(uint* data, const size_t nData)
   {
+    assert(nData >= 2);
 #if !defined(USE_SSE) || USE_SSE < 5
     std::reverse(data, data + nData);
 #else    
-    if (nData < 2)
-      return;
-    else if (nData < 4) 
+    if (nData < 4) 
       std::swap(data[0], data[nData-1]);
     else if (nData == 4) 
     {  
@@ -77,6 +76,17 @@ namespace Routines {
         std::swap(data[low],data[high]);
       }
     }
+#endif      
+  }
+  
+  inline void reverse_uint_array(uint* data, const size_t nData) 
+  {
+#if !defined(USE_SSE) || USE_SSE < 5
+    std::reverse(data, data + nData);
+#else    
+    if (nData < 2)
+      return;
+    nontrivial_reverse_uint_array(data, nData);
 #endif  
   }
 
@@ -89,14 +99,13 @@ namespace Routines {
                       : [d] "+m" (data[0]) : : "ymm0", "memory");          
   }
 
-  inline void reverse_double_array(double* data, size_t nData) 
+  inline void nontrivial_reverse_double_array(double* data, const size_t nData) 
   {
+    assert(nData >= 2);
 #if !defined(USE_SSE) || USE_SSE < 5
     std::reverse(data, data + nData);
 #else    
-    if (nData < 2)
-      return;
-    else if (nData < 4) 
+    if (nData < 4) 
       std::swap(data[0], data[nData-1]);
     else if (nData == 4) {
 
@@ -130,49 +139,68 @@ namespace Routines {
         std::swap(data[low],data[high]); 
       }        
     }
+#endif    
+  }
+
+  inline void reverse_double_array(double* data, const size_t nData) 
+  {
+#if !defined(USE_SSE) || USE_SSE < 5
+    std::reverse(data, data + nData);
+#else    
+    if (nData < 2)
+      return;
+    nontrivial_reverse_double_array(data, nData);
 #endif  
   }
-  
+
   template<typename T>
-  inline void reverse(T* data, const size_t nData) 
+  inline void nontrivial_reverse(T* data, const size_t nData) 
   {    
+    assert(nData >= 2);
     std::reverse(data, data + nData);
   }
-  
+
   template<>
-  inline void reverse(uint* data, const size_t nData) 
+  inline void nontrivial_reverse(uint* data, const size_t nData) 
   {
-    reverse_uint_array(data, nData);
+    nontrivial_reverse_uint_array(data, nData);
   }
   
   template<>
-  inline void reverse(int* data, const size_t nData) 
+  inline void nontrivial_reverse(int* data, const size_t nData) 
   {
-    reverse_uint_array((uint*) data, nData);
+    nontrivial_reverse_uint_array((uint*) data, nData);
   }
 
   template<>
-  inline void reverse(float* data, const size_t nData) 
+  inline void nontrivial_reverse(float* data, const size_t nData) 
   {
-    reverse_uint_array((uint*) data, nData);
+    nontrivial_reverse_uint_array((uint*) data, nData);
   }
 
   template<>
-  inline void reverse(double* data, const size_t nData) 
+  inline void nontrivial_reverse(double* data, const size_t nData) 
   {
     reverse_double_array(data, nData);
   }
   
   template<>
-  inline void reverse(Int64* data, const size_t nData) 
+  inline void nontrivial_reverse(Int64* data, const size_t nData) 
   {
     reverse_double_array((double*) data, nData);
   }
 
   template<>
-  inline void reverse(UInt64* data, const size_t nData) 
+  inline void nontrivial_reverse(UInt64* data, const size_t nData) 
   {
     reverse_double_array((double*) data, nData);
+  }
+  
+  template<typename T>
+  inline void reverse(T* data, const size_t nData) 
+  {
+    if (nData >= 2)      
+      std::reverse(data, data + nData);
   }
   
   /***************** downshift *****************/
@@ -503,14 +531,14 @@ namespace Routines {
 
     static const uint ind[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
-    const float finc = reinterpret<const uint, const float>(4);
     const float fkey = reinterpret<const uint, const float>(key);
 
-//#if USE_SSE >= 7
-#if 0
+#if USE_SSE >= 7
     //need AVX2 for 256 bit packed integers. AVX2 has vpbroadcastd 
 
     if (nData >= 48) {
+
+      const float finc = reinterpret<const uint, const float>(8);
       
       asm __volatile__ ("vxorps %%ymm2, %%ymm2, %%ymm2 \n\t" // set ymm2 (the array of found positions) to zero
                         "vmovdqu %[ind], %%ymm3  \n\t" //ymm3 contains the indices
@@ -526,8 +554,8 @@ namespace Routines {
         // => probably best to write the loop in assembler, too
 
         // Assembler wishlist: horizontal min and max -> would make the uniqueness assumption superflous (not even present in AVX-512)
-
-        asm __volatile__ ("vmovdqu %1, %%ymm0  \n\t"
+  
+        asm __volatile__ ("vmovdqu %[d], %%ymm0  \n\t"
                           "vpcmpeqd %%ymm5, %%ymm0, %%ymm0 \n\t" //xmm0 is overwritten with mask (all 1s on equal)
                           "vpblendvb %%ymm0, %%ymm3, %%ymm2, %%ymm2  \n\t" //if xmm0 flags 1, the index is written
                           "vptest %%ymm0, %%ymm0 \n\t" //sets the zero flag iff xmm0 is all 0
@@ -538,21 +566,30 @@ namespace Routines {
                           "vphaddd %%ymm0, %%ymm2, %%ymm2 \n\t" //(ymm0 is irrelevant)
                           "vpextrd $0, %%xmm2, %0 \n\t" //here xmm!
                           "1: vpaddd %%ymm4, %%ymm3, %%ymm3 \n\t"
-                          : "+g" (res) : "m" (data[i]) : "ymm0", "ymm2", "ymm3");
+                          : "+g" (res) : [d] "m" (data[i]) : "ymm0", "ymm2", "ymm3");
 
         if (res != MAX_UINT)
-          return res;
+          return res;        
       }
     }
 #endif
+
     if (nData - i >= 12) {
 
-      asm __volatile__ ("vxorps %%xmm2, %%xmm2, %%xmm2 \n\t" // set xmm2 (the array of found positions) to zero
-                        "vmovdqu %[ind], %%xmm3  \n\t" //xmm3 contains the indices
-                        "vbroadcastss %[finc], %%xmm4 \n\t"
-                        "vbroadcastss %[fkey], %%xmm5 \n\t"
-                        : : [ind] "m" (ind[0]), [finc] "m" (finc), [fkey] "m" (fkey)
-                        : "xmm2", "xmm3", "xmm4", "xmm5");
+      const float finc = reinterpret<const uint, const float>(4);
+
+      if (i == 0) {
+        asm __volatile__ ("vxorps %%xmm2, %%xmm2, %%xmm2 \n\t" // set xmm2 (the array of found positions) to zero
+                          "vmovdqu %[ind], %%xmm3  \n\t" //xmm3 contains the indices
+                          "vbroadcastss %[finc], %%xmm4 \n\t"
+                          "vbroadcastss %[fkey], %%xmm5 \n\t"
+                          : : [ind] "m" (ind[0]), [finc] "m" (finc), [fkey] "m" (fkey)
+                          : "xmm2", "xmm3", "xmm4", "xmm5");
+      }
+      else {
+        asm __volatile__ ("vbroadcastss %[finc], %%xmm4 \n\t"
+                          : : [finc] "m" (finc) : "xmm4");
+      }
 
       register uint res = MAX_UINT;
       for (; i+4 <= nData; i+=4) {
