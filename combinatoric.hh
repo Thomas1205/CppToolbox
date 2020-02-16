@@ -25,6 +25,9 @@ uint gcd(uint n1, uint n2);
 // greatest common divisor via the Euclidean algorithm
 inline UInt64 gcd64(UInt64 n1, UInt64 n2);
 
+//returns if n is a prime number (0,1,2,3 all count as prime)
+bool is_prime(const uint n);
+
 /**** implementation ****/
 
 inline UInt64 gcd64(UInt64 n1, UInt64 n2)
