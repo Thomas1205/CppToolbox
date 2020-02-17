@@ -42,7 +42,9 @@ ALGORITHMS
 
 - sorting algorithms (sorting.hh)
 
-- find (routines.hh)
+- find for 32 bit data types (routines.hh)
+
+- reverse for 32 bit and 64 bit data types (routines.hh)
 
 - binary search algorithms (routines.hh and stl_util.hh)
 

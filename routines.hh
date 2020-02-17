@@ -30,6 +30,8 @@ namespace Routines {
   
   /***************** reverse *******************/
   
+  //no plans for specialized 16 and 8 bit routines at present
+  
   inline void nontrivial_reverse_uint_array(uint* data, const size_t nData)
   {
     assert(nData >= 2);
