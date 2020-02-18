@@ -26,6 +26,16 @@
 //    Intel mov     eax,[ebx+3]          AT&T  movl    3(%ebx),%eax               
 //    Intel add     eax,[ebx+ecx*2h]     AT&T  addl    (%ebx,%ecx,0x2),%eax 
 
+#ifdef USE_ASM
+static_assert(sizeof(uint) == 4, "wrong size");
+static_assert(sizeof(int) == 4, "wrong size");
+static_assert(sizeof(size_t) == 8, "wrong size");
+static_assert(sizeof(Int64) == 8, "wrong size");
+static_assert(sizeof(UInt64) == 8, "wrong size");
+static_assert(sizeof(float) == 4, "wrong size");
+static_assert(sizeof(double) == 8, "wrong size");
+#endif
+
 namespace Routines {
   
   /***************** reverse *******************/
@@ -159,7 +169,12 @@ namespace Routines {
   inline void nontrivial_reverse(T* data, const size_t nData) 
   {    
     assert(nData >= 2);
-    std::reverse(data, data + nData);
+    if (sizeof(T) == 4)
+      nontrivial_reverse_uint_array((uint*) data, nData);
+    else if (sizeof(T) == 8)
+      nontrivial_reverse_double_array((double*) data, nData);
+    else
+      std::reverse(data, data + nData);
   }
 
   template<>
@@ -250,13 +265,13 @@ namespace Routines {
 
   inline void downshift_int_array(int* data, const uint pos, const uint shift, const uint nData)
   {
-    assert(sizeof(int) == sizeof(uint));
+    static_assert(sizeof(int) == sizeof(uint), "wrong size");
     downshift_uint_array((uint*) data, pos, shift, nData);
   }
 
   inline void downshift_float_array(float* data, const uint pos, const uint shift, const uint nData)
   {
-    assert(sizeof(int) == sizeof(uint));
+    static_assert(sizeof(int) == sizeof(uint), "wrong size");
     downshift_uint_array((uint*) data, pos, shift, nData);
   }
 
@@ -303,11 +318,15 @@ namespace Routines {
   inline void downshift_array(T* data, const uint pos, const uint shift, const uint nData)
   {
     //c++-20 offers shift_left and shift_right in <algorithm>
-    
-    uint i = pos;
     const uint end = nData-shift;
-    for (; i < end; i++)
-      data[i] = data[i+shift];
+    if (std::is_trivially_copyable<T>::value) {
+      memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(T));      
+    }
+    else {
+      uint i = pos;
+      for (; i < end; i++)
+        data[i] = data[i+shift];
+    }
   }
 
   template<>
@@ -368,13 +387,6 @@ namespace Routines {
     memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(double));
   }  
 
-  template<>
-  inline void downshift_array(long double* data, const uint pos, const uint shift, const uint nData)
-  {
-    const uint end = nData-shift;
-    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(long double));
-  }  
-
   /***************** upshift *****************/
 
   inline void upshift_uint_array(uint* data, const int pos, const int last, const int shift)
@@ -420,13 +432,13 @@ namespace Routines {
 
   inline void upshift_int_array(int* data, const int pos, const int last, const int shift)
   {
-    assert(sizeof(int) == sizeof(uint));
+    static_assert(sizeof(int) == sizeof(uint), "wrong size");
     upshift_uint_array((uint*) data, pos, last, shift);
   }
 
   inline void upshift_float_array(float* data, const int pos, const int last, const int shift)
   {
-    assert(sizeof(float) == sizeof(uint));
+    static_assert(sizeof(float) == sizeof(uint), "wrong size");
     upshift_uint_array((uint*) data, pos, last, shift);
   }
 
@@ -472,11 +484,15 @@ namespace Routines {
   template<typename T>
   inline void upshift_array(T* data, const int pos, const int last, const int shift)
   {
-    //c++-20 offers shift_left and shift_right in <algorithm>
-    
     assert(shift > 0);
-    for (int k = last; k >= pos+shift; k--)
-      data[k] = data[k-shift];
+    //c++-20 offers shift_left and shift_right in <algorithm>
+    if (std::is_trivially_copyable<T>::value) {
+      memmove(data+pos+shift,data+pos,(last-pos-shift+1)*sizeof(T));    
+    }
+    else {
+      for (int k = last; k >= pos+shift; k--)
+        data[k] = data[k-shift];
+    }
   }
 
   template<>
@@ -502,13 +518,6 @@ namespace Routines {
   {
     //test of specialized routine is TODO
     memmove(data+pos+shift,data+pos,(last-pos-shift+1)*sizeof(double));    
-  }
-
-  template<>
-  inline void upshift_array(long double* data, const int pos, const int shift, const int last)
-  {
-    //test of specialized routine is TODO
-    memmove(data+pos+shift,data+pos,(last-pos-shift+1)*sizeof(long double));    
   }
 
   /***************** find unique *****************/
@@ -634,6 +643,17 @@ namespace Routines {
   {
     //NOTE: raw byte equality compare gives non-standard treatment of nan and +/- inf
     return find_unique_uint((const uint*) data, reinterpret<const uint, const float>(key), nData);
+  }
+
+  template<typename T> 
+  inline uint find_unique(const T* data, const T key, const uint nData)
+  {
+    if (sizeof(T) == 4) {
+      return find_unique_uint((const uint*) data, reinterpret<const uint, const T>(key), nData);
+    }
+    else {
+      return std::find(data, data + nData, key) - data;
+    }
   }
 
   /***************** find first *****************/
@@ -879,7 +899,7 @@ namespace Routines {
 
       float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT}; //reused as output, static not useful
       uint itemp[4] = {1,1,1,1}; //increment array, reused as output, static not useful
-      assert(sizeof(uint) == 4);
+      static_assert(sizeof(uint) == 4, "wrong size");
 
       asm __volatile__ ("movups %[tmp], %%xmm6 \n\t" //xmm6 is max register
                         "xorps %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmax) to zero
@@ -952,7 +972,7 @@ namespace Routines {
     size_t i = 0;
     double cur_val;
 
-    assert(sizeof(size_t) == 8);
+    static_assert(sizeof(size_t) == 8, "wrong size");
     
 #if USE_SSE >= 5
 
@@ -1021,7 +1041,7 @@ namespace Routines {
       //note: broadcast is better implemented by movddup (SSE3). But this code is no longer improved
       double tmp[2] = {MIN_DOUBLE,MIN_DOUBLE}; //reused as output, static not useful
       uint itemp[4] = {0,1,0,1}; //reused as output, static not useful
-      assert(sizeof(uint) == 4);
+      static_assert(sizeof(uint) == 4, "wrong size");
 
       asm __volatile__ ("movupd %[tmp], %%xmm6 \n\t"
                         "xorpd %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmax) to zero
@@ -1167,7 +1187,7 @@ namespace Routines {
 
       float tmp[4] = {MAX_FLOAT,MAX_FLOAT,MAX_FLOAT,MAX_FLOAT}; //reused as output, static not useful
       uint itemp[4] = {1,1,1,1}; //reused as output, static not useful
-      assert(sizeof(uint) == 4);
+      static_assert(sizeof(uint) == 4, "wrong size");
 
       asm __volatile__ ("movups %[tmp], %%xmm6 \n\t"
                         "xorps %%xmm5, %%xmm5 \n\t" //sets xmm5 (= argmin) to zero
@@ -1246,7 +1266,7 @@ namespace Routines {
     size_t i = 0;
     double cur_val;
 
-    assert(sizeof(size_t) == 8);
+    static_assert(sizeof(size_t) == 8, "wrong size");
     
 #if USE_SSE >= 5
 
@@ -1314,7 +1334,7 @@ namespace Routines {
 
       double tmp[2] = {MAX_DOUBLE,MAX_DOUBLE}; //reused as output, static not useful
       uint itemp[4] = {0,1,0,1}; //reused as output, static not useful
-      assert(sizeof(uint) == 4);
+      static_assert(sizeof(uint) == 4, "wrong size");
 
       //note: broadcast is better implemented by movddup (SSE3). But this code is no longer improved
       asm __volatile__ ("movupd %[tmp], %%xmm6 \n\t"

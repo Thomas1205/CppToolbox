@@ -16,6 +16,7 @@
 #include <numeric> //necessary? (provides accumulat and inner_product)
 
 #include <string.h> //memcpy
+#include <type_traits>
 
 #ifdef WIN32
 namespace {
@@ -67,10 +68,8 @@ inline void print_trace (void)
 inline void print_trace (void) {}
 #endif
 
-//because c++ is missing those keywords: (C++-11 has final and override)
+//because c++ is missing this keyword: (C++-11 has final and override)
 #define abstract
-#define overide //exists in C++-11!
-#define overrides
 
 /******************** Data Macros *****************************/
 typedef unsigned int uint;
@@ -220,6 +219,10 @@ namespace Makros {
   template<typename T>
   inline T abs(T arg)
   {
+    if (std::is_unsigned<T>::value)
+      return arg;
+    if (std::is_floating_point<T>::value)
+      return fabs(arg);
     return std::abs(arg);
   }
 
@@ -301,8 +304,12 @@ namespace Makros {
   template<typename T>
   inline void unified_assign(T* attr_restrict dest, const T* attr_restrict source, size_t size)
   {
-    for (size_t i=0; i < size; i++)
-      dest[i] = source[i];
+    if (std::is_trivially_copyable<T>::value)
+      memcpy(dest, source, size * sizeof(T));
+    else {
+      for (size_t i=0; i < size; i++)
+        dest[i] = source[i];
+    }
   }
 
   template<>

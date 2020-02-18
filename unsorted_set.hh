@@ -13,21 +13,17 @@
 //find in a sequence without duplicates
 template<typename T>
 inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& vec, T val) {
-  return std::find(vec.begin(), vec.end(), val);
+  if (sizeof(T) == 4) {
+    const uint pos = Routines::find_unique_uint((uint*) vec.data(), val, vec.size());
+    return vec.begin() + pos;
+  }
+  else
+    return std::find(vec.begin(), vec.end(), val);
 }
 
 template<>
 inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, uint val) {
   const uint pos = Routines::find_unique_uint(vec.data(), val, vec.size());
-  if (pos >= vec.size())
-    return vec.end();
-  else
-    return (vec.begin() + pos);
-}
-
-template<>
-inline std::vector<int>::const_iterator set_find(const std::vector<int>& vec, int val) {
-  const uint pos = Routines::find_unique_int(vec.data(), val, vec.size());
   if (pos >= vec.size())
     return vec.end();
   else

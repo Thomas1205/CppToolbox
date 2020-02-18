@@ -64,40 +64,6 @@ Rational64::Rational64(Int64 num) : num_(num), denom_(1)
 {
 }
 
-Rational64 Rational64::negative() const
-{
-  return Rational64(-num_,denom_);
-}
-
-Rational64 Rational64::rabs() const
-{
-  return Rational64(Makros::abs(num_),denom_);
-}
-
-Rational64 Rational64::inverse() const
-{
-  assert(num_ != 0);
-
-  Int64 sign = (num_ < 0) ? -1 : 1;
-  return Rational64(denom_ * sign, Makros::abs(num_));
-}
-
-void Rational64::invert()
-{
-  assert(num_ != 0);
-  if (num_ < 0) {
-    num_ = -num_;
-    denom_ = -denom_;
-  }
-
-  std::swap(num_,denom_);
-}
-
-void Rational64::negate()
-{
-  num_ = -num_;
-}
-
 Rational64 Rational64::square() const
 {
   //we can save both gcds as this number should be normalized
