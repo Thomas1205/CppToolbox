@@ -25,7 +25,7 @@ public:
 
   inline Rational64 negative() const;
 
-  Rational64 square() const;
+  Rational64 square() const noexcept;
 
   inline void invert();
 
@@ -33,11 +33,11 @@ public:
 
   inline void negate();
 
-  void square_this();
+  void square_this() noexcept;
 
-  void normalize();
+  void normalize(); //div can throw an exception
 
-  bool is_normalized() const;
+  bool is_normalized() const; //div can throw an exception
 
   inline bool is_positive() const;
 
@@ -59,13 +59,13 @@ public:
 
   //TODO: operators for adding and subtracting an Int64
 
-  void operator+=(Rational64 r);
+  void operator+=(Rational64 r); //div can throw an exception
 
-  void operator-=(Rational64 r);
+  void operator-=(Rational64 r); //div can throw an exception
 
-  void operator*=(Int64 fac);
+  void operator*=(Int64 fac) noexcept;
 
-  void operator*=(Rational64 r);
+  void operator*=(Rational64 r) noexcept;
 
   Int64 num_;
   Int64 denom_;
@@ -75,14 +75,14 @@ Rational64 operator+(const Rational64& r1, const Rational64& r2);
 
 Rational64 operator-(const Rational64& r1, const Rational64& r2);
 
-Rational64 operator*(const Rational64& r1, const Rational64& r2);
+Rational64 operator*(const Rational64& r1, const Rational64& r2) noexcept;
 
-Rational64 operator*(Int64 r1, const Rational64& r2);
+Rational64 operator*(Int64 r1, const Rational64& r2) noexcept;
 
-Rational64 operator*(const Rational64& r1, Int64 r2);
+Rational64 operator*(const Rational64& r1, Int64 r2) noexcept;
 
 //unary minus
-Rational64 operator-(const Rational64& r);
+inline Rational64 operator-(const Rational64& r);
 
 bool operator<(const Rational64& r1, const Rational64& r2);
 
@@ -189,5 +189,10 @@ inline void Rational64::invert()
   std::swap(num_,denom_);
 }
 
+//unary minus
+inline Rational64 operator-(const Rational64& r)
+{
+  return Rational64(-r.num_,r.denom_);
+}
 
 #endif

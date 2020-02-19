@@ -64,7 +64,7 @@ Rational64::Rational64(Int64 num) : num_(num), denom_(1)
 {
 }
 
-Rational64 Rational64::square() const
+Rational64 Rational64::square() const noexcept
 {
   //we can save both gcds as this number should be normalized
 #ifndef USE_ASM
@@ -77,7 +77,7 @@ Rational64 Rational64::square() const
 #endif
 }
 
-void Rational64::square_this()
+void Rational64::square_this() noexcept
 {
 #ifndef USE_ASM
   num_ *= num_;
@@ -123,7 +123,7 @@ long double Rational64::toLongDouble() const
   return n / d;
 }
 
-void Rational64::operator*=(Int64 fac)
+void Rational64::operator*=(Int64 fac) noexcept
 {
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator*=(int)" << std::endl;
@@ -146,7 +146,7 @@ void Rational64::operator*=(Int64 fac)
   assert(denom_ > 0);
 }
 
-Rational64 operator*(Int64 r1, const Rational64& r2)
+Rational64 operator*(Int64 r1, const Rational64& r2) noexcept
 {
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator*(int)" << std::endl;
@@ -174,7 +174,7 @@ Rational64 operator*(Int64 r1, const Rational64& r2)
   return result;
 }
 
-Rational64 operator*(const Rational64& r1, long r2)
+Rational64 operator*(const Rational64& r1, long r2) noexcept
 {
   return operator*(r2,r1);
 }
@@ -741,7 +741,7 @@ inline void save_mul(Int64 n1, Int64 d1, Int64 n2, Int64 d2, Int64& num, Int64& 
 }
 #endif
 
-Rational64 operator*(const Rational64& r1, const Rational64& r2)
+Rational64 operator*(const Rational64& r1, const Rational64& r2) noexcept
 {
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator*(" << r1 << ", " << r2 << ")" << std::endl;
@@ -808,7 +808,7 @@ Rational64 operator*(const Rational64& r1, const Rational64& r2)
 #endif
 }
 
-void Rational64::operator*=(Rational64 r)
+void Rational64::operator*=(Rational64 r) noexcept
 {
 #ifdef DEBUG_OUTPUT
   std::cerr << "operator*=(" << r << ")" << std::endl;
@@ -1189,12 +1189,6 @@ bool operator==(const Rational64& r1, const Rational64& r2)
 bool operator!=(const Rational64& r1, const Rational64& r2)
 {
   return !operator==(r1,r2);
-}
-
-//unary minus
-Rational64 operator-(const Rational64& r)
-{
-  return Rational64(-r.num_,r.denom_);
 }
 
 Rational64 approx_r64(double d)

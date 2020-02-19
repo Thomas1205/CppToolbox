@@ -100,7 +100,7 @@ bool is_prime(const uint n)
     return false; //even an >= 4
   
   const uint limit = sqrt(n + 0.1); //a non-prime must have a divisor <= its square root
-  for (uint i = 5; i <= limit; i += 2) { //even numbers are no use
+  for (uint i = 3; i <= limit; i += 2) { //even numbers are no use (only need to test primes)
     if ( (n % i) == 0)
       return false;
   }
@@ -119,7 +119,7 @@ uint lowest_divisor(const uint n) {
   }
   
   const uint limit = sqrt(n + 0.1); //a non-prime must have a divisor <= its square root
-  for (uint i = 5; i <= limit; i += 2) { //even numbers are no use
+  for (uint i = 3; i <= limit; i += 2) { //even numbers are no use (only need to test primes)
     if ( (n % i) == 0)
       return i;
   }
