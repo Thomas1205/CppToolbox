@@ -9,6 +9,8 @@
 #define MERGE_THRESH 256
 #endif
 
+//#define USE_ROUTINES
+
 #include "storage1D.hh"
 #include "routines.hh"
 
@@ -177,7 +179,11 @@ inline void batch_bubble_sort(T* data, const size_t nData)
             break;
         }
 
+#ifdef USE_ROUTINES
+        Routines::nontrivial_reverse(data+l-1, end-l+1);
+#else
         std::reverse(data+l-1, data+end);
+#endif
 
         // std::cerr << "after reverse: ";
         // for (uint i=0; i < nData; i++)
@@ -348,9 +354,13 @@ inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
         }
 
         //std::cerr << "reversing from " << (l-1) << " to excl. " << end << std::endl;
-
+#ifdef USE_ROUTINES
+        Routines::nontrivial_reverse(key+l-1, end-l+1);
+        Routines::nontrivial_reverse(value+l-1, end-l+1);
+#else
         std::reverse(key+l-1, key+end);
         std::reverse(value+l-1, value+end);
+#endif        
         flip = end-1;
         l = end-2; //the last swapped index needs to be compared again (l is incremented by the loop)
       }

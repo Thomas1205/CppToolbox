@@ -26,6 +26,32 @@ inline void set_idfunc(FlexibleStorage1D<T, ST>& vec) {
     vec[i] = (T) i;
 }
 
+template<typename T, typename ST>
+inline bool approx_equal(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2, T tolerance) leaf_const
+{
+  if (v1.size() != v2.size())
+    return false;
+  for (ST i = 0; i < v1.size(); i++) {
+    if (Makros::abs<T>(v1[i] - v2[i]) > tolerance)
+      return false;
+  }
+  
+  return true;
+}
+
+template<typename T, typename ST>
+inline bool approx_equal(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2, T tolerance) leaf_const
+{
+  if (v1.size() != v2.size())
+    return false;
+  for (ST i = 0; i < v1.size(); i++) {
+    if (Makros::abs<T>(v1[i] - v2[i]) > tolerance)
+      return false;
+  }
+  
+  return true;
+}
+
 template<typename T>
 inline void negate(Math1D::Vector<T>& vec)
 {

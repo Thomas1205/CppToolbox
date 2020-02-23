@@ -22,7 +22,8 @@ namespace Math1D {
 
     typedef Storage1D<T,ST> Base;
 
-    typedef T ALIGNED16 T_A16;
+    //according to https://gcc.gnu.org/onlinedocs/gcc-7.2.0/gcc/Common-Type-Attributes.html#Common-Type-Attributes , alignment has to be expressed like this:
+    typedef T T_A16 ALIGNED16;
 
     explicit Vector();
 
@@ -40,9 +41,9 @@ namespace Math1D {
     inline T& operator[](ST i);
 
     //redefining the direct_access methods because for basic types we can indicate 16-byte alignment
-    inline T_A16* direct_access();
+    inline T* direct_access() FLAGALIGNED16;
 
-    inline const T_A16* direct_access() const;
+    inline const T* direct_access() const FLAGALIGNED16;
 
     inline T& direct_access(ST i);
 
@@ -52,6 +53,8 @@ namespace Math1D {
     inline void set_constant(T constant);
 
     inline T sum() const;
+
+    inline T sum_abs() const;
 
     inline T range_sum(ST start, ST end) const;
 
@@ -251,12 +254,27 @@ namespace Math1D {
     //at least with g++ accumulate is faster
     return std::accumulate(data,data+size,(T)0);
 
-    // T result = 0.0;
+    // T result = (T) 0;
     // for (ST i=0; i < size; i++) {
     //   result += data[i];
     // }
 
     // return result;
+  }
+  
+  template<typename T,typename ST>
+  inline T Vector<T,ST>::sum_abs() const
+  {
+    const ST size = Base::size_;
+    const T_A16* data = Base::data_;
+
+    assertAligned16(data);
+
+    T result = (T) 0;
+    for (ST i=0; i < size; i++) 
+       result += Makros::abs<T>(data[i]);
+
+    return result;
   }
 
   template<typename T,typename ST>
@@ -287,7 +305,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline typename Vector<T,ST>::T_A16* Vector<T,ST>::direct_access()
+  inline T* Vector<T,ST>::direct_access() //not allowed to repeat FLAGALIGNED16 in definition
   {
     T_A16* data = Base::data_;
     assertAligned16(data);
@@ -295,7 +313,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline const typename Vector<T,ST>::T_A16* Vector<T,ST>::direct_access() const
+  inline const T* Vector<T,ST>::direct_access() const //not allowed to repeat FLAGALIGNED16 in definition
   {
     const T_A16* data = Base::data_;
     assertAligned16(data);
@@ -335,7 +353,6 @@ namespace Math1D {
   template<typename T,typename ST>
   inline T Vector<T,ST>::max() const
   {
-
     const ST size = Base::size_;
 
     if (size > 0) {
@@ -376,10 +393,11 @@ namespace Math1D {
   T Vector<T,ST>::max_abs() const
   {
     const ST size = Base::size_;
+    const T_A16* data = Base::data_;
 
     T maxel = (T) 0;
     for (ST i=0; i < size; i++) {
-      const T candidate = Makros::abs<T>(Base::data_[i]);
+      const T candidate = Makros::abs<T>(data[i]);
       maxel = std::max(maxel,candidate);
     }
 
@@ -390,8 +408,10 @@ namespace Math1D {
   inline void Vector<T,ST>::ensure_min(T lower_limit)
   {
     const ST size = Base::size_;
+    const T_A16* data = Base::data_;
+
     for (ST i=0; i < size; i++)
-      Base::data_[i] = std::max(lower_limit,Base::data_[i]);
+      data[i] = std::max(lower_limit,data[i]);
   }
 
   /*** L2-norm of the vector ***/
@@ -614,17 +634,25 @@ namespace Math1D {
   template<typename T,typename ST>
   void Vector<T,ST>::elem_mul(const Vector<T,ST>& v)
   {
-    assert(Base::size_ == v.size());
-    for (ST i = 0; i < Base::size_; i++)
-      Base::data_[i] *= v.direct_access(i);
+    const ST size = Base::size_;
+    T_A16* data = Base::data_;
+    const T_A16* vdata = v.direct_access();
+    
+    assert(size == v.size());
+    for (ST i = 0; i < size; i++)
+      data[i] *= vdata[i];
   }
     
   template<typename T,typename ST>
   void Vector<T,ST>::elem_div(const Vector<T,ST>& v)
   {
-    assert(Base::size_ == v.size());
-    for (ST i = 0; i < Base::size_; i++)
-      Base::data_[i] /= v.direct_access(i);    
+    const ST size = Base::size_;
+    T_A16* data = Base::data_;
+    const T_A16* vdata = v.direct_access();
+
+    assert(size == v.size());
+    for (ST i = 0; i < size; i++)
+      data[i] /= vdata[i];
   }
 
   /************** implementation of NamedVector **********/
@@ -780,7 +808,6 @@ namespace Math1D {
 
     return s;
   }
-
 
   template<typename T,typename ST>
   Vector<T,ST> cross(const Vector<T,ST>& v1, const Vector<T,ST>& v2)

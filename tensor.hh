@@ -19,7 +19,8 @@ namespace Math3D {
 
     typedef Storage3D<T,ST> Base;
 
-    typedef T ALIGNED16 T_A16;
+    //according to https://gcc.gnu.org/onlinedocs/gcc-7.2.0/gcc/Common-Type-Attributes.html#Common-Type-Attributes , alignment has to be expressed like this:
+    typedef T T_A16 ALIGNED16;
 
     explicit Tensor();
 
@@ -214,19 +215,24 @@ namespace Math3D {
   template<typename T, typename ST>
   /*static*/ const std::string Tensor<T,ST>::tensor_name_ = "unnamed tensor";
 
-  template<typename T, typename ST> Tensor<T,ST>::Tensor() : Storage3D<T,ST>() {}
+  template<typename T, typename ST> 
+  Tensor<T,ST>::Tensor() : Storage3D<T,ST>() {}
 
-  template<typename T, typename ST> Tensor<T,ST>::Tensor(ST xDim, ST yDim, ST zDim) : Storage3D<T,ST>(xDim,yDim,zDim) {}
+  template<typename T, typename ST> 
+  Tensor<T,ST>::Tensor(ST xDim, ST yDim, ST zDim) : Storage3D<T,ST>(xDim,yDim,zDim) {}
 
-  template<typename T, typename ST> Tensor<T,ST>::Tensor(const Dim3D<ST> dims) : Storage3D<T,ST>(dims) {}
+  template<typename T, typename ST> 
+  Tensor<T,ST>::Tensor(const Dim3D<ST> dims) : Storage3D<T,ST>(dims) {}
 
   template<typename T, typename ST> Tensor<T,ST>::
   Tensor(ST xDim, ST yDim, ST zDim, const T default_value) :
     Storage3D<T,ST>(xDim,yDim,zDim,default_value) {}
 
-  template<typename T, typename ST> Tensor<T,ST>::Tensor(const Dim3D<ST> dims, T default_value) : Storage3D<T,ST>(dims, default_value) {}
+  template<typename T, typename ST> 
+  Tensor<T,ST>::Tensor(const Dim3D<ST> dims, T default_value) : Storage3D<T,ST>(dims, default_value) {}
 
-  template<typename T, typename ST> Tensor<T,ST>::~Tensor() {}
+  template<typename T, typename ST> 
+  Tensor<T,ST>::~Tensor() {}
 
   template<typename T, typename ST>
   /*virtual*/ const std::string& Tensor<T,ST>::name() const
@@ -239,7 +245,6 @@ namespace Math3D {
   {
     memset(Base::data_,0,Base::size()*sizeof(T));
   }
-
 
   template<typename T, typename ST>
   inline void Tensor<T,ST>::add_const(const T addon)

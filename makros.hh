@@ -31,14 +31,22 @@ using std::isnan;
 using std::isinf;
 #endif
 
+
 #ifdef GNU_COMPILER
 
+#define assertAligned16(p) assert( ((size_t)p) % 16 == 0);
 #define attr_restrict __restrict
 #define ref_attr_restrict __restrict
+//#define attr_restrict [[restrict]] //g++ ignores this
+//#define ref_attr_restrict [[restrict]] //g++ ignores this
+//functions getting a pointer and changing its data are not leaf_const (https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#Common-Function-Attributes)
+#define leaf_const [[leaf]] [[const]]
+
 //pointers returned by new are guaranteed to have an address that is divisible by 16 if the type is a basic one
 //it is convenient to give the compiler this hint so that he need not handle unaligned cases
 #define ALIGNED16 __attribute__ ((aligned(16)))
-#define assertAligned16(p) assert( ((size_t)p) % 16 == 0);
+//#define ALIGNED16 [[align(16)]] //g++ ignores this attribute
+#define FLAGALIGNED16 __attribute__((assume_aligned(16)))
 
 #include <execinfo.h>
 
@@ -61,10 +69,14 @@ inline void print_trace (void)
 }
 
 #else
+
+//for non-g++ compilers, we do not express alignments, so we also don't check it!
+#define assertAligned16(p)
 #define attr_restrict
 #define ref_attr_restrict
 #define ALIGNED16
-#define assertAligned16(p)
+#define FLAGALIGNED16
+#define leaf_const
 inline void print_trace (void) {}
 #endif
 
@@ -77,9 +89,10 @@ typedef unsigned short ushort;
 typedef unsigned char uchar;
 typedef long long int Int64;
 typedef unsigned long long int UInt64;
-typedef double ALIGNED16 double_A16;
-typedef float ALIGNED16 float_A16;
-typedef char ALIGNED16 char_A16;
+//according to https://gcc.gnu.org/onlinedocs/gcc-7.2.0/gcc/Common-Type-Attributes.html#Common-Type-Attributes , alignment has to be expressed like this:
+typedef double double_A16 ALIGNED16;
+typedef float float_A16 ALIGNED16;
+typedef char char_A16 ALIGNED16;
 
 #define MIN_DOUBLE -1.0*std::numeric_limits<double>::max()
 #define MAX_DOUBLE std::numeric_limits<double>::max()
@@ -219,7 +232,7 @@ namespace Makros {
   template<typename T>
   inline T abs(T arg)
   {
-    if (std::is_unsigned<T>::value)
+    if (std::is_unsigned<T>::value) //will be if constexpr when going to C++-17
       return arg;
     if (std::is_floating_point<T>::value)
       return fabs(arg);
@@ -304,7 +317,7 @@ namespace Makros {
   template<typename T>
   inline void unified_assign(T* attr_restrict dest, const T* attr_restrict source, size_t size)
   {
-    if (std::is_trivially_copyable<T>::value)
+    if (std::is_trivially_copyable<T>::value) //will be if constexpr when going to C++-17
       memcpy(dest, source, size * sizeof(T));
     else {
       for (size_t i=0; i < size; i++)
@@ -580,6 +593,18 @@ inline void prefetcht2(const T* ptr)
   asm ("prefetcht2 %[ptr]" : : [ptr] "m" (ptr[0]));
 #endif
 }
+
+//load a cache line into the nontemporal cache, when you think you won't need the data again
+template<typename T>
+inline void prefetchnta(const T* ptr)
+{
+#if USE_SSE >= 1
+  //prefetch is part of SSE1
+  asm ("prefetchnta %[ptr]" : : [ptr] "m" (ptr[0]));
+#endif
+}
+
+//NOTE: x86-64 also has prefetchw and prefetchwt1 (load and signal intent to write). And clflush writes a cache line back to mem, freeing the space in the cache
 
 namespace Makros {
   
