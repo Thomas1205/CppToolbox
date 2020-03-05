@@ -37,12 +37,15 @@ template<typename T, typename ST=size_t>
 class Storage3D : public StorageBase<T,ST> {
 public:
 
-  typedef StorageBase<T,ST> Base;
+  using Base = StorageBase<T,ST>;
 
   explicit Storage3D();
 
   //copy constructor
-  Storage3D(const Storage3D& toCopy);
+  Storage3D(const Storage3D<T,ST>& toCopy);
+  
+  //move constructor
+  Storage3D(const Storage3D<T,ST>&& toTake);  
 
   explicit Storage3D(ST xDim, ST yDim, ST zDim);
 
@@ -82,11 +85,7 @@ public:
 
   void operator=(const Storage3D<T,ST>& toCopy);
 
-#ifdef SAFE_MODE
-  //for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
-  // => define this operator in safe mode, only to check that such an assignment is not made
-  void operator=(const T& invalid_object);
-#endif
+  Storage3D<T,ST>& operator=(Storage3D<T,ST>&& toTake) = default;
 
   //existing positions are copied, new ones are uninitialized
   void resize(ST newxDim, ST newyDim, ST newzDim);
@@ -112,7 +111,7 @@ public:
     resize_dirty(dims.xDim_, dims.yDim_, dims.zDim_);
   }
 
-  void swap(Storage3D<T,ST>& toSwap);
+  void swap(Storage3D<T,ST>& toSwap) noexcept;
 
 protected:
   ST xDim_;
@@ -203,9 +202,11 @@ namespace Makros {
 template<typename T, typename ST>
 /*static*/ const std::string Storage3D<T,ST>::stor3D_name_ = "unnamed Storage3D";
 
-template<typename T, typename ST> Storage3D<T,ST>::Storage3D() : StorageBase<T,ST>(), xDim_(0), yDim_(0), zDim_(0) {}
+template<typename T, typename ST> 
+Storage3D<T,ST>::Storage3D() : StorageBase<T,ST>(), xDim_(0), yDim_(0), zDim_(0) {}
 
-template<typename T, typename ST> Storage3D<T,ST>::Storage3D(const Storage3D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy.xDim()*toCopy.yDim()*toCopy.zDim())
+template<typename T, typename ST> 
+Storage3D<T,ST>::Storage3D(const Storage3D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy.xDim()*toCopy.yDim()*toCopy.zDim())
 {
   xDim_ = toCopy.xDim();
   yDim_ = toCopy.yDim();
@@ -220,19 +221,32 @@ template<typename T, typename ST> Storage3D<T,ST>::Storage3D(const Storage3D<T,S
   //memcpy(data_,toCopy.direct_access(),size_*sizeof(T));
 }
 
-template<typename T, typename ST> Storage3D<T,ST>::Storage3D(ST xDim, ST yDim, ST zDim) : StorageBase<T,ST>(xDim*yDim*zDim), xDim_(xDim), yDim_(yDim), zDim_(zDim)
+//move constructor
+template<typename T, typename ST> 
+Storage3D<T,ST>::Storage3D(const Storage3D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
+{
+  xDim_ = toTake.xDim();
+  yDim_ = toTake.yDim();
+  zDim_ = toTake.zDim();  
+}
+
+template<typename T, typename ST> 
+Storage3D<T,ST>::Storage3D(ST xDim, ST yDim, ST zDim) : StorageBase<T,ST>(xDim*yDim*zDim), xDim_(xDim), yDim_(yDim), zDim_(zDim)
 {
 }
 
-template<typename T, typename ST> Storage3D<T,ST>::Storage3D(const Dim3D<ST> dims)
+template<typename T, typename ST> 
+Storage3D<T,ST>::Storage3D(const Dim3D<ST> dims)
   : StorageBase<T,ST>(dims.xDim_*dims.yDim_*dims.zDim_), xDim_(dims.xDim_), yDim_(dims.yDim_), zDim_(dims.zDim_) {}
 
-template<typename T, typename ST> Storage3D<T,ST>::Storage3D(ST xDim, ST yDim, ST zDim, const T default_value)
+template<typename T, typename ST> 
+Storage3D<T,ST>::Storage3D(ST xDim, ST yDim, ST zDim, const T default_value)
   : StorageBase<T,ST>(xDim*yDim*zDim,default_value), xDim_(xDim), yDim_(yDim), zDim_(zDim)
 {
 }
 
-template<typename T, typename ST> Storage3D<T,ST>::Storage3D(const Dim3D<ST> dims, const T default_value)
+template<typename T, typename ST> 
+Storage3D<T,ST>::Storage3D(const Dim3D<ST> dims, const T default_value)
   : StorageBase<T,ST>(dims.xDim_*dims.yDim_*dims.zDim_,default_value), xDim_(dims.xDim_), yDim_(dims.yDim_), zDim_(dims.zDim_) {}
 
 template<typename T, typename ST> Storage3D<T,ST>::~Storage3D()
@@ -404,19 +418,6 @@ void Storage3D<T,ST>::operator=(const Storage3D<T,ST>& toCopy)
   // data_[i] = toCopy.direct_access(i);
 }
 
-#ifdef SAFE_MODE
-//for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
-// => define this operator in safe mode, only to check that such an assignment is not made
-template<typename T,typename ST>
-void Storage3D<T,ST>::operator=(const T& invalid_object)
-{
-  INTERNAL_ERROR << "assignment of an atomic entity to Storage1D \"" << this->name() << "\" of type "
-                 << Makros::Typename<T>()
-                 << " with " << Base::size_ << " elements. exiting." << std::endl;
-}
-#endif
-
-
 //existing positions are copied, new ones are uninitialized
 template<typename T, typename ST>
 void Storage3D<T,ST>::resize(ST newxDim, ST newyDim, ST newzDim)
@@ -500,9 +501,8 @@ void Storage3D<T,ST>::resize_dirty(ST newxDim, ST newyDim, ST newzDim)
 }
 
 template<typename T, typename ST>
-void Storage3D<T,ST>::swap(Storage3D<T,ST>& toSwap)
+void Storage3D<T,ST>::swap(Storage3D<T,ST>& toSwap) noexcept
 {
-
   std::swap(Base::data_, toSwap.data_);
   std::swap(Base::size_, toSwap.size_);
   std::swap(xDim_, toSwap.xDim_);

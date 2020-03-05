@@ -18,7 +18,7 @@ namespace Math2D {
   class Matrix : public ::Storage2D<T,ST> {
   public:
 
-    typedef Storage2D<T,ST> Base;
+    using Base = Storage2D<T,ST>;
 
     //according to https://gcc.gnu.org/onlinedocs/gcc-7.2.0/gcc/Common-Type-Attributes.html#Common-Type-Attributes , alignment has to be expressed like this:
     typedef T T_A16 ALIGNED16;
@@ -33,6 +33,12 @@ namespace Math2D {
     explicit Matrix(const std::pair<ST,ST> dims);
 
     explicit Matrix(const std::pair<ST,ST> dims, T default_value);
+
+    //copy constructor
+    Matrix(const Matrix<T,ST>& toCopy) = default;
+
+    //move constructor
+    Matrix(Matrix<T,ST>&& toTake) = default;
 
     /*---- destructor ----*/
     ~Matrix();
@@ -73,6 +79,10 @@ namespace Math2D {
     inline void add_constant(const T addon);
 
     inline void add_matrix_multiple(const Matrix<T,ST>& toAdd, const T alpha);
+
+    inline void operator=(const Matrix<T,ST>& toCopy);
+
+    Matrix<T,ST>& operator=(Matrix<T,ST>& toTake) = default;
 
     //---- mathematical operators ----
 
@@ -456,6 +466,12 @@ namespace Math2D {
 #endif
 
     Routines::array_add_multiple(Base::data_, Base::size_, alpha, toAdd.direct_access());
+  }
+
+  template<typename T, typename ST>
+  inline void Matrix<T,ST>::operator=(const Matrix<T,ST>& toCopy)
+  {
+    Base::operator=(toCopy);
   }
 
   //addition of another matrix of equal dimensions

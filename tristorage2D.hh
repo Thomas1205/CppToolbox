@@ -16,7 +16,7 @@ template<typename T, typename ST = size_t>
 class TriStorage2D : public StorageBase<T,ST> {
 public:
 
-  typedef StorageBase<T,ST> Base;
+  using Base = StorageBase<T,ST>;
 
   //default constructor
   explicit TriStorage2D();
@@ -27,6 +27,9 @@ public:
 
   //copy constructor
   TriStorage2D(const TriStorage2D<T,ST>& toCopy);
+
+  //move constructor
+  TriStorage2D(const TriStorage2D<T,ST>&& toTake);
 
   ~TriStorage2D();
 
@@ -47,12 +50,16 @@ public:
   inline T& operator()(ST x, ST y);
 
   void operator=(const TriStorage2D<T,ST>& toCopy);
+  
+  TriStorage2D<T,ST>& operator=(TriStorage2D<T,ST>&& toTake) = default;
 
   inline T* row_ptr(ST y);
 
   inline const T* row_ptr(ST y) const;
 
   inline ST dim() const;
+
+  void swap(TriStorage2D<T,ST>& toSwap) noexcept;
 
 protected:
 
@@ -142,32 +149,31 @@ template<typename T, typename ST>
 /*static*/ const std::string TriStorage2D<T,ST>::tristor2D_name_ = "unnamed TriStorage2D";
 
 //constructors
-template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D() : StorageBase<T,ST>(), dim_(0) {}
+template<typename T, typename ST> 
+TriStorage2D<T,ST>::TriStorage2D() : StorageBase<T,ST>(), dim_(0) {}
 
-template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D(ST dim) : StorageBase<T,ST>(dim*(dim+1) / 2), dim_(dim)
+template<typename T, typename ST> 
+TriStorage2D<T,ST>::TriStorage2D(ST dim) : StorageBase<T,ST>(dim*(dim+1) / 2), dim_(dim)
 {
 }
 
-template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D(ST dim, T default_value) : StorageBase<T,ST>(dim*(dim+1) / 2, default_value), dim_(dim)
+template<typename T, typename ST> 
+TriStorage2D<T,ST>::TriStorage2D(ST dim, T default_value) : StorageBase<T,ST>(dim*(dim+1) / 2, default_value), dim_(dim)
 {
 }
 
 //copy constructor
-template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D(const TriStorage2D<T,ST>& toCopy)
+template<typename T, typename ST> 
+TriStorage2D<T,ST>::TriStorage2D(const TriStorage2D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy)
 {
   dim_ = toCopy.dim();
-  StorageBase<T,ST>::size_ = toCopy.size();
+}
 
-  if (StorageBase<T,ST>::size_ == 0)
-    StorageBase<T,ST>::data_ = 0;
-  else {
-    StorageBase<T,ST>::data_ = new T[StorageBase<T,ST>::size_];
-
-    Makros::unified_assign(StorageBase<T,ST>::data_, toCopy.direct_access(), StorageBase<T,ST>::size_);
-
-    //for (ST i = 0; i < size_; i++)
-    //  data_[i] = toCopy.direct_access(i);
-  }
+//move constructor
+template<typename T, typename ST> 
+TriStorage2D<T,ST>::TriStorage2D(const TriStorage2D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
+{
+  dim_ = toTake.dim_;
 }
 
 //destructor
@@ -336,6 +342,14 @@ void TriStorage2D<T,ST>::resize_dirty(ST newDim)
   }
 }
 
+
+template<typename T, typename ST>
+void TriStorage2D<T,ST>::swap(TriStorage2D<T,ST>& toSwap) noexcept
+{
+  std::swap(Base::data_,toSwap.data_);
+  std::swap(Base::size_,toSwap.size_);
+  std::swap(dim_,toSwap.dim_);
+}
 
 template<typename T, typename ST>
 bool operator==(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2)

@@ -24,9 +24,10 @@ namespace Math2D {
   class TriMatrix : public ::TriStorage2D<T,ST> {
   public:
 
-    typedef ::TriStorage2D<T,ST> Base;
+    using Base = ::TriStorage2D<T,ST>;
 
-    typedef T ALIGNED16 T_A16;
+    //according to https://gcc.gnu.org/onlinedocs/gcc-7.2.0/gcc/Common-Type-Attributes.html#Common-Type-Attributes , alignment has to be expressed like this:
+    typedef T T_A16 ALIGNED16;
 
     /*---- constructors -----*/
     explicit TriMatrix();
@@ -35,11 +36,14 @@ namespace Math2D {
 
     explicit TriMatrix(ST dim, const T default_value);
 
+    TriMatrix(const TriMatrix<T,ST>& toCopy) = default;
+    
+    TriMatrix(TriMatrix<T,ST>&& toTake) = default;
+
     /*---- destructor ----*/
     ~TriMatrix();
 
     virtual const std::string& name() const;
-
 
     /*** maximal element ***/
     T max() const;
@@ -74,6 +78,7 @@ namespace Math2D {
   template <typename T, typename ST=size_t>
   class NamedTriMatrix : public TriMatrix<T,ST> {
   public:
+  
     NamedTriMatrix();
 
     NamedTriMatrix(std::string name);
@@ -102,9 +107,10 @@ namespace Math2D {
   class TriangularMatrix : public TriMatrix<T,ST> {
   public:
 
-    typedef TriMatrix<T,ST> Base;
+    using Base = TriMatrix<T,ST>;
 
-    typedef T ALIGNED16 T_A16;
+    //according to https://gcc.gnu.org/onlinedocs/gcc-7.2.0/gcc/Common-Type-Attributes.html#Common-Type-Attributes , alignment has to be expressed like this:
+    typedef T T_A16 ALIGNED16;
 
     /*---- constructors -----*/
     explicit TriangularMatrix(bool lower_triangular=true);
@@ -112,6 +118,10 @@ namespace Math2D {
     explicit TriangularMatrix(ST dim, bool lower_triangular);
 
     explicit TriangularMatrix(ST dim, const T default_value, bool lower_triangular);
+
+    TriangularMatrix(const TriangularMatrix<T,ST>& toCopy) = default;
+    
+    TriangularMatrix(TriangularMatrix<T,ST>&& toTake) = default;
 
     /*---- destructor ----*/
     ~TriangularMatrix();
@@ -125,7 +135,7 @@ namespace Math2D {
 
     T sum() const;
 
-    T determinant() const;
+    long double determinant() const;
 
     /*** L2-norm of the matrix ***/
     double norm() const;
@@ -177,9 +187,10 @@ namespace Math2D {
   class TriangularMatrixAsymAccess : public TriangularMatrix<T,ST> {
   public:
 
-    typedef TriangularMatrix<T,ST> Base;
+    using Base = TriangularMatrix<T,ST>;
 
-    typedef T ALIGNED16 T_A16;
+    //according to https://gcc.gnu.org/onlinedocs/gcc-7.2.0/gcc/Common-Type-Attributes.html#Common-Type-Attributes , alignment has to be expressed like this:
+    typedef T T_A16 ALIGNED16;
 
     /*---- constructors -----*/
     explicit TriangularMatrixAsymAccess(bool lower_triangular=true);
@@ -187,6 +198,10 @@ namespace Math2D {
     explicit TriangularMatrixAsymAccess(ST dim, bool lower_triangular);
 
     explicit TriangularMatrixAsymAccess(ST dim, const T default_value, bool lower_triangular);
+
+    TriangularMatrixAsymAccess(const TriangularMatrixAsymAccess<T,ST>& toCopy) = default;
+    
+    TriangularMatrixAsymAccess(TriangularMatrixAsymAccess<T,ST>&& toTake) = default;
 
     /*---- destructor ----*/
     ~TriangularMatrixAsymAccess();
@@ -210,9 +225,10 @@ namespace Math2D {
   class SymmetricMatrix : public TriMatrix<T,ST> {
   public:
 
-    typedef TriMatrix<T,ST> Base;
+    using Base = TriMatrix<T,ST>;
 
-    typedef T ALIGNED16 T_A16;
+    //according to https://gcc.gnu.org/onlinedocs/gcc-7.2.0/gcc/Common-Type-Attributes.html#Common-Type-Attributes , alignment has to be expressed like this:
+    typedef T T_A16 ALIGNED16;
 
     /*---- constructors -----*/
     explicit SymmetricMatrix();
@@ -220,6 +236,10 @@ namespace Math2D {
     explicit SymmetricMatrix(ST dim);
 
     explicit SymmetricMatrix(ST dim, const T default_value);
+
+    SymmetricMatrix(const SymmetricMatrix<T,ST>& toCopy) = default;
+    
+    SymmetricMatrix(SymmetricMatrix<T,ST>&& toTake) = default;
 
     /*---- destructor ----*/
     ~SymmetricMatrix();
@@ -395,7 +415,6 @@ namespace Math2D {
   template<typename T, typename ST>
   T TriMatrix<T,ST>::max() const
   {
-
     const T_A16* data = Base::data_;
     const ST size = Base::size_;
 
@@ -408,7 +427,6 @@ namespace Math2D {
   template<typename T, typename ST>
   T TriMatrix<T,ST>::min() const
   {
-
     const T_A16* data = Base::data_;
     const ST size = Base::size_;
 
@@ -421,7 +439,6 @@ namespace Math2D {
   template<typename T, typename ST>
   T TriMatrix<T,ST>::max_abs() const
   {
-
     const T_A16* data = Base::data_;
     const ST size = Base::size_;
 
@@ -441,7 +458,6 @@ namespace Math2D {
   template<typename T, typename ST>
   void TriMatrix<T,ST>::add_constant(const T addon)
   {
-
     const T_A16* data = Base::data_;
     const ST size = Base::size_;
 
@@ -548,7 +564,6 @@ namespace Math2D {
   template<typename T, typename ST>
   void TriMatrix<T,ST>::operator*=(const T scalar)
   {
-
     T_A16* attr_restrict data = Base::data_;
 
     const ST size = Base::size_;
@@ -561,13 +576,17 @@ namespace Math2D {
 
   /****** implementation of NamedTriMatrix and related stand-alone operators ******/
 
-  template<typename T, typename ST> NamedTriMatrix<T,ST>::NamedTriMatrix() {}
+  template<typename T, typename ST> 
+  NamedTriMatrix<T,ST>::NamedTriMatrix() {}
 
-  template<typename T, typename ST> NamedTriMatrix<T,ST>::NamedTriMatrix(std::string name) : name_(name) {}
+  template<typename T, typename ST> 
+  NamedTriMatrix<T,ST>::NamedTriMatrix(std::string name) : name_(name) {}
 
-  template<typename T, typename ST> NamedTriMatrix<T,ST>::NamedTriMatrix(ST dim, std::string name) : TriMatrix<T,ST>(dim), name_(name) {}
+  template<typename T, typename ST> 
+  NamedTriMatrix<T,ST>::NamedTriMatrix(ST dim, std::string name) : TriMatrix<T,ST>(dim), name_(name) {}
 
-  template<typename T, typename ST> NamedTriMatrix<T,ST>::NamedTriMatrix(ST dim, T default_value, std::string name) : TriMatrix<T,ST>(dim,default_value), name_(name) {}
+  template<typename T, typename ST> 
+  NamedTriMatrix<T,ST>::NamedTriMatrix(ST dim, T default_value, std::string name) : TriMatrix<T,ST>(dim,default_value), name_(name) {}
 
   template<typename T, typename ST>
   inline void NamedTriMatrix<T,ST>::operator=(const TriMatrix<T,ST>& toCopy)
@@ -634,7 +653,6 @@ namespace Math2D {
   template<typename T, typename ST>
   T TriangularMatrix<T,ST>::sum() const
   {
-
     const T_A16* attr_restrict data = Base::data_;
     const ST size = Base::size_;
 
@@ -649,7 +667,6 @@ namespace Math2D {
   template<typename T, typename ST>
   double TriangularMatrix<T,ST>::norm() const
   {
-
     const T_A16* attr_restrict data = Base::data_;
     const ST size = Base::size_;
 
@@ -665,7 +682,6 @@ namespace Math2D {
   template<typename T, typename ST>
   double TriangularMatrix<T,ST>::sqr_norm() const
   {
-
     const T_A16* attr_restrict data = Base::data_;
     const ST size = Base::size_;
 
@@ -682,7 +698,6 @@ namespace Math2D {
   template<typename T, typename ST>
   double TriangularMatrix<T,ST>::norm_l1() const
   {
-
     const T_A16* attr_restrict data = Base::data_;
     const ST size = Base::size_;
 
@@ -696,12 +711,11 @@ namespace Math2D {
 
 
   template<typename T, typename ST>
-  T TriangularMatrix<T,ST>::determinant() const
+  long double TriangularMatrix<T,ST>::determinant() const
   {
-
     const ST dim = Base::dim_;
 
-    T result = (T) 0;
+    long double result = 1;
     for (ST i=0; i < dim; i++)
       result *= this->operator()(i,i);
 
@@ -728,12 +742,10 @@ namespace Math2D {
   }
 
 
-
   //streaming
   template <typename T, typename ST>
   std::ostream& operator<<(std::ostream& s, const TriangularMatrix<T,ST>& m)
   {
-
     const ST dim = m.dim();
 
     if (dim == 0)
@@ -773,7 +785,6 @@ namespace Math2D {
   TriangularMatrix<T,ST> operator+(const TriangularMatrix<T,ST>& m1, const TriangularMatrix<T,ST>& m2)
   {
 
-
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (m1.dim() != m2.dim()) {
 
@@ -787,7 +798,7 @@ namespace Math2D {
     }
 #endif
 
-    typedef T ALIGNED16 T_A16;
+    typedef T T_A16 ALIGNED16;
 
     const T_A16* attr_restrict data = m1.direct_access();
     const T_A16* attr_restrict data2 = m2.direct_access();
@@ -936,7 +947,6 @@ namespace Math2D {
   template<typename T, typename ST>
   inline T& TriangularMatrixAsymAccess<T,ST>::operator()(ST x, ST y)
   {
-
     //essentially the same access pattern as for symmetric access, only in safe mode failure is returned
 
 #ifdef SAFE_MODE
@@ -982,7 +992,6 @@ namespace Math2D {
   template<typename T, typename ST>
   T SymmetricMatrix<T,ST>::sum() const
   {
-
     const ST dim = Base::dim_;
 
     const T_A16* attr_restrict data = Base::data_;
@@ -1040,7 +1049,6 @@ namespace Math2D {
   template <typename T, typename ST>
   std::ostream& operator<<(std::ostream& s, const SymmetricMatrix<T,ST>& m)
   {
-
     const ST dim = m.dim();
 
     if (dim == 0)
@@ -1069,7 +1077,6 @@ namespace Math2D {
   template<typename T, typename ST>
   SymmetricMatrix<T,ST> operator+(const SymmetricMatrix<T,ST>& m1, const SymmetricMatrix<T,ST>& m2)
   {
-
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
     if (m1.dim() != m2.dim()) {
@@ -1104,7 +1111,6 @@ namespace Math2D {
   template<typename T, typename ST>
   Math1D::Vector<T,ST> operator*(const SymmetricMatrix<T,ST>& m, const Math1D::Vector<T,ST>& vec)
   {
-
     const ST dim = m.dim();
 
     Math1D::Vector<T,ST> result(dim);
@@ -1126,7 +1132,6 @@ namespace Math2D {
   template<typename T, typename ST>
   void assign(Matrix<T,ST>& dest, const SymmetricMatrix<T,ST>& src)
   {
-
     const ST dim = src.dim();
 
     dest.resize_dirty(dim,dim);

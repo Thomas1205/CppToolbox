@@ -1,5 +1,12 @@
 
-ANNOUNCEMENT: after the 1.15 release, the C++ toolbox will be C++-11, with many template exploitations
+ANNOUNCEMENT: Following the 1.15 release, C++ toolbox will has moved to C++-11. This brings many template exploitations, plus move constructors. 
+In contrast, moving to C++-14 or C++-17 will not give a major jump (as far as I can presently see).
+
+/***** changes after the last release ******/
+
+- moved to C++-11:
+  - made some template specializations obsolete by using constexpr
+  - included move constructors and operator=
 
 /***** changes for version 1.15 (February 17 2020) ******/
 

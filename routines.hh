@@ -5,7 +5,7 @@
 #define ROUTINES_HH
 
 #include "makros.hh"
-#include <algorithm> //for reverse, max, min, could also use find
+#include <algorithm> //for reverse, max, min, find
 
 //Explanations for USE_SSE:
 // - values 1-4 are SSE1-4 (note that x86_64 always has at least 2), 4 includes 4.1 and 4.2
@@ -26,6 +26,12 @@
 //    Intel mov     eax,[ebx+3]          AT&T  movl    3(%ebx),%eax               
 //    Intel add     eax,[ebx+ecx*2h]     AT&T  addl    (%ebx,%ecx,0x2),%eax 
 
+
+//NOTES on instruction lengths for equivalent instructions (some VEXes are 3 bytes, others 2 bytes):
+// vmodupd (VEX.128.66.0F.WIG 10) and vmovdqu (VEX.128.F3.0F.WIG 6F) seem longer than vmovups (VEX.128.0F.WIG 10). But experiments show they have equal length
+
+//NOTE: in C++20, register will be removed -> we remove it already
+
 #ifdef USE_ASM
 static_assert(sizeof(uint) == 4, "wrong size");
 static_assert(sizeof(int) == 4, "wrong size");
@@ -40,7 +46,7 @@ namespace Routines {
   
   /***************** reverse *******************/
   
-  //no plans for specialized 16 and 8 bit routines at present
+  //no plans for specialized 16 and 8 bit routines at present. 8 bit is best implemented with movbe reg64/32
   
   inline void nontrivial_reverse_uint_array(uint* data, const size_t nData)
   {
@@ -556,11 +562,13 @@ namespace Routines {
                         : : [ind] "m" (ind[0]), [uinc] "m" (uinc), [ukey] "m" (key)
                         : "ymm2", "ymm3", "ymm4", "ymm5");
 
-      register uint res = MAX_UINT;
+      uint res = MAX_UINT;
       for (; i+8 <= nData; i+=8) {
 
         //NOTE: jumps outside of asm blocks are allowed only in asm goto, but that cannot have outputs (and local variables do not seem to get assembler names)
         // => probably best to write the loop in assembler, too
+
+        //NOTE: an alternative to vptest; jz; would be vmovmskps xmm, cx; jcxz;
 
         // Assembler wishlist: horizontal min and max -> would make the uniqueness assumption superflous (not even present in AVX-512)
   
@@ -601,11 +609,13 @@ namespace Routines {
                           : : [finc] "m" (finc) : "xmm4");
       }
 
-      register uint res = MAX_UINT;
+      uint res = MAX_UINT;
       for (; i+4 <= nData; i+=4) {
 
         //NOTE: jumps outside of asm blocks are allowed only in asm goto, but that cannot have outputs (and local variables do not seem to get assembler names)
         // => probably best to write the loop in assembler, too
+
+        //NOTE: an alternative to vptest; jz would be movmskps cx, xmm; jcxz;
 
         // Assembler wishlist: horizontal min and max -> would make the uniqueness assumption superflous (not even present in AVX-512)
 
@@ -649,6 +659,7 @@ namespace Routines {
   inline uint find_unique(const T* data, const T key, const uint nData)
   {
     if (sizeof(T) == 4) {
+      //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
       return find_unique_uint((const uint*) data, reinterpret<const uint, const T>(key), nData);
     }
     else {
@@ -689,7 +700,7 @@ namespace Routines {
                         : : [ind] "m" (ind[0]), [finc] "m" (finc), [fkey] "m" (fkey), [fmax] "m" (fmax)
                         : "xmm2", "xmm3", "xmm4", "xmm5");
 
-      register uint res = MAX_UINT;
+      uint res = MAX_UINT;
       for (; i+4 <= nData; i+=4) 
       {
         //NOTE: jumps outside of asm blocks are allowed only in asm goto, but that cannot have outputs (and local variables do not seem to get assembler names)
@@ -704,7 +715,7 @@ namespace Routines {
                           "jz 1f \n\t" //jump if no equals
                           //manual phmin
                           "vmovhlps %%xmm2, %%xmm1, %%xmm1 \n\t" //move high two ints of xmm2 to low in xmm1
-                          //"vpsrldq $8, %%xmm2, %%xmm1 \n\t" //move high two ints of xmm2 to low in xmm1: dq is byte shift
+                          //"vpsrldq $8, %%xmm2, %%xmm1 \n\t" //BYTE suffle for the entire reg: move high two ints of xmm2 to low in xmm1: dq is byte shift
                           "pminud %%xmm1, %%xmm2   \n\t"
                           "vpsrldq $4, %%xmm2, %%xmm1 \n\t"
                           "pminud %%xmm1, %%xmm2   \n\t"
@@ -980,6 +991,7 @@ namespace Routines {
 
     if (nData >= 6) {
 
+      //TODO: make inc 4, safes final shuffle
       //const size_t one = 1;
       const double inc = reinterpret<const size_t, const double>(1); //*reinterpret_cast<const double*>(&one);
 
@@ -1274,6 +1286,7 @@ namespace Routines {
 
     if (nData >= 8) {
 
+      //TODO: make inc 4, safes final shuffle
       //const size_t one = 1;
       const double inc = reinterpret<const size_t, const double>(1); //*reinterpret_cast<const double*>(&one);
 
@@ -1587,9 +1600,11 @@ namespace Routines {
 #else
 
     // AVX  - align16 is no good, need align32 for aligned moves
+    //NOTE: for large arrays, using vmovntpd instead of vmovupd might be better, but it would need 32-byte alignment!
 
     asm __volatile__ ("vbroadcastsd %[w1], %%ymm0 \n\t" //ymm0 = w1
                       : : [w1] "m" (alpha) : "ymm0");
+
 
     //vmulpd can take an unaligned mem arg, vfnmadd too!
     //vsubpd can take an unaligned mem arg

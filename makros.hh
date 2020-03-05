@@ -13,7 +13,7 @@
 #include <typeinfo>
 #include <cmath> //provides abs, sqrt, pow, log and exp functions
 #include <algorithm> //necessary?
-#include <numeric> //necessary? (provides accumulat and inner_product)
+#include <numeric> //necessary? (provides accumulate and inner_product)
 
 #include <string.h> //memcpy
 #include <type_traits>
@@ -40,7 +40,8 @@ using std::isinf;
 //#define attr_restrict [[restrict]] //g++ ignores this
 //#define ref_attr_restrict [[restrict]] //g++ ignores this
 //functions getting a pointer and changing its data are not leaf_const (https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#Common-Function-Attributes)
-#define leaf_const [[leaf]] [[const]]
+#define leaf_const __attribute__((leaf)) __attribute__((const))
+//#define leaf_const [[leaf]] [[const]]
 
 //pointers returned by new are guaranteed to have an address that is divisible by 16 if the type is a basic one
 //it is convenient to give the compiler this hint so that he need not handle unaligned cases
@@ -84,15 +85,19 @@ inline void print_trace (void) {}
 #define abstract
 
 /******************** Data Macros *****************************/
-typedef unsigned int uint;
-typedef unsigned short ushort;
-typedef unsigned char uchar;
-typedef long long int Int64;
-typedef unsigned long long int UInt64;
+//NOTE: since C++-11, using is preferred over typedef
+using uint = unsigned int;
+using ushort = unsigned short;
+using uchar = unsigned char;
+using Int64 = long long int;
+using UInt64 = unsigned long long int;
 //according to https://gcc.gnu.org/onlinedocs/gcc-7.2.0/gcc/Common-Type-Attributes.html#Common-Type-Attributes , alignment has to be expressed like this:
 typedef double double_A16 ALIGNED16;
 typedef float float_A16 ALIGNED16;
 typedef char char_A16 ALIGNED16;
+
+template<typename T>
+using T_A16 = T ALIGNED16;
 
 #define MIN_DOUBLE -1.0*std::numeric_limits<double>::max()
 #define MAX_DOUBLE std::numeric_limits<double>::max()

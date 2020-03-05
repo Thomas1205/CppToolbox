@@ -17,7 +17,7 @@ namespace Math3D {
   class Tensor : public Storage3D<T,ST> {
   public:
 
-    typedef Storage3D<T,ST> Base;
+    using Base = Storage3D<T,ST>;
 
     //according to https://gcc.gnu.org/onlinedocs/gcc-7.2.0/gcc/Common-Type-Attributes.html#Common-Type-Attributes , alignment has to be expressed like this:
     typedef T T_A16 ALIGNED16;
@@ -31,6 +31,12 @@ namespace Math3D {
     explicit Tensor(ST xDim, ST yDim, ST zDim, const T default_value);
 
     explicit Tensor(const Dim3D<ST> dims, T default_value);
+
+    //copy constructor
+    Tensor(const Tensor<T,ST>& toCopy) = default;
+    
+    //move constructor
+    Tensor(Tensor<T,ST>&& toTake) = default;
 
     ~Tensor();
 
@@ -92,6 +98,10 @@ namespace Math3D {
     inline T max_abs(ST z) const;
 
     double max_vector_norm() const;
+
+    void operator=(const Tensor<T,ST>& toCopy);
+    
+    Tensor<T,ST>& operator=(Tensor<T,ST>&& toTake) = default;
 
     void operator+=(const Tensor<T,ST>& toAdd);
 
@@ -296,6 +306,12 @@ namespace Math3D {
 #endif
 
     Routines::array_add_multiple(Base::data_, Base::size_, alpha, toAdd.direct_access());
+  }
+
+  template<typename T, typename ST>
+  void Tensor<T,ST>::operator=(const Tensor<T,ST>& toCopy)
+  {
+    Base::operator=(toCopy); 
   }
 
   template<typename T, typename ST>

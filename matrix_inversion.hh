@@ -8,25 +8,24 @@
 
 class NotInvertibleException {};
 
-template<typename T>
-void invert_matrix(const Math2D::Matrix<T>& toInvert, Math2D::Matrix<T>& result) throw (NotInvertibleException);
+template<typename T, typename ST>
+void invert_matrix(const Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result) /*throw (NotInvertibleException)*/;
 
 //the matrix toInvert is modified in case the dimension of the matrix is greater than 2.
 //toInvert then contains the identity matrix (up to roundoff errors) after the call.
-template<typename T>
-void invert_and_destroy_matrix(Math2D::Matrix<T>& toInvert, Math2D::Matrix<T>& result)
-throw (NotInvertibleException);
+template<typename T, typename ST>
+void invert_and_destroy_matrix(Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result)
+/*throw (NotInvertibleException)*/;
 
 
 /********* implementation **********/
 /** these routines are mostly intended for all those who need a quick solution, i.e. are too lazy to link to
 ** one of the standard packages. Most likely there are faster and more robust solutions out there. **/
 
-template<typename T>
-void invert_matrix(const Math2D::Matrix<T>& toInvert, Math2D::Matrix<T>& result) throw (NotInvertibleException)
+template<typename T, typename ST>
+void invert_matrix(const Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result) /*throw (NotInvertibleException)*/
 {
-
-  size_t dim = toInvert.xDim();
+  const ST dim = toInvert.xDim();
   if (toInvert.yDim() != dim) {
 
     INTERNAL_ERROR << " cannot invert non-square matrix \"" << toInvert.name() << "\" of size "
@@ -61,22 +60,17 @@ void invert_matrix(const Math2D::Matrix<T>& toInvert, Math2D::Matrix<T>& result)
     Math2D::Matrix<T> copy = toInvert;
     invert_and_destroy_matrix(copy,result);
   }
-
 }
 
-
-template<typename T>
-void invert_and_destroy_matrix(Math2D::Matrix<T>& toInvert, Math2D::Matrix<T>& result)
-throw (NotInvertibleException)
+template<typename T, typename ST>
+void invert_and_destroy_matrix(Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result) /*throw (NotInvertibleException)*/
 {
-
-  size_t dim = toInvert.xDim();
+  const ST dim = toInvert.xDim();
   if (toInvert.yDim() != dim) {
 
     INTERNAL_ERROR << " cannot invert non-square matrix \"" << toInvert.name() << "\" of size "
                    << dim << "x" << toInvert.yDim() << ". Exiting..." << std::endl;
   }
-
 
   if (result.xDim() != dim || result.yDim() != dim)
     result.resize_dirty(dim,dim);
@@ -131,18 +125,15 @@ throw (NotInvertibleException)
       /** swap rows if necessary **/
       if (arg_max != y) {
 
-// 	for (uint x=y; x <  dim; x++) {
+// 	for (uint x=y; x < dim; x++) {
 // 	  swap(toInvert(x,y),toInvert(x,arg_max));
 // 	}
-        std::swap_ranges(toInvert.direct_access()+y*dim+y, toInvert.direct_access()+(y+1)*dim,
-                         toInvert.direct_access()+arg_max*dim+y);
+        std::swap_ranges(toInvert.row_ptr(y)+y, toInvert.row_ptr(y+1), toInvert.row_ptr(arg_max)+y);
 
 // 	for (uint x=0; x < dim; x++) {
 // 	  swap(result(x,y),result(x,arg_max));
 // 	}
-        std::swap_ranges(result.direct_access()+y*dim,result.direct_access()+(y+1)*dim,
-                         result.direct_access()+arg_max*dim);
-
+        std::swap_ranges(result.row_ptr(y), result.row_ptr(y+1), result.row_ptr(arg_max));
       }
 
 //       std::cerr << "toInvert after swap: " << toInvert << std::endl;

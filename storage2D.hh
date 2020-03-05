@@ -15,7 +15,7 @@ template<typename T, typename ST = size_t>
 class Storage2D : public StorageBase<T,ST> {
 public:
 
-  typedef StorageBase<T,ST> Base;
+  using Base = StorageBase<T,ST>;
 
   //default constructor
   explicit Storage2D();
@@ -30,6 +30,9 @@ public:
 
   //copy constructor
   Storage2D(const Storage2D<T,ST>& toCopy);
+  
+  //move constructor
+  Storage2D(Storage2D<T,ST>&& toTake);
 
   ~Storage2D();
 
@@ -66,11 +69,7 @@ public:
 
   void operator=(const Storage2D<T,ST>& toCopy);
 
-#ifdef SAFE_MODE
-  //for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
-  // => define this operator in safe mode, only to check that such an assignment is not made
-  void operator=(const T& invalid_object);
-#endif
+  Storage2D<T,ST>& operator=(Storage2D<T,ST>&& toTake) = default;
 
   inline T* row_ptr(ST y);
 
@@ -88,7 +87,7 @@ public:
 
   inline std::pair<ST,ST> dims() const;
 
-  void swap(Storage2D<T,ST>& toSwap);
+  void swap(Storage2D<T,ST>& toSwap) noexcept;
 
 protected:
 
@@ -183,29 +182,35 @@ template<typename T, typename ST>
 /*static*/ const std::string Storage2D<T,ST>::stor2D_name_ = "unnamed 2Dstorage";
 
 //constructors
-template<typename T, typename ST> Storage2D<T,ST>::Storage2D() : StorageBase<T,ST>(), xDim_(0), yDim_(0) {}
+template<typename T, typename ST> 
+Storage2D<T,ST>::Storage2D() : StorageBase<T,ST>(), xDim_(0), yDim_(0) {}
 
-template<typename T, typename ST> Storage2D<T,ST>::Storage2D(ST xDim, ST yDim) : StorageBase<T,ST>(xDim*yDim), xDim_(xDim), yDim_(yDim)
+template<typename T, typename ST> 
+Storage2D<T,ST>::Storage2D(ST xDim, ST yDim) : StorageBase<T,ST>(xDim*yDim), xDim_(xDim), yDim_(yDim)
 {
 }
 
-template<typename T, typename ST> Storage2D<T,ST>::Storage2D(ST xDim, ST yDim, const T default_value)
+template<typename T, typename ST> 
+Storage2D<T,ST>::Storage2D(ST xDim, ST yDim, const T default_value)
   : StorageBase<T,ST>(xDim*yDim, default_value), xDim_(xDim), yDim_(yDim)
 {
 }
 
-template<typename T, typename ST> Storage2D<T,ST>::Storage2D(const std::pair<ST,ST> dims)
+template<typename T, typename ST> 
+Storage2D<T,ST>::Storage2D(const std::pair<ST,ST> dims)
   : StorageBase<T,ST>(dims.first*dims.second), xDim_(dims.first), yDim_(dims.second)
 {
 }
 
-template<typename T, typename ST> Storage2D<T,ST>::Storage2D(const std::pair<ST,ST> dims, T default_value)
+template<typename T, typename ST> 
+Storage2D<T,ST>::Storage2D(const std::pair<ST,ST> dims, T default_value)
   : StorageBase<T,ST>(dims.first*dims.second, default_value), xDim_(dims.first), yDim_(dims.second)
 {
 }
 
 //copy constructor
-template<typename T, typename ST> Storage2D<T,ST>::Storage2D(const Storage2D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy.xDim()*toCopy.yDim())
+template<typename T, typename ST> 
+Storage2D<T,ST>::Storage2D(const Storage2D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy.xDim()*toCopy.yDim())
 {
   xDim_ = toCopy.xDim();
   yDim_ = toCopy.yDim();
@@ -217,24 +222,18 @@ template<typename T, typename ST> Storage2D<T,ST>::Storage2D(const Storage2D<T,S
     Makros::unified_assign(Base::data_, toCopy.direct_access(), size);
 }
 
-// template<>
-// Storage2D<int>::Storage2D(const Storage2D<int>& toCopy);
-
-// template<>
-// Storage2D<uint>::Storage2D(const Storage2D<uint>& toCopy);
-
-// template<>
-// Storage2D<float>::Storage2D(const Storage2D<float>& toCopy);
-
-// template<>
-// Storage2D<double>::Storage2D(const Storage2D<double>& toCopy);
-
-// template<>
-// Storage2D<long double>::Storage2D(const Storage2D<long double>& toCopy);
+//move constructor
+template<typename T, typename ST> 
+Storage2D<T,ST>::Storage2D(Storage2D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
+{
+  xDim_ = toTake.xDim_;
+  yDim_ = toTake.yDim_;
+}
 
 
 //destructor
-template <typename T, typename ST> Storage2D<T,ST>::~Storage2D()
+template<typename T, typename ST> 
+Storage2D<T,ST>::~Storage2D()
 {
 }
 
@@ -247,14 +246,14 @@ const std::string& Storage2D<T,ST>::name() const
 template<typename T, typename ST>
 inline T* Storage2D<T,ST>::row_ptr(ST y)
 {
-  assert(y < yDim_);
+  assert(y <= yDim_); //allow use as endpointer for last row
   return Base::data_ + y * xDim_;
 }
 
 template<typename T, typename ST>
 inline T* Storage2D<T,ST>::row_ptr(ST y) const
 {
-  assert(y < yDim_);
+  assert(y <= yDim_); //allow use as endpointer for last row
   return Base::data_ + y * xDim_;
 }
 
@@ -366,36 +365,6 @@ void Storage2D<T,ST>::operator=(const Storage2D<T,ST>& toCopy)
   //memcpy(data_,toCopy.direct_access(),size_*sizeof(T));
 }
 
-
-#ifdef SAFE_MODE
-//for some reason g++ allows to assign an object of type T, but this does NOT produce the effect one would expect
-// => define this operator in safe mode, only to check that such an assignment is not made
-template<typename T,typename ST>
-void Storage2D<T,ST>::operator=(const T& invalid_object)
-{
-  INTERNAL_ERROR << "assignment of an atomic entity to Storage2D \"" << this->name() << "\" of type "
-                 << Makros::Typename<T>()
-                 << " with " << Base::size_ << " elements. exiting." << std::endl;
-}
-#endif
-
-
-// template<>
-// void Storage2D<int>::operator=(const Storage2D<int>& toCopy);
-
-// template<>
-// void Storage2D<uint>::operator=(const Storage2D<uint>& toCopy);
-
-// template<>
-// void Storage2D<float>::operator=(const Storage2D<float>& toCopy);
-
-// template<>
-// void Storage2D<double>::operator=(const Storage2D<double>& toCopy);
-
-// template<>
-// void Storage2D<long double>::operator=(const Storage2D<long double>& toCopy);
-
-
 template <typename T, typename ST>
 void Storage2D<T,ST>::resize(ST newxDim, ST newyDim)
 {
@@ -468,7 +437,7 @@ void Storage2D<T,ST>::resize_dirty(ST newxDim, ST newyDim)
 }
 
 template<typename T, typename ST>
-void Storage2D<T,ST>::swap(Storage2D<T,ST>& toSwap)
+void Storage2D<T,ST>::swap(Storage2D<T,ST>& toSwap) noexcept
 {
   std::swap(Base::data_, toSwap.data_);
   std::swap(Base::size_, toSwap.size_);

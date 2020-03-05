@@ -10,6 +10,7 @@
 #include "sorting.hh"
 #include "routines.hh"
 
+//can use std::iota from <numeric> since C++-11
 template<typename T, typename ST>
 inline void set_idfunc(Storage1D<T, ST>& vec) {
   const ST size = vec.size();
@@ -18,6 +19,7 @@ inline void set_idfunc(Storage1D<T, ST>& vec) {
     vec[i] = (T) i;
 }
 
+//can use std::iota from <numeric> since C++-11
 template<typename T, typename ST>
 inline void set_idfunc(FlexibleStorage1D<T, ST>& vec) {
   const ST size = vec.size();
@@ -27,7 +29,10 @@ inline void set_idfunc(FlexibleStorage1D<T, ST>& vec) {
 }
 
 template<typename T, typename ST>
-inline bool approx_equal(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2, T tolerance) leaf_const
+inline bool approx_equal(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2, T tolerance) leaf_const;
+
+template<typename T, typename ST>
+inline bool approx_equal(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2, T tolerance)
 {
   if (v1.size() != v2.size())
     return false;
@@ -40,7 +45,10 @@ inline bool approx_equal(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2, T
 }
 
 template<typename T, typename ST>
-inline bool approx_equal(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2, T tolerance) leaf_const
+inline bool approx_equal(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2, T tolerance) leaf_const;
+
+template<typename T, typename ST>
+inline bool approx_equal(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2, T tolerance)
 {
   if (v1.size() != v2.size())
     return false;

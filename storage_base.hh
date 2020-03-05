@@ -5,17 +5,27 @@
 #define STORAGE_BASE_HH
 
 #include "makros.hh"
+#include <initializer_list>
 
 //operators == and != need to be defined on T
 template<typename T, typename ST=size_t>
 class StorageBase {
 public:
 
+  //for compatibility with the STL:
+  using value_type = T;
+
   StorageBase();
 
   StorageBase(ST size);
 
   StorageBase(ST size, const T default_value);
+
+  //copy constructor
+  StorageBase(const StorageBase<T,ST>& toCopy);
+
+  //move constructor
+  StorageBase(StorageBase<T,ST>&& toTake);
 
   ~StorageBase();
 
@@ -37,6 +47,12 @@ public:
 
 protected:
 
+  StorageBase(const std::initializer_list<T>& init);
+  
+  StorageBase<T,ST>& operator=(const StorageBase<T,ST>& toCopy);
+
+  StorageBase<T,ST>& operator=(StorageBase<T,ST>&& toTake);
+
   //pointer must go first so that following variables can be grouped for optimal alignment
   T* data_; //if `T is a basic type this is 16-byte aligned as returned by new
   ST size_;
@@ -45,24 +61,79 @@ protected:
 
 /*************************** implementation ****************************/
 
-template<typename T, typename ST> StorageBase<T,ST>::StorageBase() : data_(0), size_(0)
+template<typename T, typename ST> 
+StorageBase<T,ST>::StorageBase() : data_(0), size_(0)
 {
 }
 
-template<typename T, typename ST> StorageBase<T,ST>::StorageBase(ST size) : size_(size)
+template<typename T, typename ST> 
+StorageBase<T,ST>::StorageBase(ST size) : size_(size)
 {
   data_ = new T[size];
 }
 
-template<typename T, typename ST> StorageBase<T,ST>::StorageBase(ST size, const T default_value) : size_(size)
+template<typename T, typename ST> 
+StorageBase<T,ST>::StorageBase(ST size, const T default_value) : size_(size)
 {
   data_ = new T[size];
   std::fill_n(data_,size_,default_value);
 }
 
-template<typename T, typename ST> StorageBase<T,ST>::~StorageBase()
+template<typename T, typename ST> 
+StorageBase<T,ST>::StorageBase(const std::initializer_list<T>& init)
+{
+  size_ = init.size();
+  std::copy(init.begin(),init.end(),data_);
+}
+
+//copy constructor
+template<typename T, typename ST> 
+StorageBase<T,ST>::StorageBase(const StorageBase<T,ST>& toCopy) 
+{
+  size_ = toCopy.size();
+  data_ = new T[size_];
+  
+  Makros::unified_assign(data_, toCopy.direct_access(), size_);
+}
+
+//move constructor
+template<typename T, typename ST> 
+StorageBase<T,ST>::StorageBase(StorageBase<T,ST>&& toTake) : data_(toTake.data_), size_(toTake.size_) 
+{
+  toTake.data_ = 0;
+}
+
+template<typename T, typename ST> 
+StorageBase<T,ST>::~StorageBase()
 {
   delete[] data_;
+}
+
+template<typename T, typename ST> 
+StorageBase<T,ST>& StorageBase<T,ST>::operator=(const StorageBase<T,ST>& toCopy)
+{
+  if (size_ != toCopy.size_) {
+
+    delete[] data_;
+
+    size_ = toCopy.size_;
+    data_ = new T[size_];
+  }
+
+  Makros::unified_assign(data_, toCopy.direct_access(), size_);
+
+  return *this;
+}
+
+template<typename T, typename ST> 
+StorageBase<T,ST>& StorageBase<T,ST>::operator=(StorageBase<T,ST>&& toTake)
+{
+  delete[] data_;
+  data_ = toTake.data_;
+  size_ = toTake.size_;
+  toTake.data_ = 0;
+
+  return *this;
 }
 
 template<typename T, typename ST>

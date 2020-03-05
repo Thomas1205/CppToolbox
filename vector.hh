@@ -20,7 +20,7 @@ namespace Math1D {
   class Vector : public ::Storage1D<T,ST> {
   public:
 
-    typedef Storage1D<T,ST> Base;
+    using Base = Storage1D<T,ST>;
 
     //according to https://gcc.gnu.org/onlinedocs/gcc-7.2.0/gcc/Common-Type-Attributes.html#Common-Type-Attributes , alignment has to be expressed like this:
     typedef T T_A16 ALIGNED16;
@@ -31,9 +31,19 @@ namespace Math1D {
 
     explicit Vector(ST size, const T default_value);
 
-    Vector(const Vector<T,ST>& toCopy);
+    Vector(const std::initializer_list<T>& init);
+
+    //copy constructor
+    Vector(const Vector<T,ST>& toCopy) = default;
+    
+    //move constructor
+    Vector(Vector<T,ST>&& toTake) = default;
 
     ~Vector();
+
+    Vector<T,ST>& operator=(const Vector<T,ST>& toCopy) = default;
+    
+    Vector<T,ST>& operator=(Vector<T,ST>&& toTake) = default;
 
     //redefining the operator[] methods because for basic types we can indicate 16-byte alignment
     inline const T& operator[](ST i) const;
@@ -239,9 +249,12 @@ namespace Math1D {
   }
 
   template<typename T,typename ST> 
-  Vector<T,ST>::Vector(const Vector<T,ST>& toCopy) : Storage1D<T,ST>(static_cast<const Storage1D<T,ST>&>(toCopy)) {}
+  Vector<T,ST>::Vector(const std::initializer_list<T>& init) : Storage1D<T,ST>(init)
+  {
+  }
 
-  template<typename T,typename ST> Vector<T,ST>::~Vector() {}
+  template<typename T,typename ST> 
+  Vector<T,ST>::~Vector() {}
 
   template<typename T,typename ST>
   inline T Vector<T,ST>::sum() const
@@ -548,7 +561,6 @@ namespace Math1D {
 
     Routines::array_add_multiple(Base::data_, size, alpha, v.direct_access());
   }
-
 
   template<typename T,typename ST>
   void Vector<T,ST>::operator+=(const Vector<T,ST>& v)
