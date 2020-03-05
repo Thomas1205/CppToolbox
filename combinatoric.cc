@@ -113,10 +113,8 @@ uint lowest_divisor(const uint n) {
   
   if (n <= 3)
     return 1;
-  if ((n & 1) == 0) {    
-    //room for improvements here
-    return 2 * lowest_divisor(n >> 1); //even an >= 4
-  }
+  if ((n & 1) == 0) 
+    return 2;
   
   const uint limit = sqrt(n + 0.1); //a non-prime must have a divisor <= its square root
   for (uint i = 3; i <= limit; i += 2) { //even numbers are no use (only need to test primes)
