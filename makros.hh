@@ -35,6 +35,8 @@ using std::isinf;
 #ifdef GNU_COMPILER
 
 #define assertAligned16(p) assert( ((size_t)p) % 16 == 0);
+
+//apparently, g++ no longer makes use of restrict attributes
 #define attr_restrict __restrict
 #define ref_attr_restrict __restrict
 //#define attr_restrict [[restrict]] //g++ ignores this

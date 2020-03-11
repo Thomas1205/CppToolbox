@@ -8,14 +8,15 @@
 
 class NotInvertibleException {};
 
+//T should be a floating point (inverse of integer matrix isn't integer!)
 template<typename T, typename ST>
 void invert_matrix(const Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result) /*throw (NotInvertibleException)*/;
 
+//T should be a floating point (inverse of integer matrix isn't integer!)
 //the matrix toInvert is modified in case the dimension of the matrix is greater than 2.
 //toInvert then contains the identity matrix (up to roundoff errors) after the call.
 template<typename T, typename ST>
-void invert_and_destroy_matrix(Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result)
-/*throw (NotInvertibleException)*/;
+void invert_and_destroy_matrix(Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result) /*throw (NotInvertibleException)*/;
 
 
 /********* implementation **********/
@@ -72,6 +73,8 @@ void invert_and_destroy_matrix(Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,
                    << dim << "x" << toInvert.yDim() << ". Exiting..." << std::endl;
   }
 
+  //NOTE: it should be possible to do this inplace, cf. [Numerical Recipes]. But no plans currently
+
   if (result.xDim() != dim || result.yDim() != dim)
     result.resize_dirty(dim,dim);
 
@@ -125,19 +128,19 @@ void invert_and_destroy_matrix(Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,
       /** swap rows if necessary **/
       if (arg_max != y) {
 
-// 	for (uint x=y; x < dim; x++) {
-// 	  swap(toInvert(x,y),toInvert(x,arg_max));
-// 	}
+        // 	for (uint x=y; x < dim; x++) {
+        // 	  swap(toInvert(x,y),toInvert(x,arg_max));
+        // 	}
         std::swap_ranges(toInvert.row_ptr(y)+y, toInvert.row_ptr(y+1), toInvert.row_ptr(arg_max)+y);
 
-// 	for (uint x=0; x < dim; x++) {
-// 	  swap(result(x,y),result(x,arg_max));
-// 	}
+        // 	for (uint x=0; x < dim; x++) {
+        // 	  swap(result(x,y),result(x,arg_max));
+        // 	}
         std::swap_ranges(result.row_ptr(y), result.row_ptr(y+1), result.row_ptr(arg_max));
       }
 
-//       std::cerr << "toInvert after swap: " << toInvert << std::endl;
-//       std::cerr << "result after swap: " << result << std::endl;
+      //       std::cerr << "toInvert after swap: " << toInvert << std::endl;
+      //       std::cerr << "result after swap: " << result << std::endl;
 
       if (std::abs(max_val) <= 1e-10)
         throw NotInvertibleException();
