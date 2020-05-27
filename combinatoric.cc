@@ -91,37 +91,3 @@ uint gcd(uint n1, uint n2)
   return n1;
 }
 
-//returns if n is a prime number (0,1,2,3 all count as prime)
-bool is_prime(const uint n)
-{
-  if (n <= 3)
-    return true;
-  if ((n & 1) == 0)
-    return false; //even an >= 4
-  
-  const uint limit = sqrt(n + 0.1); //a non-prime must have a divisor <= its square root
-  for (uint i = 3; i <= limit; i += 2) { //even numbers are no use (only need to test primes)
-    if ( (n % i) == 0)
-      return false;
-  }
-  
-  return true;
-}
-
-//returns 1 for primes
-uint lowest_divisor(const uint n) {
-  
-  if (n <= 3)
-    return 1;
-  if ((n & 1) == 0) 
-    return 2;
-  
-  const uint limit = sqrt(n + 0.1); //a non-prime must have a divisor <= its square root
-  for (uint i = 3; i <= limit; i += 2) { //even numbers are no use (only need to test primes)
-    if ( (n % i) == 0)
-      return i;
-  }
-  
-  return 1;  
-}
-

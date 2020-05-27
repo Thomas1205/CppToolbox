@@ -48,7 +48,7 @@ ALGORITHMS
 
 - binary search algorithms (routines.hh and stl_util.hh)
 
-- some routines for combinatorics (combinatoric.hh), including choose(n,k), factorial, greatest common divisor, test of prime numbers
+- some routines for combinatorics (combinatoric.hh), including choose(n,k), factorial, greatest common divisor, test of prime numbers, getting prime divisors
 
 ---------
 

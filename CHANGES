@@ -1,5 +1,5 @@
 
-ANNOUNCEMENT: Following the 1.15 release, C++ toolbox will has moved to C++-11. This brings many template exploitations, plus move constructors. 
+Following the 1.15 release, C++ toolbox has moved to C++-11. This brings many template exploitations, plus move constructors. 
 In contrast, moving to C++-14 or C++-17 will not give a major jump (as far as I can presently see).
 
 /***** changes after the last release ******/
@@ -7,6 +7,9 @@ In contrast, moving to C++-14 or C++-17 will not give a major jump (as far as I 
 - moved to C++-11:
   - made some template specializations obsolete by using constexpr
   - included move constructors and operator=
+- matrix determinant
+- made prime test etc. a template
+- added getting the prime divisors of an unsigned integer
 
 /***** changes for version 1.15 (February 17 2020) ******/
 

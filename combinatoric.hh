@@ -6,6 +6,7 @@
 
 #include "makros.hh"
 #include "vector.hh"
+#include <vector>
 
 uint fac(uint n);
 
@@ -26,10 +27,15 @@ uint gcd(uint n1, uint n2);
 inline UInt64 gcd64(UInt64 n1, UInt64 n2);
 
 //returns if n is a prime number (0,1,2,3 all count as prime)
-bool is_prime(const uint n);
+template<typename T>
+bool is_prime(const T n);
 
 //returns 1 for primes
-uint lowest_divisor(const uint n);
+template<typename T>
+T lowest_divisor(const T n);
+
+template<typename T>
+void get_prime_divisors(T n, std::vector<T>& divisors);
 
 /**** implementation ****/
 
@@ -71,6 +77,77 @@ inline UInt64 gcd_mixed_128_64(UInt64 n1_high, UInt64 n1_low, UInt64 n2)
 
   return n1_low;
 #endif
+}
+
+//returns if n is a prime number (0,1,2,3 all count as prime)
+template<typename T>
+bool is_prime(const T n)
+{
+  static_assert(std::is_unsigned<T>::value, "not unsigned");
+  
+  if (n <= 3)
+    return true;
+  if ((n & 1) == 0)
+    return false; //even an >= 4
+  
+  const T limit = sqrt(n + 0.1); //a non-prime must have a divisor <= its square root
+  for (T i = 3; i <= limit; i += 2) { //even numbers are no use (only need to test primes)
+    if ( (n % i) == 0)
+      return false;
+  }
+  
+  return true;
+}
+
+//returns 1 for primes
+template<typename T>
+T lowest_divisor(const T n) 
+{
+  static_assert(std::is_unsigned<T>::value, "not unsigned");
+  
+  if (n <= 3)
+    return 1;
+  if ((n & 1) == 0) 
+    return 2;
+  
+  const T limit = sqrt(n + 0.1); //a non-prime must have a divisor <= its square root
+  for (T i = 3; i <= limit; i += 2) { //even numbers are no use (only need to test primes)
+    if ( (n % i) == 0)
+      return i;
+  }
+  
+  return 1;  
+}
+
+template<typename T>
+void get_prime_divisors(T n, std::vector<T>& divisors) 
+{
+  static_assert(std::is_unsigned<T>::value, "not unsigned");
+
+  divisors.clear();
+  if (n <= 1)
+    return;
+  
+  while ((n & 1) == 0) {
+    divisors.push_back(2);
+    n >>= 1;
+  }
+  
+  T limit = sqrt(n + 0.1); //for numerical imprecisions
+  
+  T i = 3;
+  while (i <= limit) {
+    if ((n % i) == 0) {
+      divisors.push_back(i);
+      n /= i;
+      limit = sqrt(n + 0.1); //for numerical imprecisions
+    }
+    else
+      i+= 2; //even numbers are no use (only need to test primes)
+  }  
+  
+  if (n > 1 && !divisors.empty())
+    divisors.push_back(n);
 }
 
 #endif
