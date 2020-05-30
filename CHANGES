@@ -7,9 +7,10 @@ In contrast, moving to C++-14 or C++-17 will not give a major jump (as far as I 
 - moved to C++-11:
   - made some template specializations obsolete by using constexpr
   - included move constructors and operator=
+- some more SIMD routines, including contains and equals and reverse for bytes
 - matrix determinant
-- made prime test etc. a template
-- added getting the prime divisors of an unsigned integer
+- made prime test etc. a template, added getting the prime divisors of an unsigned integer
+- extended and improved the various sets
 
 /***** changes for version 1.15 (February 17 2020) ******/
 

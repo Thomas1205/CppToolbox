@@ -44,9 +44,207 @@ static_assert(sizeof(double) == 8, "wrong size");
 
 namespace Routines {
   
+  /***************************** declarations ******************************/
+  
+  /***************** reverse *******************/
+
+  template<typename T>
+  inline void reverse(T* data, const size_t nData);
+  
+  /***************** downshift *****************/
+
+  template<typename T>
+  inline void downshift_array(T* data, const uint pos, const uint shift, const uint nData);
+
+  /***************** upshift *****************/
+
+  template<typename T>
+  inline void upshift_array(T* data, const int pos, const int last, const int shift);
+
+  /***************** binary search in sorted data *************/
+
+  template<typename T>
+  inline size_t binsearch(const T* data, const T key, const size_t nData);
+
+  template<typename T>
+  inline size_t binsearch_insertpos(const T* data, const T key, const size_t nData);
+
+  /***************** find unique *****************/
+
+  //if T has size 1,2,4 or 8 this is always a bit-based comparison
+  template<typename T> 
+  inline uint find_unique(const T* data, const T key, const uint nData);
+
+  inline uint find_unique_uint(const uint* data, const uint key, const uint nData);
+
+  inline uint find_unique_int(const int* data, const int key, const uint nData);
+
+  //non-standard treatment of NAN and INF, just bit-comparisons
+  inline uint find_unique_float(const float* data, const float key, const uint nData);
+
+  /***************** find first *****************/
+
+  //if T has size 1,2,4 or 8 this is always a bit-based comparison
+  template<typename T> 
+  inline uint find_first(const T* data, const T key, const uint nData);
+
+  inline uint find_first_uint(const uint* data, const uint key, const uint nData);
+
+  inline uint find_first_int(const int* data, const int key, const uint nData);
+
+  /***************** contains *****************/
+
+  inline bool contains_nan(const double_A16* data, const size_t nData); 
+
+  inline bool contains_nan(const float_A16* data, const size_t nData);
+
+  //if T has size 1,2,4 or 8 this is always a bit-based comparison
+  template<typename T>
+  inline bool contains(const T* data, const T key, const size_t nData);
+
+  inline bool contains_uchar(const uchar* data, const uchar key, const size_t nData);
+
+  inline bool contains_ushort(const ushort* data, const ushort key, const size_t nData);
+
+  inline bool contains_uint(const uint* data, const uint key, const size_t nData);
+
+  inline bool contains_uint64(const UInt64* data, const UInt64 key, const size_t nData);
+
+  /***************** equals ****************/
+
+  //if T has size 1,2,4 or 8 this is always a bit-based comparison
+  template<typename T>
+  inline bool equals(const T* data1, const T* data2, const size_t nData);
+
+  inline bool equals_uchar(const uchar* data1, const uchar* data2, const size_t nData);
+  
+  inline bool equals_ushort(const ushort* data1, const ushort* data2, const size_t nData);
+  
+  inline bool equals_uint(const uint* data1, const uint* data2, const size_t nData);
+  
+  inline bool equals_uint64(const UInt64* data1, const UInt64* data2, const size_t nData);
+
+  /***************** min, max, min+arg_min, max+arg_max *******/
+
+  inline void find_max_and_argmax(const double_A16* data, const size_t nData, double& max_val, size_t& arg_max);
+
+  inline void find_min_and_argmin(const double_A16* data, const size_t nData, double& min_val, size_t& arg_max);
+
+  inline void find_max_and_argmax(const float_A16* data, const size_t nData, float& max_val, size_t& arg_max);
+
+  inline void find_min_and_argmin(const float_A16* data, const size_t nData, float& min_val, size_t& arg_max);
+
+  /***************** array additions with multiplications *************/
+
+  //performs data[i] -= factor*data2[i] for each i
+  //this is a frequent operation in the conjugate gradient algorithm
+  inline void array_subtract_multiple(double_A16* attr_restrict data, const size_t nData, double factor,
+                                      const double_A16* attr_restrict data2);
+
+  inline void array_add_multiple(double_A16* attr_restrict data, const size_t nData, double factor,
+                                 const double_A16* attr_restrict data2);
+
+  //NOTE: despite attr_restrict, you can safely pass the same for dest and src1 or src2
+  inline void go_in_neg_direction(double_A16* attr_restrict dest, const size_t nData, const double_A16* attr_restrict src1,
+                                  const double_A16* attr_restrict src2, double alpha);
+
+  //NOTE: despite attr_restrict, you can safely pass the same for dest and src1 or src2
+  inline void assign_weighted_combination(double_A16* attr_restrict dest, const size_t nData, double w1, const double_A16* attr_restrict src1,
+                                          double w2, const double_A16* attr_restrict src2);
+
+    
+  /***************************** implementation ******************************/
+  
   /***************** reverse *******************/
   
-  //no plans for specialized 16 and 8 bit routines at present. 8 bit is best implemented with movbe reg64/32
+  //no plans for specialized 16 routines at present
+  
+  inline void nontrivial_reverse_byte_array(uchar* data, const size_t nData)
+  {
+    assert(nData >= 2);
+#if !defined(USE_SSE) || USE_SSE < 5
+    std::reverse(data, data + nData);
+#else    
+    if (nData < 4) 
+      std::swap(data[0], data[nData-1]);
+    else if (nData == 4) {
+      
+      uint temp;
+      asm __volatile__ ("movbel %[d], %[reg] \n\t"
+                        "movl %[reg], %[d] \n\t"
+                        : [d] "+m" (data[0]), [reg] "=r" (temp) : : "memory");      
+    }
+    else if (nData < 8) {
+
+      ushort temp1;
+      ushort temp2;
+
+      size_t low = 0;
+      size_t high = nData - 2;
+      for (; low + 2 <= high; low += 2, high -= 2) {
+        asm __volatile__ ("movbew %[d1], %[reg1] \n\t"
+                          "movbew %[d2], %[reg2] \n\t"
+                          "movw %[reg1], %[d2] \n\t"
+                          "movw %[reg2], %[d1] \n\t"
+                          : [d1] "+m" (data[low]), [reg1] "=r" (temp1), [d2] "+m" (data[high]), [reg2] "=r" (temp2) : : "memory");        
+      }
+
+      if (low+1 == high)
+        std::swap(data[low],data[low+2]);
+      if (low == high) {
+        
+        asm __volatile__ ("movbew %[d], %[reg] \n\t"
+                          "movw %[reg], %[d] \n\t"
+                          : [d] "+m" (data[low]), [reg] "=r" (temp1) : : "memory");              
+      }
+    }
+    else {
+
+      uint temp1;
+      uint temp2;
+
+      size_t low = 0;
+      size_t high = nData - 4;
+      for (; low + 4 <= high; low += 4, high -= 4) {
+        asm __volatile__ ("movbel %[d1], %[reg1] \n\t"
+                          "movbel %[d2], %[reg2] \n\t"
+                          "movl %[reg1], %[d2] \n\t"
+                          "movl %[reg2], %[d1] \n\t"
+                          : [d1] "+m" (data[low]), [reg1] "=r" (temp1), [d2] "+m" (data[high]), [reg2] "=r" (temp2) : : "memory");        
+      }
+
+      ushort tu1;
+      ushort tu2;
+      high += 2;
+      for (; low + 2 <= high; low += 2, high -= 2) {
+        asm __volatile__ ("movbew %[d1], %[reg1] \n\t"
+                          "movbew %[d2], %[reg2] \n\t"
+                          "movw %[reg1], %[d2] \n\t"
+                          "movw %[reg2], %[d1] \n\t"
+                          : [d1] "+m" (data[low]), [reg1] "=r" (tu1), [d2] "+m" (data[high]), [reg2] "=r" (tu2) : : "memory");        
+      }
+
+      if (low+1 == high)
+        std::swap(data[low],data[low+2]);
+      if (low == high) {
+        asm __volatile__ ("movbew %[d], %[reg] \n\t"
+                          "movw %[reg], %[d] \n\t"
+                          : [d] "+m" (data[low]), [reg] "=r" (tu1) : : "memory");              
+      }
+    }
+#endif
+  }
+
+  inline void reverse_byte_array(uchar* data, const size_t nData) 
+  {
+#if !defined(USE_SSE) || USE_SSE < 5
+    std::reverse(data, data + nData);
+#else    
+    if (nData < 2)
+      return;
+    nontrivial_reverse_byte_array(data, nData);
+#endif  
+  }
   
   inline void nontrivial_reverse_uint_array(uint* data, const size_t nData)
   {
@@ -125,10 +323,8 @@ namespace Routines {
 #else    
     if (nData < 4) 
       std::swap(data[0], data[nData-1]);
-    else if (nData == 4) {
-
+    else if (nData == 4) 
       reverse_4doubles(data);
-    }
     else if (nData < 8) 
       std::reverse(data, data + nData);
     else {
@@ -175,7 +371,9 @@ namespace Routines {
   inline void nontrivial_reverse(T* data, const size_t nData) 
   {    
     assert(nData >= 2);
-    if (sizeof(T) == 4)
+    if (sizeof(T) == 1)
+      nontrivial_reverse_byte_array((uchar*) data, nData);
+    else if (sizeof(T) == 4)
       nontrivial_reverse_uint_array((uint*) data, nData);
     else if (sizeof(T) == 8)
       nontrivial_reverse_double_array((double*) data, nData);
@@ -222,8 +420,8 @@ namespace Routines {
   template<typename T>
   inline void reverse(T* data, const size_t nData) 
   {
-    if (nData >= 2)      
-      std::reverse(data, data + nData);
+    if (nData >= 2)     
+      nontrivial_reverse(data, nData);
   }
   
   /***************** downshift *****************/
@@ -736,9 +934,626 @@ namespace Routines {
     return MAX_UINT;
   }
 
+  inline uint find_first_int(const int* data, const int key, const uint nData)
+  {
+    return find_first_uint((uint*) data, key, nData);
+  }
+
+  template<typename T> 
+  inline uint find_first(const T* data, const T key, const uint nData)
+  {
+    if (sizeof(T) == 4) {
+      //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
+      return find_first_uint((const uint*) data, reinterpret<const uint, const T>(key), nData);
+    }
+    else {
+      return std::find(data, data + nData, key) - data;
+    }
+  }
+
+  /******** contains *******/
+  
+  inline bool contains_nan(const float_A16* data, const size_t nData) 
+  {
+    size_t i = 0;  
+#if !defined(USE_SSE) || USE_SSE < 5
+    
+    for (; i < nData; i++) {
+      if (std::isnan(data[i]))
+        return true;
+    }    
+#else
+
+    uchar found = 0;
+
+    for (; (i+8) <= nData; i += 8) {
+      
+      asm __volatile__ ("vmovups %[fptr], %%ymm7\n\t"
+                        "vcmpunordps %%ymm7, %%ymm7, %%ymm7 \n\t"
+                        "vptest %%ymm7, %%ymm7 \n\t" //sets the zero flag iff xmm7 is all 0
+                        "setnz %[f] \n\t"
+                        //"jz 1f \n\t" //jump if no equals
+                        //"movl $1, %[f] \n\t"
+                        //"1: \n\t"
+                        : [f] "+m" (found) : [fptr] "m" (data[i]) : "ymm7");      
+
+      if (found != 0)
+        return true;
+    }
+
+    for (; (i+4) <= nData; i += 4) {
+      
+      asm __volatile__ ("vmovaps %[fptr], %%xmm7\n\t"
+                        "vcmpunordps %%xmm7, %%xmm7, %%xmm7 \n\t"
+                        "vptest %%xmm7, %%xmm7 \n\t" //sets the zero flag iff xmm7 is all 0
+                        "setnz %[f] \n\t"
+                        //"jz 1f \n\t" //jump if no equals
+                        //"movl $1, %[f] \n\t"
+                        //"1: \n\t"
+                        : [f] "+r" (found) : [fptr] "m" (data[i]) : "xmm7");      
+
+      if (found != 0)
+        return true;
+    }
+
+    for (; i < nData; i++) {
+      if (std::isnan(data[i]))
+        return true;
+    }    
+#endif      
+    
+    return false;
+  }
+
+  inline bool contains_nan(const double_A16* data, const size_t nData) 
+  {
+    size_t i = 0;  
+#if !defined(USE_SSE) || USE_SSE < 5
+    
+    for (; i < nData; i++) {
+      if (std::isnan(data[i]))
+        return true;
+    }    
+#else
+
+    uchar found = 0;
+
+    for (; (i+4) <= nData; i += 4) {
+      
+      asm __volatile__ ("vmovupd %[fptr], %%ymm7\n\t"
+                        "vcmpunordpd %%ymm7, %%ymm7, %%ymm7 \n\t"
+                        "vptest %%ymm7, %%ymm7 \n\t" //sets the zero flag iff xmm7 is all 0
+                        "setnz %[f] \n\t"
+                        //"jz 1f \n\t" //jump if no equals
+                        //"movl $1, %[f] \n\t"
+                        //"1: \n\t"
+                        : [f] "+r" (found) : [fptr] "m" (data[i]) : "ymm7");      
+
+      if (found != 0)
+        return true;
+    }
+
+    for (; i < nData; i++) {
+      if (std::isnan(data[i]))
+        return true;
+    }
+#endif
+
+    return false;
+  }
+
+  template<typename T>
+  inline bool contains(const T* data, const T key, const size_t nData) 
+  {
+    if (sizeof(T) == 1) {
+      return contains_uchar((const uchar*) data, reinterpret<const uchar, const T>(key), nData);
+    }
+    else if (sizeof(T) == 2) {
+      return contains_ushort((const ushort*) data, reinterpret<const ushort, const T>(key), nData);
+    }
+    else if (sizeof(T) == 4) {
+      //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
+      return contains_uint((const uint*) data, reinterpret<const uint, const T>(key), nData);
+    }
+    else if (sizeof(T) == 8) {
+      //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
+      return contains_uint64((const UInt64*) data, reinterpret<const UInt64, const T>(key), nData);
+    }
+    else 
+      return (std::find(data, data + nData, key) != data + nData);
+  }
+
+  inline bool contains_uchar(const uchar* data, const uchar key, const size_t nData)
+  {
+    size_t i = 0;  
+#if !defined(USE_SSE) || USE_SSE < 5
+    
+    for (; i < nData; i++) {
+      if (data[i] == key)
+        return true;
+    }    
+#else
+
+    uchar found = 0;
+
+    if (nData >= 16) {
+
+      const uint u16key = key;
+      const uint ukey = u16key + (u16key << 8);
+      const float fkey = reinterpret<const uint, const float>(ukey + (ukey << 16) );
+
+      asm __volatile__ ("vbroadcastss %[fkey], %%ymm6 \n\t" 
+                        : : [fkey] "m" (fkey) : "ymm6");
+
+#if USE_SSE >= 6
+      for (; i + 32 <= nData; i += 32) {
+
+        asm __volatile__ ("vmovdqu %[dat], %%ymm7  \n\t"
+                          "vpcmpeqb %%ymm6, %%ymm7, %%ymm7 \n\t" //ymm7 is overwritten with mask (all 1s on equal)
+                          "vptest %%ymm7, %%ymm7 \n\t" //sets the zero flag iff xmm7 is all 0
+                          "setnz %[f] \n\t"                          
+                          : [f] "+r" (found) : [dat] "m" (data[i]) : "ymm7");
+
+        if (found != 0)
+          return true;
+      }
+#endif
+
+      for (; i + 16 <= nData; i += 16) {
+
+        asm __volatile__ ("vmovdqu %[dat], %%xmm7  \n\t"
+                          "vpcmpeqb %%xmm6, %%xmm7, %%xmm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                          "vptest %%xmm7, %%xmm7 \n\t" //sets the zero flag iff xmm7 is all 0
+                          "setnz %[f] \n\t"                          
+                          : [f] "+r" (found) : [dat] "m" (data[i]) : "xmm7");
+
+        if (found != 0)
+          return true;
+      }            
+    }
+
+    for (; i < nData; i++) {
+      if (data[i] == key)
+        return true;
+    }    
+#endif
+
+    return false;    
+  }
+
+  inline bool contains_ushort(const ushort* data, const ushort key, const size_t nData) {
+
+    size_t i = 0;  
+#if !defined(USE_SSE) || USE_SSE < 5
+    
+    for (; i < nData; i++) {
+      if (data[i] == key)
+        return true;
+    }    
+#else
+
+    uchar found = 0;
+
+    if (nData >= 8) {
+      
+      const uint ukey = key;
+      const float fkey = reinterpret<const uint, const float>(ukey + (ukey << 16) );
+
+      asm __volatile__ ("vbroadcastss %[fkey], %%ymm6 \n\t" 
+                        : : [fkey] "m" (fkey) : "ymm6");
+      
+#if USE_SSE >= 6
+      for (; i + 16 <= nData; i += 16) {
+
+        asm __volatile__ ("vmovdqu %[dat], %%ymm7  \n\t"
+                          "vpcmpeqw %%ymm6, %%ymm7, %%ymm7 \n\t" //ymm7 is overwritten with mask (all 1s on equal)
+                          "vptest %%ymm7, %%ymm7 \n\t" //sets the zero flag iff xmm7 is all 0
+                          "setnz %[f] \n\t"                          
+                          : [f] "+r" (found) : [dat] "m" (data[i]) : "ymm7");
+
+        if (found != 0)
+          return true;
+      }
+#endif
+
+      for (; i + 8 <= nData; i += 8) {
+
+        asm __volatile__ ("vmovdqu %[dat], %%xmm7  \n\t"
+                          "vpcmpeqw %%xmm6, %%xmm7, %%xmm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                          "vptest %%xmm7, %%xmm7 \n\t" //sets the zero flag iff xmm7 is all 0
+                          "setnz %[f] \n\t"                          
+                          : [f] "+r" (found) : [dat] "m" (data[i]) : "xmm7");
+
+        if (found != 0)
+          return true;
+      }            
+    }
+
+    for (; i < nData; i++) {
+      if (data[i] == key)
+        return true;
+    }    
+#endif
+
+    return false;
+  }
+
+  inline bool contains_uint(const uint* data, const uint key, const size_t nData) 
+  {
+    size_t i = 0;  
+#if !defined(USE_SSE) || USE_SSE < 5
+    
+    for (; i < nData; i++) {
+      if (data[i] == key)
+        return true;
+    }    
+#else
+
+    uchar found = 0;
+
+    if (nData >= 8) {
+      
+      const float fkey = reinterpret<const uint, const float>(key); //*reinterpret_cast<const float*>(&key);
+      asm __volatile__ ("vbroadcastss %[fkey], %%ymm6 \n\t" 
+                        : : [fkey] "m" (fkey) : "ymm6");
+
+#if USE_SSE >= 6
+      for (; i + 8 <= nData; i += 8) {
+
+        asm __volatile__ ("vmovdqu %[dat], %%ymm7  \n\t"
+                          "vpcmpeqd %%ymm6, %%ymm7, %%ymm7 \n\t" //ymm7 is overwritten with mask (all 1s on equal)
+                          "vptest %%ymm7, %%ymm7 \n\t" //sets the zero flag iff xmm7 is all 0
+                          "setnz %[f] \n\t"                          
+                          : [f] "+r" (found) : [dat] "m" (data[i]) : "ymm7");
+
+        if (found != 0)
+          return true;
+      }
+#endif
+      
+      for (; i + 4 <= nData; i += 4) {
+
+        asm __volatile__ ("vmovdqu %[dat], %%xmm7  \n\t"
+                          "vpcmpeqd %%xmm6, %%xmm7, %%xmm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                          "vptest %%xmm7, %%xmm7 \n\t" //sets the zero flag iff xmm7 is all 0
+                          "setnz %[f] \n\t"                          
+                          : [f] "+r" (found) : [dat] "m" (data[i]) : "xmm7");
+
+        if (found != 0)
+          return true;
+      }      
+    }
+
+    for (; i < nData; i++) {
+      if (data[i] == key)
+        return true;
+    }    
+#endif
+
+    return false;
+  }
+
+  inline bool contains_uint64(const UInt64* data, const UInt64 key, const size_t nData) 
+  {
+    size_t i = 0;  
+#if !defined(USE_SSE) || USE_SSE < 5
+    
+    for (; i < nData; i++) {
+      if (data[i] == key)
+        return true;
+    }    
+#else
+
+    uchar found = 0;
+
+    if (nData >= 4) {
+
+      const double dkey = reinterpret<const UInt64, const double>(key); //*reinterpret_cast<const float*>(&key);
+
+      asm __volatile__ ("vbroadcastsd %[dkey], %%ymm6 \n\t" 
+                        : : [dkey] "m" (dkey) : "ymm6");
+
+#if USE_SSE >= 6
+      for (; i + 4 <= nData; i += 4) {
+
+        asm __volatile__ ("vmovdqu %[dat], %%ymm7  \n\t"
+                          "vpcmpeqq %%ymm6, %%ymm7, %%ymm7 \n\t" //ymm7 is overwritten with mask (all 1s on equal)
+                          "vptest %%ymm7, %%ymm7 \n\t" //sets the zero flag iff xmm7 is all 0
+                          "setnz %[f] \n\t"                          
+                          : [f] "+r" (found) : [dat] "m" (data[i]) : "ymm7");
+
+        if (found != 0)
+          return true;
+
+      }
+#endif
+
+      for (; i + 2 <= nData; i += 2) {
+
+        asm __volatile__ ("vmovdqu %[dat], %%xmm7  \n\t"
+                          "vpcmpeqq %%xmm6, %%xmm7, %%xmm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                          "vptest %%xmm7, %%xmm7 \n\t" //sets the zero flag iff xmm7 is all 0
+                          "setnz %[f] \n\t"                          
+                          : [f] "+r" (found) : [dat] "m" (data[i]) : "xmm7");
+
+        if (found != 0)
+          return true;
+      }      
+    }
+    
+    for (; i < nData; i++) {
+      if (data[i] == key)
+        return true;
+    }    
+#endif
+
+    return false;
+  }
+
+  /***************** equals ****************/
+
+  //if T has size 1,2,4 or 8 this is always a bit-based comparison
+  template<typename T>
+  inline bool equals(const T* data1, const T* data2, const size_t nData)
+  {
+    if (sizeof(T) == 1) {
+      return equals_uchar((uchar*) data1, (uchar*) data2, nData);
+    }
+    else if (sizeof(T) == 2) {
+      return equals_ushort((ushort*) data1, (ushort*) data2, nData);
+    }
+    else if (sizeof(T) == 4) {
+      //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
+      return equals_uint((uint*) data1, (uint*) data2, nData);
+    }
+    else if (sizeof(T) == 8) {
+      //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
+      return equals_uint64((UInt64*) data1, (UInt64*) data2, nData); 
+    }
+    else {
+      for (size_t i = 0; i < nData; i++) {
+        if (data1[i] != data2[i])
+          return false;
+      }
+      return true;
+    }    
+  }
+
+  inline bool equals_uchar(const uchar* data1, const uchar* data2, const size_t nData)
+  {
+    size_t i = 0;  
+#if !defined(USE_SSE) || USE_SSE < 5
+    
+    for (; i < nData; i++) {
+      if (data1[i] != data2[i])
+        return false;
+    }    
+#else
+
+    uchar found = 0;
+
+    const float fkey = reinterpret<const uint, const float>(0xFFFFFFFF); 
+    asm __volatile__ ("vbroadcastss %[fkey], %%ymm5 \n\t" 
+                      : : [fkey] "m" (fkey) : "ymm5");
+
+#if USE_SSE >= 6
+    for (; i + 32 <= nData; i += 32) {
+
+      asm __volatile__ ("vmovdqu %[dat1], %%ymm6  \n\t"
+                        "vmovdqu %[dat2], %%ymm7  \n\t"
+                        "vpcmpeqb %%ymm6, %%ymm7, %%ymm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                        //need to test if xmm7 contains 0s now
+                        "vxorps %%ymm5, %%ymm7, %%ymm7 \n\t" //negate via xor with all 1s
+                        "vptest %%ymm7, %%ymm7 \n\t" ///sets the zero flag iff (the now negated) ymm7 is all 0
+                        "setnz %[f] \n\t"                          
+                        : [f] "+r" (found) : [dat1] "m" (data1[i]), [dat2] "m" (data2[i]) : "ymm6", "ymm7");
+
+      if (found != 0)
+        return false;
+    }      
+#endif
+
+    for (; i + 16 <= nData; i += 16) {
+
+      asm __volatile__ ("vmovdqu %[dat1], %%xmm6  \n\t"
+                        "vmovdqu %[dat2], %%xmm7  \n\t"
+                        "vpcmpeqb %%xmm6, %%xmm7, %%xmm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                        //need to test if xmm7 contains 0s now
+                        "vxorps %%xmm5, %%xmm7, %%xmm7 \n\t" //negate via xor with all 1s
+                        "vptest %%xmm7, %%xmm7 \n\t" ///sets the zero flag iff (the now negated) xmm7 is all 0
+                        "setnz %[f] \n\t"                          
+                        : [f] "+r" (found) : [dat1] "m" (data1[i]), [dat2] "m" (data2[i]) : "xmm6", "xmm7");
+
+      if (found != 0)
+        return false;
+    }      
+
+    for (; i < nData; i++) {
+      if (data1[i] != data2[i])
+        return false;
+    }        
+#endif    
+
+    return true;
+  }
+
+  inline bool equals_ushort(const ushort* data1, const ushort* data2, const size_t nData)
+  {
+    size_t i = 0;  
+#if !defined(USE_SSE) || USE_SSE < 5
+    
+    for (; i < nData; i++) {
+      if (data1[i] != data2[i])
+        return false;
+    }    
+#else
+
+    uchar found = 0;
+
+    const float fkey = reinterpret<const uint, const float>(0xFFFFFFFF); 
+    asm __volatile__ ("vbroadcastss %[fkey], %%ymm5 \n\t" 
+                      : : [fkey] "m" (fkey) : "ymm5");
+
+#if USE_SSE >= 6
+    for (; i + 16 <= nData; i += 16) {
+
+      asm __volatile__ ("vmovdqu %[dat1], %%ymm6  \n\t"
+                        "vmovdqu %[dat2], %%ymm7  \n\t"
+                        "vpcmpeqw %%ymm6, %%ymm7, %%ymm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                        //need to test if xmm7 contains 0s now
+                        "vxorps %%ymm5, %%ymm7, %%ymm7 \n\t" //negate via xor with all 1s
+                        "vptest %%ymm7, %%ymm7 \n\t" ///sets the zero flag iff (the now negated) ymm7 is all 0
+                        "setnz %[f] \n\t"                          
+                        : [f] "+r" (found) : [dat1] "m" (data1[i]), [dat2] "m" (data2[i]) : "ymm6", "ymm7");
+
+      if (found != 0)
+        return false;
+    }      
+#endif
+
+    for (; i + 8 <= nData; i += 8) {
+
+      asm __volatile__ ("vmovdqu %[dat1], %%xmm6  \n\t"
+                        "vmovdqu %[dat2], %%xmm7  \n\t"
+                        "vpcmpeqw %%xmm6, %%xmm7, %%xmm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                        //need to test if xmm7 contains 0s now
+                        "vxorps %%xmm5, %%xmm7, %%xmm7 \n\t" //negate via xor with all 1s
+                        "vptest %%xmm7, %%xmm7 \n\t" ///sets the zero flag iff (the now negated) xmm7 is all 0
+                        "setnz %[f] \n\t"                          
+                        : [f] "+r" (found) : [dat1] "m" (data1[i]), [dat2] "m" (data2[i]) : "xmm6", "xmm7");
+
+      if (found != 0)
+        return false;
+    }      
+
+    for (; i < nData; i++) {
+      if (data1[i] != data2[i])
+        return false;
+    }        
+#endif    
+
+    return true;    
+  }
+  
+  inline bool equals_uint(const uint* data1, const uint* data2, const size_t nData)
+  {
+    size_t i = 0;  
+#if !defined(USE_SSE) || USE_SSE < 5
+    
+    for (; i < nData; i++) {
+      if (data1[i] != data2[i])
+        return false;
+    }    
+#else
+
+    uchar found = 0;
+
+    const float fkey = reinterpret<const uint, const float>(0xFFFFFFFF); 
+    asm __volatile__ ("vbroadcastss %[fkey], %%ymm5 \n\t" 
+                      : : [fkey] "m" (fkey) : "ymm5");
+
+#if USE_SSE >= 6
+    for (; i + 8 <= nData; i += 8) {
+
+      asm __volatile__ ("vmovdqu %[dat1], %%ymm6  \n\t"
+                        "vmovdqu %[dat2], %%ymm7  \n\t"
+                        "vpcmpeqd %%ymm6, %%ymm7, %%ymm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                        //need to test if xmm7 contains 0s now
+                        "vxorps %%ymm5, %%ymm7, %%ymm7 \n\t" //negate via xor with all 1s
+                        "vptest %%ymm7, %%ymm7 \n\t" ///sets the zero flag iff (the now negated) ymm7 is all 0
+                        "setnz %[f] \n\t"                          
+                        : [f] "+r" (found) : [dat1] "m" (data1[i]), [dat2] "m" (data2[i]) : "ymm6", "ymm7");
+
+      if (found != 0)
+        return false;
+    }      
+#endif
+
+    for (; i + 4 <= nData; i += 4) {
+
+      asm __volatile__ ("vmovdqu %[dat1], %%xmm6  \n\t"
+                        "vmovdqu %[dat2], %%xmm7  \n\t"
+                        "vpcmpeqd %%xmm6, %%xmm7, %%xmm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                        //need to test if xmm7 contains 0s now
+                        "vxorps %%xmm5, %%xmm7, %%xmm7 \n\t" //negate via xor with all 1s
+                        "vptest %%xmm7, %%xmm7 \n\t" ///sets the zero flag iff (the now negated) xmm7 is all 0
+                        "setnz %[f] \n\t"                          
+                        : [f] "+r" (found) : [dat1] "m" (data1[i]), [dat2] "m" (data2[i]) : "xmm6", "xmm7");
+
+      if (found != 0)
+        return false;
+    }      
+
+    for (; i < nData; i++) {
+      if (data1[i] != data2[i])
+        return false;
+    }        
+#endif    
+
+    return true;
+  }
+
+  inline bool equals_uint64(const UInt64* data1, const UInt64* data2, const size_t nData)
+  {
+    size_t i = 0;  
+#if !defined(USE_SSE) || USE_SSE < 5
+    
+    for (; i < nData; i++) {
+      if (data1[i] != data2[i])
+        return false;
+    }    
+#else
+
+    uchar found = 0;
+
+    const float fkey = reinterpret<const uint, const float>(0xFFFFFFFF); 
+    asm __volatile__ ("vbroadcastss %[fkey], %%ymm5 \n\t" 
+                      : : [fkey] "m" (fkey) : "ymm5");
+
+#if USE_SSE >= 6
+    for (; i + 4 <= nData; i += 4) {
+
+      asm __volatile__ ("vmovdqu %[dat1], %%ymm6  \n\t"
+                        "vmovdqu %[dat2], %%ymm7  \n\t"
+                        "vpcmpeqq %%ymm6, %%ymm7, %%ymm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                        //need to test if xmm7 contains 0s now
+                        "vxorps %%ymm5, %%ymm7, %%ymm7 \n\t" //negate via xor with all 1s
+                        "vptest %%ymm7, %%ymm7 \n\t" ///sets the zero flag iff (the now negated) ymm7 is all 0
+                        "setnz %[f] \n\t"                          
+                        : [f] "+r" (found) : [dat1] "m" (data1[i]), [dat2] "m" (data2[i]) : "ymm6", "ymm7");
+
+      if (found != 0)
+        return false;
+    }      
+#endif
+
+    for (; i + 2 <= nData; i += 2) {
+
+      asm __volatile__ ("vmovdqu %[dat1], %%xmm6  \n\t"
+                        "vmovdqu %[dat2], %%xmm7  \n\t"
+                        "vpcmpeqq %%xmm6, %%xmm7, %%xmm7 \n\t" //xmm7 is overwritten with mask (all 1s on equal)
+                        //need to test if xmm7 contains 0s now
+                        "vxorps %%xmm5, %%xmm7, %%xmm7 \n\t" //negate via xor with all 1s
+                        "vptest %%xmm7, %%xmm7 \n\t" ///sets the zero flag iff (the now negated) xmm7 is all 0
+                        "setnz %[f] \n\t"                          
+                        : [f] "+r" (found) : [dat1] "m" (data1[i]), [dat2] "m" (data2[i]) : "xmm6", "xmm7");
+
+      if (found != 0)
+        return false;
+    }      
+
+    for (; i < nData; i++) {
+      if (data1[i] != data2[i])
+        return false;
+    }        
+#endif    
+
+    return true;
+  }
+
   /******** min, max, min+arg_min, max+arg_max *******/
 
-  inline float max(const float_A16* data, size_t nData)
+  inline float max(const float_A16* data, const size_t nData)
   {
     float max_val=MIN_FLOAT;
     float cur_datum;
@@ -757,13 +1572,16 @@ namespace Routines {
     float tmp[4] = {MIN_FLOAT,MIN_FLOAT,MIN_FLOAT,MIN_FLOAT}; //reused as output, static not useful
 
     //maxps can take an unaligned mem arg!
-    asm __volatile__ ("movaps %[tmp], %%xmm6" : : [tmp] "m" (tmp[0]) : "xmm6");
+    asm __volatile__ ("movaps %[tmp], %%xmm6" 
+                      : : [tmp] "m" (tmp[0]) : "xmm6");
     for (; (i+4) <= nData; i += 4) {
       asm __volatile__ ("movaps %[fptr], %%xmm7\n\t"
-                        "maxps %%xmm7, %%xmm6" : : [fptr] "m" (data[i]) : "xmm6", "xmm7");
+                        "maxps %%xmm7, %%xmm6" 
+                        : : [fptr] "m" (data[i]) : "xmm6", "xmm7");
 
     }
-    asm __volatile__ ("movups %%xmm6, %[tmp]" : [tmp] "=m" (tmp[0]) : : "memory");
+    asm __volatile__ ("movups %%xmm6, %[tmp]" 
+                      : [tmp] "=m" (tmp[0]) : : "memory");
     for (k=0; k < 4; k++)
       max_val = std::max(max_val,tmp[k]);
 
@@ -778,7 +1596,7 @@ namespace Routines {
     return max_val;
   }
 
-  inline float min(const float_A16* data, size_t nData)
+  inline float min(const float_A16* data, const size_t nData)
   {
     float min_val=MAX_FLOAT;
     float cur_datum;
@@ -797,13 +1615,16 @@ namespace Routines {
     float tmp[4] = {MAX_FLOAT,MAX_FLOAT,MAX_FLOAT,MAX_FLOAT}; //reused as output, static not useful
 
     //minps can take an unaligned mem arg!
-    asm __volatile__ ("movaps %[tmp], %%xmm6" : : [tmp] "m" (tmp[0]) : "xmm6");
+    asm __volatile__ ("movaps %[tmp], %%xmm6" 
+                      : : [tmp] "m" (tmp[0]) : "xmm6");
     for (; (i+4) <= nData; i += 4) 
     {
       asm __volatile__ ("movaps %[fptr], %%xmm7 \n\t"
-                        "minps %%xmm7, %%xmm6 \n\t" : : [fptr] "m" (data[i]) : "xmm6", "xmm7");
+                        "minps %%xmm7, %%xmm6 \n\t" 
+                        : : [fptr] "m" (data[i]) : "xmm6", "xmm7");
     }
-    asm __volatile__ ("movups %%xmm6, %[tmp]" : [tmp] "=m" (tmp[0]) :  : "memory");
+    asm __volatile__ ("movups %%xmm6, %[tmp]" 
+                      : [tmp] "=m" (tmp[0]) :  : "memory");
     for (k=0; k < 4; k++)
       min_val = std::min(min_val,tmp[k]);
 

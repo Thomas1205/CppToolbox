@@ -22,6 +22,14 @@ public:
   {
     data_ = s.data_;
   }
+  
+  TreeSet(const std::initializer_list<T>& init) 
+  {
+    data_.reserve(init.size()+1);
+    data_.push_back(T()); //so far we do not use the first element    
+    for (typename std::initializer_list<T>::const_iterator it = init.begin(); it != init.end(); it++)
+      insert(*it);
+  }
 
   void swap(TreeSet<T>& other);
 
@@ -82,8 +90,11 @@ protected:
   std::vector<T> data_;
 };
 
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const TreeSet<T>& vec);
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const TreeSet<T>& set);
+
+template<typename T>
+bool operator==(const TreeSet<T>& set1, const TreeSet<T>& set2);
 
 /************** implementation ***********/
 
@@ -787,7 +798,7 @@ std::vector<T> TreeSet<T>::get_sorted_data_from_val(T val) const
   return result;
 }
 
-template <typename T>
+template<typename T>
 std::ostream& operator<<(std::ostream& os, const TreeSet<T>& treeset)
 {
   const std::vector<T>& data = treeset.unsorted_data();
@@ -839,6 +850,12 @@ std::ostream& operator<<(std::ostream& os, const TreeSet<T>& treeset)
   os << " }";
 
   return os;
+}
+
+template<typename T>
+bool operator==(const TreeSet<T>& set1, const TreeSet<T>& set2)
+{
+  return (set1.unsorted_data() == set2.unsorted_data());
 }
 
 #endif

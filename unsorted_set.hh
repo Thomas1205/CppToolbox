@@ -12,23 +12,16 @@
 
 //find in a sequence without duplicates
 template<typename T>
-inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& vec, T val) {
-  if (sizeof(T) == 4) {
-    const uint pos = Routines::find_unique_uint((uint*) vec.data(), val, vec.size());
-    return vec.begin() + pos;
-  }
-  else
-    return std::find(vec.begin(), vec.end(), val);
-}
+inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& vec, const T val);
 
 template<>
-inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, uint val) {
-  const uint pos = Routines::find_unique_uint(vec.data(), val, vec.size());
-  if (pos >= vec.size())
-    return vec.end();
-  else
-    return (vec.begin() + pos);
-}
+inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, const uint val);
+
+template<typename T>
+inline bool set_contains(const std::vector<T>& vec, const T val);
+
+template<>
+inline bool set_contains(const std::vector<uint>& vec, const uint val);
 
 template<typename T>
 class UnsortedSet {
@@ -37,6 +30,8 @@ public:
   UnsortedSet() {}
 
   UnsortedSet(const UnsortedSet<T>& toCopy);
+
+  UnsortedSet(const std::initializer_list<T>& init);
 
   void swap(UnsortedSet<T>& other)
   {
@@ -68,6 +63,7 @@ public:
     return data_;
   }
 
+  //const qualifier doesn't make sense here - not returning a reference
   const std::vector<T> sorted_data() const
   {
     std::vector<T> result = data_;
@@ -83,12 +79,12 @@ public:
     USET_SORT_ALG(target.direct_access(), target.size());    
   }
 
-  bool contains(T val) const;
+  bool contains(const T val) const;
 
   //returns true if val is new
-  bool insert(T val);
+  bool insert(const T val);
 
-  void insert_new(T val);
+  void insert_new(const T val);
 
   //for compatibility with the other sets (use in templates etc.)
   inline void insert_largest(const T val)
@@ -97,15 +93,18 @@ public:
   }
 
   //returns true if val was in the tree
-  bool erase(T val);
+  bool erase(const T val);
 
   //returns true if out was in the tree
-  bool replace(T out, T in);
+  bool replace(const T out, const T in);
 
 protected:
 
   std::vector<T> data_;
 };
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const UnsortedSet<T>& set);
 
 /********************/
 
@@ -116,6 +115,8 @@ public:
   UnsortedSetExploitSort() {}
 
   UnsortedSetExploitSort(const UnsortedSetExploitSort<T>& toCopy);
+
+  UnsortedSetExploitSort(const std::initializer_list<T>& init);
 
   void swap(UnsortedSetExploitSort<T>& other)
   {
@@ -166,21 +167,21 @@ public:
     USET_SORT_ALG(target.direct_access(), target.size());    
   }
 
-  bool contains(T val) const;
+  bool contains(const T val) const;
 
   //returns true if val is new
-  bool insert(T val);
+  bool insert(const T val);
 
-  void insert_new(T val);
+  void insert_new(const T val);
 
   //for compatibility with the other sets (use in templates etc.)
   inline void insert_largest(const T val);
 
   //returns true if val was in the tree
-  bool erase(T val);
+  bool erase(const T val);
 
   //returns true if out was in the tree
-  bool replace(T out, T in);
+  bool replace(const T out, const T in);
 
 protected:
 
@@ -188,24 +189,81 @@ protected:
   bool is_sorted_ = true;
 };
 
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const UnsortedSetExploitSort<T>& set);
+
+/********************** implementation of helpers ************************/
+
+//find in a sequence without duplicates
+template<typename T>
+inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& vec, const T val) 
+{
+  if (std::is_trivially_copyable<T>::value) {
+    const uint pos = Routines::find_unique(vec.data(), val, vec.size());
+    if (pos >= vec.size())
+      return vec.end();
+    else
+      return vec.begin() + pos;
+  }
+  else
+    return std::find(vec.begin(), vec.end(), val);
+}
+
+template<>
+inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, const uint val) 
+{
+  const uint pos = Routines::find_unique_uint(vec.data(), val, vec.size());
+  if (pos >= vec.size())
+    return vec.end();
+  else
+    return (vec.begin() + pos);
+}
+
+template<typename T>
+inline bool set_contains(const std::vector<T>& vec, const T val) 
+{
+  if (std::is_trivially_copyable<T>::value) 
+    return Routines::contains(vec.data(), val);
+  else
+    return (std::find(vec.begin(), vec.end(), val) != vec.end());
+}
+
+template<>
+inline bool set_contains(const std::vector<uint>& vec, const uint val) 
+{
+  return Routines::contains_uint(vec.data(), val, vec.size());
+}
+
 /********************** implementation of UnsortedSet ************************/
 
 template<typename T>
-UnsortedSet<T>::UnsortedSet(const UnsortedSet<T>& toCopy) {
+UnsortedSet<T>::UnsortedSet(const UnsortedSet<T>& toCopy) 
+{
   data_ = toCopy.data_;
 }
 
 template<typename T>
-bool UnsortedSet<T>::contains(T val) const
+UnsortedSet<T>::UnsortedSet(const std::initializer_list<T>& init)
 {
-  return (set_find(data_, val) != data_.end());
+  data_.reserve(init.size());
+  for (typename std::initializer_list<T>::const_iterator it = init.begin(); it != init.end(); it++)
+    insert(*it);
+}
+
+template<typename T>
+bool UnsortedSet<T>::contains(const T val) const
+{
+  //return (set_find(data_, val) != data_.end());
+  return set_contains(data_, val);
 }
 
 //returns true if val is new
 template<typename T>
-bool UnsortedSet<T>::insert(T val)
+bool UnsortedSet<T>::insert(const T val)
 {
-  if (set_find(data_, val) != data_.end())
+  //if (set_find(data_, val) != data_.end())
+  //  return false;
+  if (set_contains(data_, val))
     return false;
 
   data_.push_back(val);
@@ -213,15 +271,15 @@ bool UnsortedSet<T>::insert(T val)
 }
 
 template<typename T>
-void UnsortedSet<T>::insert_new(T val)
+void UnsortedSet<T>::insert_new(const T val)
 {
-  assert(set_find(data_, val) == data_.end());
+  assert(!contains(val));
   data_.push_back(val);
 }
 
 //returns true if val was in the tree
 template<typename T>
-bool UnsortedSet<T>::erase(T val)
+bool UnsortedSet<T>::erase(const T val)
 {
   const typename std::vector<T>::const_iterator it = set_find(data_, val);
   if (it == data_.end())
@@ -235,7 +293,7 @@ bool UnsortedSet<T>::erase(T val)
 
 //returns true if out was in the tree
 template<typename T>
-bool UnsortedSet<T>::replace(T out, T in)
+bool UnsortedSet<T>::replace(const T out, const T in)
 {
   assert(!contains(in));
 	
@@ -249,6 +307,22 @@ bool UnsortedSet<T>::replace(T out, T in)
   return true;
 }
 
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const UnsortedSet<T>& set)
+{
+  const std::vector<T> data = set.sorted_data();
+  const size_t size = data.size();
+
+  os << "{ ";
+  for (size_t i = 0; i < size; i++) {
+    if (i != 0)
+      os << ", ";
+    os << data[i];
+  }
+
+  os << " }";
+  return os;
+}
 
 /********************** implementation of UnsortedSetExploitSort ************************/
 
@@ -260,22 +334,34 @@ UnsortedSetExploitSort<T>::UnsortedSetExploitSort(const UnsortedSetExploitSort<T
 }
 
 template<typename T>
-bool UnsortedSetExploitSort<T>::contains(T val) const
+UnsortedSetExploitSort<T>::UnsortedSetExploitSort(const std::initializer_list<T>& init)
 {
-  if (!is_sorted_)
-    return (set_find(data_, val) != data_.end());
+  data_.reserve(init.size());
+  for (typename std::initializer_list<T>::const_iterator it = init.begin(); it != init.end(); it++)
+    insert(*it);  
+}
+
+template<typename T>
+bool UnsortedSetExploitSort<T>::contains(const T val) const
+{
+  if (!is_sorted_) {
+    //return (set_find(data_, val) != data_.end());
+    return set_contains(data_, val);
+  }
   else 
     return (Routines::binsearch(data_.data(), val, data_.size()) != MAX_UINT);
 }
 
 //returns true if val is new
 template<typename T>
-bool UnsortedSetExploitSort<T>::insert(T val)
+bool UnsortedSetExploitSort<T>::insert(const T val)
 {
   const size_t size = data_.size();
   bool is_new = false;
-  if (!is_sorted_)
-    is_new = (set_find(data_, val) != data_.end());
+  if (!is_sorted_) {
+    //is_new = (set_find(data_, val) != data_.end());
+    is_new = !set_contains(data_, val);
+  }
   else 
     is_new = (Routines::binsearch(data_.data(), val, size) != MAX_UINT);
   
@@ -288,7 +374,7 @@ bool UnsortedSetExploitSort<T>::insert(T val)
 }
 
 template<typename T>
-void UnsortedSetExploitSort<T>::insert_new(T val)
+void UnsortedSetExploitSort<T>::insert_new(const T val)
 {
   assert(!contains(val));
   if (is_sorted_) {
@@ -302,12 +388,13 @@ void UnsortedSetExploitSort<T>::insert_new(T val)
 template<typename T>
 inline void UnsortedSetExploitSort<T>::insert_largest(const T val)
 {
+  assert(!contains(val));
   data_.push_back(val);  
 }
 
 //returns true if val was in the tree
 template<typename T>
-bool UnsortedSetExploitSort<T>::erase(T val)
+bool UnsortedSetExploitSort<T>::erase(const T val)
 {
   const size_t size = data_.size();
   size_t pos = 0;
@@ -333,7 +420,7 @@ bool UnsortedSetExploitSort<T>::erase(T val)
 
 //returns true if out was in the tree
 template<typename T>
-bool UnsortedSetExploitSort<T>::replace(T out, T in)
+bool UnsortedSetExploitSort<T>::replace(const T out, const T in)
 {
   assert(!contains(in));
 
@@ -362,5 +449,21 @@ bool UnsortedSetExploitSort<T>::replace(T out, T in)
   return true;
 }
 
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const UnsortedSetExploitSort<T>& set)
+{
+  const std::vector<T>& data = set.sorted_data();
+  const size_t size = data.size();
+
+  os << "{ ";
+  for (size_t i = 0; i < size; i++) {
+    if (i != 0)
+      os << ", ";
+    os << data[i];
+  }
+
+  os << " }";
+  return os;
+}
 
 #endif

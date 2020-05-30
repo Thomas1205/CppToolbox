@@ -9,8 +9,10 @@
 #define STORAGE1D_HH
 
 #include "makros.hh"
+#include "routines.hh"
 #include "storage_base.hh"
 #include <cstring>
+#include <type_traits>
 
 template<typename T>
 class SwapOp {
@@ -119,7 +121,7 @@ template<typename T, typename ST>
 std::ostream& operator<<(std::ostream& s, const Storage1D<T,ST>& v);
 
 template<typename T, typename ST>
-bool operator==(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2);
+inline bool operator==(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2);
 
 template<typename T, typename ST>
 bool operator!=(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2);
@@ -415,14 +417,17 @@ void Storage1D<T,ST>::swap(Storage1D<T,ST>& toSwap) noexcept
 
 /******** implementation of NamedStorage1D ***************/
 
-template<typename T,typename ST> NamedStorage1D<T,ST>::NamedStorage1D() : Storage1D<T,ST>(), name_("yyy") {}
+template<typename T,typename ST> 
+NamedStorage1D<T,ST>::NamedStorage1D() : Storage1D<T,ST>(), name_("yyy") {}
 
-template<typename T,typename ST> NamedStorage1D<T,ST>::NamedStorage1D(std::string name) : Storage1D<T,ST>(), name_(name) {}
+template<typename T,typename ST> 
+NamedStorage1D<T,ST>::NamedStorage1D(std::string name) : Storage1D<T,ST>(), name_(name) {}
 
-template<typename T,typename ST> NamedStorage1D<T,ST>::NamedStorage1D(ST size, std::string name) : Storage1D<T,ST>(size), name_(name) {}
+template<typename T,typename ST> 
+NamedStorage1D<T,ST>::NamedStorage1D(ST size, std::string name) : Storage1D<T,ST>(size), name_(name) {}
 
-template<typename T,typename ST> NamedStorage1D<T,ST>::NamedStorage1D(ST size, T default_value, std::string name) :
-  Storage1D<T,ST>(size,default_value), name_(name) {}
+template<typename T,typename ST> 
+NamedStorage1D<T,ST>::NamedStorage1D(ST size, T default_value, std::string name) : Storage1D<T,ST>(size,default_value), name_(name) {}
 
 template<typename T,typename ST>
 /*virtual*/ const std::string& NamedStorage1D<T,ST>::name() const
@@ -443,7 +448,6 @@ inline void NamedStorage1D<T,ST>::operator=(const NamedStorage1D<T,ST>& toCopy)
   Storage1D<T,ST>::operator=(static_cast<const Storage1D<T,ST>&>(toCopy));
 }
 
-
 template<typename T,typename ST>
 std::ostream& operator<<(std::ostream& s, const Storage1D<T,ST>& v)
 {
@@ -458,16 +462,21 @@ std::ostream& operator<<(std::ostream& s, const Storage1D<T,ST>& v)
 }
 
 template<typename T,typename ST>
-bool operator==(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2)
+inline bool operator==(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2)
 {
   if (v1.size() != v2.size())
-    return false;
+    return false;  
 
-  for (ST k=0; k < v1.size(); k++) {
-    if (v1[k] != v2[k])
-      return false;
+  if (std::is_trivially_copyable<T>::value) {
+    return Routines::equals(v1.direct_access(), v2.direct_access(), v1.size());
   }
-  return true;
+  else {
+    for (ST k=0; k < v1.size(); k++) {
+      if (v1[k] != v2[k])
+        return false;
+    }
+    return true;
+  }
 }
 
 template<typename T,typename ST>

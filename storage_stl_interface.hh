@@ -4,8 +4,9 @@
 #define STORAGE_STL_INTERFACE
 
 #include <vector>
-#include <map>
 #include <set>
+#include <map>
+#include <unordered_map>
 #include "storage1D.hh"
 #include "flexible_storage1D.hh"
 #include "storage2D.hh"
@@ -20,11 +21,17 @@ void assign(FlexibleStorage1D<T1,ST>& target, const std::vector<T2>& source);
 template<typename T, typename ST, typename X>
 void assign(Storage1D<std::pair<X,T>,ST>& target, const std::map<X,T>& source);
 
+template<typename T, typename ST, typename X>
+void assign(Storage1D<std::pair<X,T>,ST>& target, const std::unordered_map<X,T>& source);
+
 template<typename T, typename ST>
 void assign(Storage1D<T,ST>& target, const std::set<T>& source);
 
 template<typename T, typename ST, typename X>
 void assign(Storage1D<X,ST>& target1, Storage1D<T,ST>& target2, const std::map<X,T>& source);
+
+template<typename T, typename ST, typename X>
+void assign(Storage1D<X,ST>& target1, Storage1D<T,ST>& target2, const std::unordered_map<X,T>& source);
 
 template<typename T, typename X>
 void assign(std::vector<X>& target1, std::vector<T>& target2, const std::map<X,T>& source);
@@ -75,7 +82,6 @@ void assign_copy(Storage1D<T1,ST>& target, const std::vector<T2>& source)
   std::copy(source.begin(),source.end(),target.direct_access());
 }
 
-
 template<typename T, typename ST, typename X>
 void assign(Storage1D<std::pair<X,T>,ST>& target, const std::map<X,T>& source)
 {
@@ -83,6 +89,18 @@ void assign(Storage1D<std::pair<X,T>,ST>& target, const std::map<X,T>& source)
   target.resize_dirty(source.size());
   uint k=0;
   for (typename std::map<X,T>::const_iterator it = source.begin(); it != source.end(); it++) {
+    target[k] = *it;
+    k++;
+  }
+}
+
+template<typename T, typename ST, typename X>
+void assign(Storage1D<std::pair<X,T>,ST>& target, const std::unordered_map<X,T>& source)
+{
+  //TODO: think about std::copy()
+  target.resize_dirty(source.size());
+  uint k=0;
+  for (typename std::unordered_map<X,T>::const_iterator it = source.begin(); it != source.end(); it++) {
     target[k] = *it;
     k++;
   }
@@ -107,6 +125,20 @@ void assign(Storage1D<X,ST>& target1, Storage1D<T,ST>& target2, const std::map<X
 
   uint k=0;
   for (typename std::map<X,T>::const_iterator it = source.begin(); it != source.end(); it++) {
+    target1[k] = it->first;
+    target2[k] = it->second;
+    k++;
+  }
+}
+
+template<typename T, typename ST, typename X>
+void assign(Storage1D<X,ST>& target1, Storage1D<T,ST>& target2, const std::unordered_map<X,T>& source)
+{
+  target1.resize_dirty(source.size());
+  target2.resize_dirty(source.size());
+
+  uint k=0;
+  for (typename std::unordered_map<X,T>::const_iterator it = source.begin(); it != source.end(); it++) {
     target1[k] = it->first;
     target2[k] = it->second;
     k++;

@@ -6,6 +6,7 @@
 
 #include <cmath>
 
+//NOTE: if we used 1 for overflow, we could use the seto instruction
 static int __attribute__((used))  rational_res_is_save = 1;
 
 //#define DEBUG_OUTPUT

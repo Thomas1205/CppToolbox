@@ -13,6 +13,8 @@ public:
   SortedSet() {}
 
   SortedSet(const SortedSet<T>& toCopy);
+  
+  SortedSet(const std::initializer_list<T>& init);
 
   void swap(SortedSet<T>& other)
   {
@@ -70,11 +72,25 @@ protected:
   std::vector<T> data_;
 };
 
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const SortedSet<T>& set);
+
+template<typename T>
+bool operator==(const SortedSet<T>& set1, const SortedSet<T>& set2);
+
 /********************** implementation ************************/
 
 template<typename T> 
 SortedSet<T>::SortedSet(const SortedSet<T>& toCopy)
   : data_(toCopy.data_) {}
+
+template<typename T> 
+SortedSet<T>::SortedSet(const std::initializer_list<T>& init)
+{
+  data_.reserve(init.size());
+  for (typename std::initializer_list<T>::const_iterator it = init.begin(); it != init.end(); it++)
+    insert(*it); 
+}
 
 template<typename T>
 bool SortedSet<T>::contains(const T val) const
@@ -197,6 +213,29 @@ bool SortedSet<T>::replace(const T out, const T in)
     return false;
   }
 #endif
+}
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const SortedSet<T>& set)
+{
+  const std::vector<T>& data = set.sorted_data();
+  const size_t size = data.size();
+
+  os << "{ ";
+  for (size_t i = 0; i < size; i++) {
+    if (i != 0)
+      os << ", ";
+    os << data[i];
+  }
+
+  os << " }";
+  return os;
+}
+
+template<typename T>
+bool operator==(const SortedSet<T>& set1, const SortedSet<T>& set2)
+{
+  return (set1.sorted_data() == set2.sorted_data());
 }
 
 #endif
