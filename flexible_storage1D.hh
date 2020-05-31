@@ -42,8 +42,6 @@ public:
 
   ~FlexibleStorage1D();
 
-  const T* end_ptr() const;
-
   inline T& operator[](ST i) const;
 
   inline ST reserved_size() const;
@@ -204,12 +202,6 @@ template<typename T, typename ST>
 FlexibleStorage1D<T,ST>::FlexibleStorage1D(FlexibleStorage1D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
 {
   reserved_size_ = toTake.reserved_size_;
-}
-
-template<typename T, typename ST>
-const T* FlexibleStorage1D<T,ST>::end_ptr() const
-{
-  return Base::data_ + Base::size_; 
 }
 
 template<typename T, typename ST>
@@ -591,7 +583,7 @@ std::ostream& operator<<(std::ostream& s, const FlexibleStorage1D<T,ST>& v)
 {
   s << "[ ";
   for (int i=0; i < ((int) v.size()) - 1; i++)
-    s << v[i] << ",";
+    s << v[i] << ", ";
   if (v.size() > 0)
     s << v[v.size()-1];
   s << " ]";

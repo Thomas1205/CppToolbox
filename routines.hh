@@ -529,7 +529,7 @@ namespace Routines {
     else {
       uint i = pos;
       for (; i < end; i++)
-        data[i] = data[i+shift];
+        data[i] = std::move(data[i+shift]);
     }
   }
 
@@ -695,7 +695,7 @@ namespace Routines {
     }
     else {
       for (int k = last; k >= pos+shift; k--)
-        data[k] = data[k-shift];
+        data[k] = std::move(data[k-shift]);
     }
   }
 

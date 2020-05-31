@@ -14,6 +14,7 @@
 #include <cstring>
 #include <type_traits>
 
+//this should be superfluous now that we use unified_move_assign
 template<typename T>
 class SwapOp {
 public:
@@ -24,6 +25,7 @@ public:
   }
 };
 
+//this should be superfluous now that we use unified_move_assign
 template<typename T>
 class SpecialSwapOp {
 public:
@@ -58,8 +60,6 @@ public:
 
   ~Storage1D() = default;
 
-  const T* end_ptr() const;
-
   virtual const std::string& name() const;
 
   inline const T& operator[](ST i) const;
@@ -78,10 +78,11 @@ public:
   void resize(ST new_size);
 
   //maintains the values of existing positions, new ones are undefined. Swapping may be faster if e.g. T is std::vector or Storage1D
+  //this should be superfluous now that we use unified_move_assign
   template<class swap_op = SwapOp<T>>
   void resize_swap(ST newsize, swap_op op);
 
-  //maintains the values of exisitng positions, new ones are filled with <code> fill_value </code>
+  //maintains the values of exisitng positions, new ones are filled with <code> fill_value </code>  
   void resize(ST new_size, PassType fill_value);
 
   //all elements are undefined after this operation
@@ -233,12 +234,6 @@ Storage1D<T,ST>::Storage1D(const Storage1D<T,ST>& toCopy) : StorageBase<T,ST>(to
 template<typename T,typename ST> 
 Storage1D<T,ST>::Storage1D(Storage1D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
 {
-}
-
-template<typename T,typename ST>
-const T* Storage1D<T,ST>::end_ptr() const
-{
-  return Base::data_ + Base::size_; 
 }
 
 template<typename T,typename ST>

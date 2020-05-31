@@ -40,6 +40,8 @@ public:
   inline T& ref_attr_restrict direct_access(ST i);
 
   inline const T& ref_attr_restrict direct_access(ST i) const;
+  
+  inline const T* end_ptr() const;
 
   inline void set_constant(const T constant);
 
@@ -170,6 +172,12 @@ template<typename T, typename ST>
 inline const T& ref_attr_restrict StorageBase<T,ST>::direct_access(ST i) const
 {
   return data_[i];
+}
+
+template<typename T, typename ST>
+const T* StorageBase<T,ST>::end_ptr() const
+{
+  return data_ + size_; 
 }
 
 template<typename T, typename ST>
