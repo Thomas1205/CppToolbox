@@ -11,6 +11,11 @@
 #define INIT_CAPACITY 4
 #endif
 
+inline size_t increased_size(const size_t reserved_size) 
+{  
+  return size_t(1.2 * reserved_size) + 4;
+}
+
 //this class is meant to replace std::vector with its push_back() functionality.
 // It has slightly less functionality, though. E.g. erase() is not available.
 template<typename T, typename ST=size_t>
@@ -37,6 +42,8 @@ public:
 
   ~FlexibleStorage1D();
 
+  const T* end_ptr() const;
+
   inline T& operator[](ST i) const;
 
   inline ST reserved_size() const;
@@ -53,13 +60,18 @@ public:
   inline void shrink_by(ST reduction);
   
   inline void grow_by_dirty(ST increase);
+  
+  //sometimes you just want a reserved T instead of explicitly appending one, e.g. when you know it's in default state
+  inline T& increase();
 
   void reserve(ST size);
 
-  //will not free memory
-  void clear();
+  //if free is true, will free all memory
+  void clear(bool free = false);
 
   FlexibleStorage1D<T,ST>& operator=(const FlexibleStorage1D<T,ST>& toCopy);
+
+  FlexibleStorage1D<T,ST>& operator=(FlexibleStorage1D<T,ST>&& toTake);
 
   inline T back() const;
 
@@ -124,7 +136,11 @@ public:
   //operators
   void operator=(const NamedFlexibleStorage1D<T,ST>& toCopy);
 
+  void operator=(NamedFlexibleStorage1D<T,ST>&& toTake);
+
   void operator=(const FlexibleStorage1D<T,ST>& toCopy);
+
+  void operator=(FlexibleStorage1D<T,ST>&& toCopy);
 
 protected:
   std::string name_;
@@ -191,6 +207,12 @@ FlexibleStorage1D<T,ST>::FlexibleStorage1D(FlexibleStorage1D<T,ST>&& toTake) : S
 }
 
 template<typename T, typename ST>
+const T* FlexibleStorage1D<T,ST>::end_ptr() const
+{
+  return Base::data_ + Base::size_; 
+}
+
+template<typename T, typename ST>
 void FlexibleStorage1D<T,ST>::swap(FlexibleStorage1D<T,ST>& toSwap)
 {
   std::swap(Base::data_,toSwap.data_);
@@ -216,6 +238,19 @@ FlexibleStorage1D<T,ST>& FlexibleStorage1D<T,ST>::operator=(const FlexibleStorag
   //for (uint k=0; k < Base::size_; k++)
   //  Base::data_[k] = toCopy[k];
 
+  return *this;
+}
+
+template<typename T, typename ST> 
+FlexibleStorage1D<T,ST>& FlexibleStorage1D<T,ST>::operator=(FlexibleStorage1D<T,ST>&& toTake)
+{
+  delete[] Base::data_;
+  Base::data_ = toTake.data_;
+  toTake.data_ = 0;
+  
+  Base::size_ = toTake.size_;
+  Base::reserved_size_ = toTake.reserved_size_;
+  
   return *this;
 }
 
@@ -257,11 +292,11 @@ ST FlexibleStorage1D<T,ST>::append(FlexibleStorage1D<T,ST>::PassType val)
 {
   if (Base::size_ == reserved_size_) {
 
-    reserved_size_ = size_t(1.2 * reserved_size_) + 4;
+    reserved_size_ = increased_size(reserved_size_);
 
     T* new_data = new T[reserved_size_];
 
-    Makros::unified_assign(new_data, Base::data_, Base::size_);
+    Makros::unified_move_assign(new_data, Base::data_, Base::size_);
     //for (uint k=0; k < Base::size_; k++)
     //  new_data[k] = Base::data_[k];
 
@@ -282,11 +317,11 @@ ST FlexibleStorage1D<T,ST>::move_append(T&& val)
 {
   if (Base::size_ == reserved_size_) {
 
-    reserved_size_ = size_t(1.2 * reserved_size_) + 4;
+    reserved_size_ = increased_size(reserved_size_);
 
     T* new_data = new T[reserved_size_];
 
-    Makros::unified_assign(new_data, Base::data_, Base::size_);
+    Makros::unified_move_assign(new_data, Base::data_, Base::size_);
     //for (uint k=0; k < Base::size_; k++)
     //  new_data[k] = Base::data_[k];
 
@@ -326,7 +361,7 @@ void FlexibleStorage1D<T,ST>::append(Storage1D<T,ST>& toAppend)
 
     T* new_data = new T[reserved_size_];
 
-    Makros::unified_assign(new_data, Base::data_, Base::size_);
+    Makros::unified_move_assign(new_data, Base::data_, Base::size_);
     //for (uint k=0; k < Base::size_; k++)
     //  new_data[k] = Base::data_[k];
 
@@ -334,10 +369,11 @@ void FlexibleStorage1D<T,ST>::append(Storage1D<T,ST>& toAppend)
     Base::data_ = new_data;
   }
 
-  for (ST k=0; k < toAppend.size(); k++) {
-    Base::data_[Base::size_] = toAppend[k];
-    Base::size_++;
-  }
+  Makros::unified_assign(Base::data_ + Base::size_, toAppend.direct_access(), toAppend.size());
+  //for (ST k=0; k < toAppend.size(); k++) {
+  //  Base::data_[Base::size_] = toAppend[k];
+  //  Base::size_++;
+  //}
 }
 
 template<typename T, typename ST>
@@ -349,7 +385,7 @@ void FlexibleStorage1D<T,ST>::append(FlexibleStorage1D<T,ST>& toAppend)
 
     T* new_data = new T[reserved_size_];
 
-    Makros::unified_assign(new_data, Base::data_, Base::size_);
+    Makros::unified_move_assign(new_data, Base::data_, Base::size_);
     //for (uint k=0; k < Base::size_; k++)
     //  new_data[k] = Base::data_[k];
 
@@ -357,7 +393,7 @@ void FlexibleStorage1D<T,ST>::append(FlexibleStorage1D<T,ST>& toAppend)
     Base::data_ = new_data;
   }
 
-  Makros::unified_assign(Base::data_, toAppend.direct_access(), toAppend.size());
+  Makros::unified_assign(Base::data_ + Base::size_, toAppend.direct_access(), toAppend.size());
   Base::size_ += toAppend.size();  
   //for (ST k=0; k < toAppend.size(); k++) {
   //  Base::data_[Base::size_] = toAppend[k];
@@ -373,7 +409,7 @@ void FlexibleStorage1D<T,ST>::resize(ST size, bool exact_fit)
     reserved_size_ = size;
     T* new_data = new T[reserved_size_];
 
-    Makros::unified_assign(new_data, Base::data_, std::min(Base::size_,size));
+    Makros::unified_move_assign(new_data, Base::data_, std::min(Base::size_,size));
     //for (uint k=0; k < std::min(size_,size); k++)
     //  new_data[k] = data_[k];
 
@@ -388,7 +424,7 @@ void FlexibleStorage1D<T,ST>::resize(ST size, bool exact_fit)
     reserved_size_ = Base::size_;
     T* new_data = new T[reserved_size_];
 
-    Makros::unified_assign(new_data, Base::data_, Base::size_);
+    Makros::unified_move_assign(new_data, Base::data_, Base::size_);
     //for (uint k=0; k < Base::size_; k++)
     //  new_data[k] = Base::data_[k];
 
@@ -403,7 +439,7 @@ void FlexibleStorage1D<T,ST>::fit_exactly()
   if (reserved_size_ != Base::size_) {
     
     T* new_data = new T[Base::size_];
-    Makros::unified_assign(new_data, Base::data_, Base::size_);
+    Makros::unified_move_assign(new_data, Base::data_, Base::size_);
 
     delete[] Base::data_;
     Base::data_ = new_data;
@@ -435,7 +471,7 @@ inline void FlexibleStorage1D<T,ST>::grow_by_dirty(ST increase)
     reserved_size_ = size;
     T* new_data = new T[reserved_size_];
 
-    Makros::unified_assign(new_data, Base::data_, std::min(Base::size_,size));
+    Makros::unified_move_assign(new_data, Base::data_, std::min(Base::size_,size));
     //for (uint k=0; k < std::min(Base::size_,size); k++)
     //  new_data[k] = Base::data_[k];
 
@@ -447,6 +483,24 @@ inline void FlexibleStorage1D<T,ST>::grow_by_dirty(ST increase)
 }
 
 template<typename T, typename ST>
+inline T& FlexibleStorage1D<T,ST>::increase() 
+{
+  if (Base::size_ == reserved_size_) 
+  {
+    reserved_size_ = increased_size(reserved_size_);
+    T* new_data = new T[reserved_size_];
+
+    Makros::unified_move_assign(new_data, Base::data_, Base::size_);    
+    
+    delete[] Base::data_;
+    Base::data_ = new_data;    
+  }
+
+  Base::size_++;
+  return Base::data_[Base::size_-1];
+}
+
+template<typename T, typename ST>
 void FlexibleStorage1D<T,ST>::reserve(ST size)
 {
   if (size > Base::size_ && size != reserved_size_) {
@@ -454,7 +508,7 @@ void FlexibleStorage1D<T,ST>::reserve(ST size)
     reserved_size_ = size;
     T* new_data = new T[reserved_size_];
 
-    Makros::unified_assign(new_data, Base::data_, Base::size_);
+    Makros::unified_move_assign(new_data, Base::data_, Base::size_);
 
     delete[] Base::data_;
     Base::data_ = new_data;
@@ -462,9 +516,14 @@ void FlexibleStorage1D<T,ST>::reserve(ST size)
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::clear()
+void FlexibleStorage1D<T,ST>::clear(bool free)
 {
-  Base::size_ = 0;
+  Base::size_ = 0; 
+  if (free) {
+    reserved_size_ = 0;
+    delete[] Base::data_;
+    Base::data_ = 0;
+  }
 }
 
 template<typename T, typename ST>
@@ -606,11 +665,22 @@ void NamedFlexibleStorage1D<T,ST>::operator=(const NamedFlexibleStorage1D<T,ST>&
 }
 
 template<typename T, typename ST>
+void NamedFlexibleStorage1D<T,ST>::operator=(NamedFlexibleStorage1D<T,ST>&& toTake)
+{
+  FlexibleStorage1D<T,ST>::operator=(toTake);
+}
+
+template<typename T, typename ST>
 void NamedFlexibleStorage1D<T,ST>::operator=(const FlexibleStorage1D<T,ST>& toCopy)
 {
   FlexibleStorage1D<T,ST>::operator=(toCopy);
 }
 
+template<typename T, typename ST>
+void NamedFlexibleStorage1D<T,ST>::operator=(FlexibleStorage1D<T,ST>&& toTake)
+{
+  FlexibleStorage1D<T,ST>::operator=(toTake);
+}
 
 
 #endif

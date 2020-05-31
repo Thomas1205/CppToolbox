@@ -54,9 +54,11 @@ public:
   Storage1D(const Storage1D<T,ST>& toCopy);
   
   //move constructor
-  Storage1D(Storage1D<T,ST>&& toCopy);
+  Storage1D(Storage1D<T,ST>&& toTake);
 
-  ~Storage1D();
+  ~Storage1D() = default;
+
+  const T* end_ptr() const;
 
   virtual const std::string& name() const;
 
@@ -106,12 +108,23 @@ public:
 
   NamedStorage1D(ST size, T default_value, std::string name);
 
+  NamedStorage1D(const NamedStorage1D<T,ST>& toCopy);
+  
+  NamedStorage1D(NamedStorage1D<T,ST>&& toTake);
+
+  ~NamedStorage1D() = default;
+
   virtual const std::string& name() const;
 
   inline void operator=(const Storage1D<T,ST>& toCopy);
 
+  inline void operator=(Storage1D<T,ST>&& toTake);
+
   //NOTE: the name is NOT copied
   inline void operator=(const NamedStorage1D<T,ST>& toCopy);
+
+  //NOTE: the name is NOT taken
+  inline void operator=(NamedStorage1D<T,ST>&& toTake);
 
 protected:
   std::string name_;
@@ -223,15 +236,17 @@ Storage1D<T,ST>::Storage1D(Storage1D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
 }
 
 template<typename T,typename ST>
+const T* Storage1D<T,ST>::end_ptr() const
+{
+  return Base::data_ + Base::size_; 
+}
+
+template<typename T,typename ST>
 inline void Storage1D<T,ST>::range_set_constant(Storage1D<T,ST>::PassType constant, ST start, ST length)
 {
   assert(start+length <= Base::size_);
 
   std::fill_n(Base::data_+start,length,constant); //experimental result: fill_n is usually faster
-}
-
-template<typename T,typename ST> Storage1D<T,ST>::~Storage1D()
-{
 }
 
 template<typename T,typename ST>
@@ -295,30 +310,15 @@ template<typename T,typename ST>
 void Storage1D<T,ST>::resize(ST new_size)
 {
   if (Base::data_ == 0) {
-    //DEBUG
-    // T* ptr = new T[new_size];
-    // if (((size_t)((void*)ptr)) % 16 != 0) {
-    //   WARNING << " pointer does not satisfy alignment boundary of 16!!: " << ptr << std::endl;
-    //   std::cerr << "type "  << Makros::Typename<T>() << std::endl;
-    // }
-    // data_ = ptr;
-    //END_DEBUG
     Base::data_ = new T[new_size];
   }
   else if (Base::size_ != new_size) {
 
-    //DEBUG
-    // T* ptr = new T[new_size];
-    // if (((size_t)((void*)ptr)) % 16 != 0) {
-    //   WARNING << " pointer does not satisfy alignment boundary of 16!!: " << ptr << std::endl;
-    // }
-    // T_A16* new_data = ptr;
-    //END_DEBUG
     T* new_data = new T[new_size];
 
     const ST size = std::min(Base::size_,new_size);
 
-    Makros::unified_assign(new_data, Base::data_, size);
+    Makros::unified_move_assign(new_data, Base::data_, size);
 
     delete[] Base::data_;
     Base::data_ = new_data;
@@ -376,7 +376,7 @@ void Storage1D<T,ST>::resize(ST new_size, Storage1D<T,ST>::PassType fill_value)
 
     const ST size = std::min(Base::size_,new_size);
 
-    Makros::unified_assign(new_data, Base::data_, size);
+    Makros::unified_move_assign(new_data, Base::data_, size);
 
     // for (size_t i=0; i < size; i++)
     // new_data[i] = data_[i];
@@ -429,6 +429,12 @@ NamedStorage1D<T,ST>::NamedStorage1D(ST size, std::string name) : Storage1D<T,ST
 template<typename T,typename ST> 
 NamedStorage1D<T,ST>::NamedStorage1D(ST size, T default_value, std::string name) : Storage1D<T,ST>(size,default_value), name_(name) {}
 
+template<typename T,typename ST> 
+NamedStorage1D<T,ST>::NamedStorage1D(const NamedStorage1D<T,ST>& toCopy) : Storage1D<T,ST>(toCopy), name_("yyy") {}
+  
+template<typename T,typename ST> 
+NamedStorage1D<T,ST>::NamedStorage1D(NamedStorage1D<T,ST>&& toTake) : Storage1D<T,ST>(toTake), name_("yyy") {}
+
 template<typename T,typename ST>
 /*virtual*/ const std::string& NamedStorage1D<T,ST>::name() const
 {
@@ -441,11 +447,24 @@ inline void NamedStorage1D<T,ST>::operator=(const Storage1D<T,ST>& toCopy)
   Storage1D<T,ST>::operator=(toCopy);
 }
 
+template<typename T,typename ST>
+inline void NamedStorage1D<T,ST>::operator=(Storage1D<T,ST>&& toTake)
+{
+  Storage1D<T,ST>::operator=(toTake);
+}
+
 //NOTE: the name is NOT copied
 template<typename T,typename ST>
 inline void NamedStorage1D<T,ST>::operator=(const NamedStorage1D<T,ST>& toCopy)
 {
   Storage1D<T,ST>::operator=(static_cast<const Storage1D<T,ST>&>(toCopy));
+}
+
+//NOTE: the name is NOT taken
+template<typename T,typename ST>
+inline void NamedStorage1D<T,ST>::operator=(NamedStorage1D<T,ST>&& toTake)
+{
+  Storage1D<T,ST>::operator=(static_cast<Storage1D<T,ST>&&>(toTake));
 }
 
 template<typename T,typename ST>

@@ -115,9 +115,9 @@ VarDimStorage<T>& VarDimStorage<T>::operator=(const VarDimStorage& toCopy)
   dim_ = toCopy.dim_vector();
 
   Base::data_ = new T[Base::size_];
-  for (uint k=0; k < Base::size_; k++) {
-    Base::data_[k] = toCopy.data(k);
-  }
+  Makros::unified_assign(Base::data_, toCopy.direct_access(), Base::size_);
+  //for (uint k=0; k < Base::size_; k++)
+  //  Base::data_[k] = toCopy.data(k);
   
   return *this;
 }
@@ -198,9 +198,15 @@ bool operator==(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2)
   if (v1.dims() != v2.dims())
     return false;
 
-  for (size_t k = 0; k < v1.size(); k++) {
-    if (v1.direct_access(k) != v2.direct_access(k))
-      return false;
+  if (std::is_trivially_copyable<T>::value) {
+    return Routines::equals(v1.direct_access(), v2.direct_access(), v1.size());
+  }
+  else {
+
+    for (size_t k = 0; k < v1.size(); k++) {
+      if (v1.direct_access(k) != v2.direct_access(k))
+        return false;
+    }
   }
 
   return true;

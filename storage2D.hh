@@ -34,7 +34,7 @@ public:
   //move constructor
   Storage2D(Storage2D<T,ST>&& toTake);
 
-  ~Storage2D();
+  ~Storage2D() = default;
 
   virtual const std::string& name() const;
 
@@ -67,9 +67,9 @@ public:
 
   inline T& operator()(ST x, ST y);
 
-  void operator=(const Storage2D<T,ST>& toCopy);
+  Storage2D<T,ST>& operator=(const Storage2D<T,ST>& toCopy);
 
-  Storage2D<T,ST>& operator=(Storage2D<T,ST>&& toTake) = default;
+  Storage2D<T,ST>& operator=(Storage2D<T,ST>&& toTake);
 
   inline T* row_ptr(ST y);
 
@@ -112,12 +112,19 @@ public:
 
   NamedStorage2D(const std::pair<ST,ST> dims, T default_value, std::string name);
 
+  ~NamedStorage2D() = default;
+
   virtual const std::string& name() const;
 
   inline void operator=(const Storage2D<T,ST>& toCopy);
 
+  inline void operator=(Storage2D<T,ST>&& toTake);
+
   //NOTE: the name is NOT copied
   inline void operator=(const NamedStorage2D<T,ST>& toCopy);
+
+  //NOTE: the name is NOT taken
+  inline void operator=(NamedStorage2D<T,ST>&& toTake);
 
 protected:
   std::string name_;
@@ -230,13 +237,6 @@ Storage2D<T,ST>::Storage2D(Storage2D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
   yDim_ = toTake.yDim_;
 }
 
-
-//destructor
-template<typename T, typename ST> 
-Storage2D<T,ST>::~Storage2D()
-{
-}
-
 template<typename T, typename ST>
 const std::string& Storage2D<T,ST>::name() const
 {
@@ -301,7 +301,7 @@ inline std::pair<ST,ST> Storage2D<T,ST>::dims() const
   return std::make_pair(xDim_,yDim_);
 }
 
-template <typename T, typename ST>
+template<typename T, typename ST>
 OPTINLINE const T& Storage2D<T,ST>::operator()(ST x, ST y) const
 {
 #ifdef SAFE_MODE
@@ -320,7 +320,7 @@ OPTINLINE const T& Storage2D<T,ST>::operator()(ST x, ST y) const
 }
 
 
-template <typename T, typename ST>
+template<typename T, typename ST>
 OPTINLINE T& Storage2D<T,ST>::operator()(ST x, ST y)
 {
 #ifdef SAFE_MODE
@@ -339,8 +339,8 @@ OPTINLINE T& Storage2D<T,ST>::operator()(ST x, ST y)
   return Base::data_[y*xDim_+x];
 }
 
-template <typename T, typename ST>
-void Storage2D<T,ST>::operator=(const Storage2D<T,ST>& toCopy)
+template<typename T, typename ST>
+Storage2D<T,ST>&  Storage2D<T,ST>::operator=(const Storage2D<T,ST>& toCopy)
 {
   if (Base::size_ != toCopy.size()) {
     if (Base::data_ != 0)
@@ -357,15 +357,26 @@ void Storage2D<T,ST>::operator=(const Storage2D<T,ST>& toCopy)
 
   assert(size == xDim_*yDim_);
   Makros::unified_assign(Base::data_, toCopy.direct_access(), size);
-
   // for (ST i = 0; i < size; i++)
   // data_[i] = toCopy.value(i);
 
-  //this is faster for basic types but it fails for complex types where e.g. arrays have to be copied
-  //memcpy(data_,toCopy.direct_access(),size_*sizeof(T));
+  return *this;
 }
 
-template <typename T, typename ST>
+template<typename T, typename ST>
+Storage2D<T,ST>& Storage2D<T,ST>::operator=(Storage2D<T,ST>&& toTake) 
+{
+  delete[] Base::data_;
+  Base::data_ = toTake.data_;
+  toTake.data_ = 0;  
+
+  xDim_ = toTake.xDim();
+  yDim_ = toTake.yDim();
+  Base::size_ = toTake.size();
+  return *this;
+}
+
+template<typename T, typename ST>
 void Storage2D<T,ST>::resize(ST newxDim, ST newyDim)
 {
   if (Base::data_ == 0) {
@@ -378,7 +389,7 @@ void Storage2D<T,ST>::resize(ST newxDim, ST newyDim)
     /* copy data */
     for (ST y=0; y < std::min(yDim_,newyDim); y++)
       for (ST x=0; x < std::min(xDim_,newxDim); x++)
-        new_data[y*newxDim+x] = Base::data_[y*xDim_+x];
+        new_data[y*newxDim+x] = std::move(Base::data_[y*xDim_+x]);
 
     delete[] Base::data_;
     Base::data_ = new_data;
@@ -389,7 +400,7 @@ void Storage2D<T,ST>::resize(ST newxDim, ST newyDim)
   Base::size_ = xDim_*yDim_;
 }
 
-template <typename T, typename ST>
+template<typename T, typename ST>
 void Storage2D<T,ST>::resize(ST newxDim, ST newyDim, const T fill_value)
 {
   const uint newsize = newxDim*newyDim;
@@ -409,7 +420,7 @@ void Storage2D<T,ST>::resize(ST newxDim, ST newyDim, const T fill_value)
     /* copy data */
     for (ST y=0; y < std::min(yDim_,newyDim); y++)
       for (ST x=0; x < std::min(xDim_,newxDim); x++)
-        new_data[y*newxDim+x] = Base::data_[y*xDim_+x];
+        new_data[y*newxDim+x] = std::move(Base::data_[y*xDim_+x]);
 
     delete[] Base::data_;
     Base::data_ = new_data;
@@ -474,13 +485,25 @@ inline void NamedStorage2D<T,ST>::operator=(const Storage2D<T,ST>& toCopy)
   Storage2D<T,ST>::operator=(toCopy);
 }
 
+template<typename T, typename ST>
+inline void NamedStorage2D<T,ST>::operator=(Storage2D<T,ST>&& toTake)
+{
+  Storage2D<T,ST>::operator=(toTake);
+}
+
 //NOTE: the name is NOT copied
 template<typename T, typename ST>
 inline void NamedStorage2D<T,ST>::operator=(const NamedStorage2D<T,ST>& toCopy)
 {
-  Storage2D<T,ST>::operator=(static_cast<Storage2D<T,ST> >(toCopy));
+  Storage2D<T,ST>::operator=(static_cast<const Storage2D<T,ST>&>(toCopy));
 }
 
+//NOTE: the name is NOT taken
+template<typename T, typename ST>
+inline void NamedStorage2D<T,ST>::operator=(NamedStorage2D<T,ST>&& toTake)
+{
+  Storage2D<T,ST>::operator=(static_cast<Storage2D<T,ST>&&>(toTake));
+}
 
 template<typename T, typename ST>
 bool operator==(const Storage2D<T,ST>& v1, const Storage2D<T,ST>& v2)
@@ -488,10 +511,16 @@ bool operator==(const Storage2D<T,ST>& v1, const Storage2D<T,ST>& v2)
   if (v1.xDim() != v2.xDim() || v1.yDim() != v2.yDim())
     return false;
 
-  for (ST i=0; i < v1.size(); i++) {
-    if (v1.direct_access(i) != v2.direct_access(i))
-      return false;
+  if (std::is_trivially_copyable<T>::value) {
+    return Routines::equals(v1.direct_access(), v2.direct_access(), v1.size());
   }
+  else {
+
+    for (ST i=0; i < v1.size(); i++) {
+      if (v1.direct_access(i) != v2.direct_access(i))
+        return false;
+    }
+  }    
 
   return true;
 }

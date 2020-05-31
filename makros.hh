@@ -332,6 +332,7 @@ namespace Makros {
     }
   }
 
+  //some specializations for compilers who do not optimize entirely
   template<>
   inline void unified_assign(char* attr_restrict dest, const char* attr_restrict source, size_t size)
   {
@@ -385,6 +386,43 @@ namespace Makros {
   {
     memcpy(dest, source, size * sizeof(long double));
   }
+
+  template<typename T>
+  inline void unified_move_assign(T* attr_restrict dest, const T* attr_restrict source, size_t size)
+  {
+    if (std::is_trivially_copyable<T>::value) //will be if constexpr when going to C++-17
+      memcpy(dest, source, size * sizeof(T));
+    else {
+      for (size_t i=0; i < size; i++)
+        dest[i] = std::move(source[i]);
+    }
+  }
+
+  //some specializations for compilers who do not optimize entirely
+  template<>
+  inline void unified_move_assign(int* attr_restrict dest, const int* attr_restrict source, size_t size)
+  {
+    memcpy(dest, source, size * sizeof(int));
+  }
+
+  template<>
+  inline void unified_move_assign(uint* attr_restrict dest, const uint* attr_restrict source, size_t size)
+  {
+    memcpy(dest, source, size * sizeof(uint));
+  }
+
+  template<>
+  inline void unified_move_assign(float* attr_restrict dest, const float* attr_restrict source, size_t size)
+  {
+    memcpy(dest, source, size * sizeof(float));
+  }
+
+  template<>
+  inline void unified_move_assign(double* attr_restrict dest, const double* attr_restrict source, size_t size)
+  {
+    memcpy(dest, source, size * sizeof(double));
+  }
+
 
   inline size_t highest_bit(size_t val)
   {

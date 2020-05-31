@@ -88,7 +88,7 @@ void assign(Storage1D<std::pair<X,T>,ST>& target, const std::map<X,T>& source)
   //TODO: think about std::copy()
   target.resize_dirty(source.size());
   uint k=0;
-  for (typename std::map<X,T>::const_iterator it = source.begin(); it != source.end(); it++) {
+  for (typename std::map<X,T>::const_iterator it = source.begin(); it != source.end(); ++it) {
     target[k] = *it;
     k++;
   }
@@ -100,7 +100,7 @@ void assign(Storage1D<std::pair<X,T>,ST>& target, const std::unordered_map<X,T>&
   //TODO: think about std::copy()
   target.resize_dirty(source.size());
   uint k=0;
-  for (typename std::unordered_map<X,T>::const_iterator it = source.begin(); it != source.end(); it++) {
+  for (typename std::unordered_map<X,T>::const_iterator it = source.begin(); it != source.end(); ++it) {
     target[k] = *it;
     k++;
   }
@@ -111,7 +111,7 @@ void assign(Storage1D<T,ST>& target, const std::set<T>& source)
 {
   target.resize_dirty(source.size());
   uint k=0;
-  for (typename std::set<T>::const_iterator it = source.begin(); it != source.end(); it++) {
+  for (typename std::set<T>::const_iterator it = source.begin(); it != source.end(); ++it) {
     target[k] = *it;
     k++;
   }
@@ -124,7 +124,7 @@ void assign(Storage1D<X,ST>& target1, Storage1D<T,ST>& target2, const std::map<X
   target2.resize_dirty(source.size());
 
   uint k=0;
-  for (typename std::map<X,T>::const_iterator it = source.begin(); it != source.end(); it++) {
+  for (typename std::map<X,T>::const_iterator it = source.begin(); it != source.end(); ++it) {
     target1[k] = it->first;
     target2[k] = it->second;
     k++;
@@ -138,7 +138,7 @@ void assign(Storage1D<X,ST>& target1, Storage1D<T,ST>& target2, const std::unord
   target2.resize_dirty(source.size());
 
   uint k=0;
-  for (typename std::unordered_map<X,T>::const_iterator it = source.begin(); it != source.end(); it++) {
+  for (typename std::unordered_map<X,T>::const_iterator it = source.begin(); it != source.end(); ++it) {
     target1[k] = it->first;
     target2[k] = it->second;
     k++;
@@ -153,7 +153,7 @@ void assign(std::vector<X>& target1, std::vector<T>& target2, const std::map<X,T
   target2.clear();
   target2.reserve(source.size());
 
-  for (typename std::map<X,T>::const_iterator it = source.begin(); it != source.end(); it++) {
+  for (typename std::map<X,T>::const_iterator it = source.begin(); it != source.end(); ++it) {
     target1.push_back(it->first);
     target2.push_back(it->second);
   }
