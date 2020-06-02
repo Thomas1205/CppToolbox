@@ -14,28 +14,6 @@
 #include <cstring>
 #include <type_traits>
 
-//this should be superfluous now that we use unified_move_assign
-template<typename T>
-class SwapOp {
-public:
-
-  void operator()(T& val1, T& val2) const
-  {
-    std::swap(val1, val2);
-  }
-};
-
-//this should be superfluous now that we use unified_move_assign
-template<typename T>
-class SpecialSwapOp {
-public:
-
-  void operator()(T& val1, T& val2) const
-  {
-    val1.swap(val2);
-  }
-};
-
 template<typename T, typename ST=size_t>
 class Storage1D : public StorageBase<T,ST> {
 public:

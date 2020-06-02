@@ -48,7 +48,7 @@ namespace Routines {
   
   /***************** reverse *******************/
 
-  template<typename T>
+  template<typename T, typename Swap = SwapOp<T>>
   inline void reverse(T* data, const size_t nData);
   
   /***************** downshift *****************/
@@ -367,7 +367,7 @@ namespace Routines {
 #endif  
   }
 
-  template<typename T>
+  template<typename T, typename Swap>
   inline void nontrivial_reverse(T* data, const size_t nData) 
   {    
     assert(nData >= 2);
@@ -377,51 +377,59 @@ namespace Routines {
       nontrivial_reverse_uint_array((uint*) data, nData);
     else if (sizeof(T) == 8)
       nontrivial_reverse_double_array((double*) data, nData);
-    else
-      std::reverse(data, data + nData);
+    else {
+      const static Swap swapobj;
+      
+      size_t start = 0; size_t end = nData-1;
+      while (start < end) {        
+        swapobj(data[start],data[end]);
+        start++;
+        end--;
+      }
+    }
   }
 
   template<>
-  inline void nontrivial_reverse(uint* data, const size_t nData) 
+  inline void nontrivial_reverse<uint,SwapOp<uint> >(uint* data, const size_t nData) 
   {
     nontrivial_reverse_uint_array(data, nData);
   }
   
   template<>
-  inline void nontrivial_reverse(int* data, const size_t nData) 
+  inline void nontrivial_reverse<int,SwapOp<int> >(int* data, const size_t nData) 
   {
     nontrivial_reverse_uint_array((uint*) data, nData);
   }
 
   template<>
-  inline void nontrivial_reverse(float* data, const size_t nData) 
+  inline void nontrivial_reverse<float,SwapOp<float> >(float* data, const size_t nData) 
   {
     nontrivial_reverse_uint_array((uint*) data, nData);
   }
 
   template<>
-  inline void nontrivial_reverse(double* data, const size_t nData) 
+  inline void nontrivial_reverse<double,SwapOp<double> >(double* data, const size_t nData) 
   {
     nontrivial_reverse_double_array(data, nData);
   }
   
   template<>
-  inline void nontrivial_reverse(Int64* data, const size_t nData) 
+  inline void nontrivial_reverse<Int64,SwapOp<Int64> >(Int64* data, const size_t nData) 
   {
     nontrivial_reverse_double_array((double*) data, nData);
   }
 
   template<>
-  inline void nontrivial_reverse(UInt64* data, const size_t nData) 
+  inline void nontrivial_reverse<UInt64,SwapOp<UInt64> >(UInt64* data, const size_t nData) 
   {
     nontrivial_reverse_double_array((double*) data, nData);
   }
   
-  template<typename T>
+  template<typename T, typename Swap = SwapOp<T>>
   inline void reverse(T* data, const size_t nData) 
   {
     if (nData >= 2)     
-      nontrivial_reverse(data, nData);
+      nontrivial_reverse<T,Swap>(data, nData);
   }
   
   /***************** downshift *****************/
@@ -524,7 +532,7 @@ namespace Routines {
     //c++-20 offers shift_left and shift_right in <algorithm>
     const uint end = nData-shift;
     if (std::is_trivially_copyable<T>::value) {
-      memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(T));      
+      memmove((void*) (data+pos), (void*) (data+pos+shift),(end-pos+shift-1)*sizeof(T));      
     }
     else {
       uint i = pos;
@@ -538,7 +546,7 @@ namespace Routines {
   {
     //test of the specialized routine downshift_double_array is TODO
     const uint end = nData-shift;
-    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(char));
+    memmove((void*) (data+pos), (void*) (data+pos+shift),(end-pos+shift-1)*sizeof(char));
   }  
 
   template<>
@@ -546,15 +554,15 @@ namespace Routines {
   {
     //test of the specialized routine downshift_double_array is TODO
     const uint end = nData-shift;
-    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(uchar));
+    memmove((void*) (data+pos),data+pos+shift,(end-pos+shift-1)*sizeof(uchar));
   }  
 
   template<>
   inline void downshift_array(short* data, const uint pos, const uint shift, const uint nData)
   {
-    //test of the specialized routine downshift_double_array is TODO
+    //test of the specialized routine downshift_ushort_array is TODO
     const uint end = nData-shift;
-    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(short));
+    memmove((void*) (data+pos), (void*) (data+pos+shift),(end-pos+shift-1)*sizeof(short));
   }  
 
   template<>
@@ -562,7 +570,7 @@ namespace Routines {
   {
     //test of the specialized routine downshift_double_array is TODO
     const uint end = nData-shift;
-    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(ushort));
+    memmove((void*) (data+pos), (void*) (data+pos+shift),(end-pos+shift-1)*sizeof(ushort));
   }  
 
   template<>
@@ -588,7 +596,7 @@ namespace Routines {
   {
     //test of the specialized routine downshift_double_array is TODO
     const uint end = nData-shift;
-    memmove(data+pos,data+pos+shift,(end-pos+shift-1)*sizeof(double));
+    memmove((void*) (data+pos), (void*) (data+pos+shift),(end-pos+shift-1)*sizeof(double));
   }  
 
   /***************** upshift *****************/
@@ -600,7 +608,7 @@ namespace Routines {
 #if !defined(USE_SSE) || USE_SSE < 2
     //for (; k >= pos+shift; k--)
     //  data[k] = data[k-shift];
-    memmove(data+pos+shift,data+pos,(last-pos-shift+1)*sizeof(uint));
+    memmove((void*) (data+pos+shift), (void*) (data+pos),(last-pos-shift+1)*sizeof(uint));
 #else
 
     //roughly the same performance as memmove
@@ -628,9 +636,8 @@ namespace Routines {
                         : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "xmm7", "memory");
     }
     
-    for (; k >= pos+shift; k--) {
+    for (; k >= pos+shift; k--) 
       data[k] = data[k-shift];
-    }
 #endif
   }
 
@@ -653,7 +660,7 @@ namespace Routines {
 #if !defined(USE_SSE) || USE_SSE < 2
     //for (; k >= pos+shift; k--)
     //  data[k] = data[k-shift];    
-    memmove(data+pos+shift,data+pos,(last-pos-shift+1)*sizeof(double));
+    memmove((void*) (data+pos+shift), (void*) (data+pos),(last-pos-shift+1)*sizeof(double));
 #else
 
     //roughly the same speed as memove
@@ -671,8 +678,8 @@ namespace Routines {
 #endif
 
     //movupd is SSE2
-    for (; k-2-shift > pos; k -= 2) 
-    {
+    for (; k-2 > pos+shift; k -= 2) 
+    {  
       double* out_ptr = data + k - 1;
       const double* in_ptr = out_ptr - shift;
 
@@ -680,9 +687,18 @@ namespace Routines {
                         "movupd %%xmm7, %[outp] \n\t"
                         : [outp] "=m" (out_ptr[0]) : [inp] "m" (in_ptr[0]) : "xmm7", "memory");
     }
+
+
     for (; k >= pos+shift; k--)
-      data[k] = data[k-1];
+      data[k] = data[k-shift];
 #endif
+  }
+
+  template<typename T>
+  inline void standard_upshift_array(T* data, const int pos, const int last, const int shift)
+  {
+    for (int k = last; k >= pos+shift; k--) 
+      data[k] = std::move(data[k-shift]);
   }
 
   template<typename T>
@@ -691,11 +707,10 @@ namespace Routines {
     assert(shift > 0);
     //c++-20 offers shift_left and shift_right in <algorithm>
     if (std::is_trivially_copyable<T>::value) {
-      memmove(data+pos+shift,data+pos,(last-pos-shift+1)*sizeof(T));    
+      memmove((void*) (data+pos+shift), (void*) (data+pos),(last-pos-shift+1)*sizeof(T));    
     }
     else {
-      for (int k = last; k >= pos+shift; k--)
-        data[k] = std::move(data[k-shift]);
+      standard_upshift_array(data,pos,last,shift);
     }
   }
 
@@ -706,22 +721,21 @@ namespace Routines {
   }
 
   template<>
-  inline void upshift_array(int* data, const int pos, const int shift, const int last)
+  inline void upshift_array(int* data, const int pos, const int last, const int shift)
   {
-    upshift_int_array(data, pos, shift, last);
+    upshift_int_array(data, pos, last, shift);
   }
 
   template<>
-  inline void upshift_array(float* data, const int pos, const int shift, const int last)
+  inline void upshift_array(float* data, const int pos, const int last, const int shift)
   {
-    upshift_float_array(data, pos, shift, last);
+    upshift_float_array(data, pos, last, shift);
   }
 
   template<>
-  inline void upshift_array(double* data, const int pos, const int shift, const int last)
+  inline void upshift_array(double* data, const int pos, const int last, const int shift)
   {
-    //test of specialized routine is TODO
-    memmove(data+pos+shift,data+pos,(last-pos-shift+1)*sizeof(double));    
+    upshift_double_array(data, pos, last, shift);
   }
 
   /***************** find unique *****************/
@@ -850,7 +864,7 @@ namespace Routines {
   inline uint find_unique_float(const float* data, const float key, const uint nData)
   {
     //NOTE: raw byte equality compare gives non-standard treatment of nan and +/- inf
-    return find_unique_uint((const uint*) data, reinterpret<const uint, const float>(key), nData);
+    return find_unique_uint((const uint*) data, reinterpret<const float, const uint>(key), nData);
   }
 
   template<typename T> 
@@ -858,7 +872,7 @@ namespace Routines {
   {
     if (sizeof(T) == 4) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
-      return find_unique_uint((const uint*) data, reinterpret<const uint, const T>(key), nData);
+      return find_unique_uint((const uint*) data, reinterpret<const T, const uint>(key), nData);
     }
     else {
       return std::find(data, data + nData, key) - data;
@@ -944,7 +958,7 @@ namespace Routines {
   {
     if (sizeof(T) == 4) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
-      return find_first_uint((const uint*) data, reinterpret<const uint, const T>(key), nData);
+      return find_first_uint((const uint*) data, reinterpret<const T, const uint>(key), nData);
     }
     else {
       return std::find(data, data + nData, key) - data;
@@ -1046,18 +1060,18 @@ namespace Routines {
   inline bool contains(const T* data, const T key, const size_t nData) 
   {
     if (sizeof(T) == 1) {
-      return contains_uchar((const uchar*) data, reinterpret<const uchar, const T>(key), nData);
+      return contains_uchar((const uchar*) data, reinterpret<const T, const uchar>(key), nData);
     }
     else if (sizeof(T) == 2) {
-      return contains_ushort((const ushort*) data, reinterpret<const ushort, const T>(key), nData);
+      return contains_ushort((const ushort*) data, reinterpret<const T, const ushort>(key), nData);
     }
     else if (sizeof(T) == 4) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
-      return contains_uint((const uint*) data, reinterpret<const uint, const T>(key), nData);
+      return contains_uint((const uint*) data, reinterpret<const T, const uint>(key), nData);
     }
     else if (sizeof(T) == 8) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
-      return contains_uint64((const UInt64*) data, reinterpret<const UInt64, const T>(key), nData);
+      return contains_uint64((const UInt64*) data, reinterpret<const T, const UInt64>(key), nData);
     }
     else 
       return (std::find(data, data + nData, key) != data + nData);

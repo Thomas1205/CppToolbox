@@ -42,6 +42,12 @@ public:
 
   ~FlexibleStorage1D();
 
+  //for compatibility with std::vector, e.g. for use in templates
+  T* data() { return Base::direct_access(); }
+
+  //for compatibility with std::vector, e.g. for use in templates
+  const T* data() const { return Base::direct_access(); }
+
   inline T& operator[](ST i) const;
 
   inline ST reserved_size() const;

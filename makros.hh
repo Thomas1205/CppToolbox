@@ -673,6 +673,24 @@ namespace Makros {
 
 } //end of namespace Makros
 
+template<typename T>
+class SwapOp {
+public:
 
+  inline void operator()(T& val1, T& val2) const
+  {
+    std::swap(val1, val2);
+  }
+};
+
+template<typename T>
+class SpecialSwapOp {
+public:
+
+  inline void operator()(T& val1, T& val2) const
+  {
+    val1.swap(val2);
+  }
+};
 
 #endif

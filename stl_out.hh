@@ -11,17 +11,17 @@
 
 /*************** declarations ******************/
 
-template <typename T>
+template<typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec);
 
 template<typename T>
 std::ostream& operator<<(std::ostream& os, const std::set<T>& s);
 
-template<typename TK, typename TE>
-std::ostream& operator<<(std::ostream& os, const std::map<TK,TE>& m);
+template<typename TK, typename TV>
+std::ostream& operator<<(std::ostream& os, const std::map<TK,TV>& m);
 
-template<typename TK, typename TE, typename H>
-std::ostream& operator<<(std::ostream& os, const std::map<TK,TE,H>& m);
+template<typename TK, typename TV, typename H>
+std::ostream& operator<<(std::ostream& os, const std::map<TK,TV,H>& m);
 
 template<typename T1, typename T2>
 std::ostream& operator<<(std::ostream& os, const std::pair<T1,T2>& p);
@@ -29,7 +29,7 @@ std::ostream& operator<<(std::ostream& os, const std::pair<T1,T2>& p);
 
 /*************** implementation ****************/
 
-template <typename T>
+template<typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
 {
   os << "[ ";
@@ -58,11 +58,11 @@ std::ostream& operator<<(std::ostream& os, const std::set<T>& s)
   return os;
 }
 
-template<typename TK, typename TE>
-std::ostream& operator<<(std::ostream& os, const std::map<TK,TE>& m)
+template<typename TK, typename TV>
+std::ostream& operator<<(std::ostream& os, const std::map<TK,TV>& m)
 {
   os << "[ ";
-  for (typename std::map<TK,TE>::const_iterator it=m.begin(); it != m.end(); ) {
+  for (typename std::map<TK,TV>::const_iterator it=m.begin(); it != m.end(); ) {
     os << it->first << "->" << it->second;
     ++it;
     if (it != m.end())
@@ -73,11 +73,11 @@ std::ostream& operator<<(std::ostream& os, const std::map<TK,TE>& m)
   return os;
 }
 
-template<typename TK, typename TE, typename H>
-std::ostream& operator<<(std::ostream& os, const std::unordered_map<TK,TE,H>& m)
+template<typename TK, typename TV, typename H>
+std::ostream& operator<<(std::ostream& os, const std::unordered_map<TK,TV,H>& m)
 {
   os << "[ ";
-  for (typename std::unordered_map<TK,TE>::const_iterator it=m.begin(); it != m.end(); ) {
+  for (typename std::unordered_map<TK,TV>::const_iterator it=m.begin(); it != m.end(); ) {
     os << it->first << "->" << it->second;
     ++it;
     if (it != m.end())
