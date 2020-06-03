@@ -36,28 +36,28 @@ public:
   virtual const std::string& name() const;
 
   //existing elements are preserved, new ones are uninitialized
-  void resize(ST newDim);
+  void resize(ST newDim) noexcept;
 
   //existing elements are preserved, new ones are filled with the second argument
-  void resize(ST newDim, const T fill_value);
+  void resize(ST newDim, const T fill_value) noexcept;
 
   //all elements are uninitialized after this operation
-  void resize_dirty(ST newDim);
+  void resize_dirty(ST newDim) noexcept;
 
   //access on an element (handling is symmetric, i.e. accessing (x,y) is equivalent to accessing (y,x) )
-  inline const T& operator()(ST x, ST y) const;
+  inline const T& operator()(ST x, ST y) const noexcept;
 
-  inline T& operator()(ST x, ST y);
+  inline T& operator()(ST x, ST y) noexcept;
 
-  void operator=(const TriStorage2D<T,ST>& toCopy);
+  void operator=(const TriStorage2D<T,ST>& toCopy) noexcept;
   
   TriStorage2D<T,ST>& operator=(TriStorage2D<T,ST>&& toTake) = default;
 
-  inline T* row_ptr(ST y);
+  inline T* row_ptr(ST y) noexcept;
 
-  inline const T* row_ptr(ST y) const;
+  inline const T* row_ptr(ST y) const noexcept;
 
-  inline ST dim() const;
+  inline ST dim() const noexcept;
 
   void swap(TriStorage2D<T,ST>& toSwap) noexcept;
 
@@ -93,10 +93,10 @@ protected:
 
 
 template<typename T, typename ST>
-bool operator==(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2);
+bool operator==(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2) noexcept;
 
 template<typename T, typename ST>
-bool operator!=(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2);
+bool operator!=(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2) noexcept;
 
 namespace Makros {
 
@@ -182,7 +182,7 @@ template <typename T, typename ST> TriStorage2D<T,ST>::~TriStorage2D()
 }
 
 template<typename T, typename ST>
-void TriStorage2D<T,ST>::operator=(const TriStorage2D<T,ST>& toCopy)
+void TriStorage2D<T,ST>::operator=(const TriStorage2D<T,ST>& toCopy) noexcept
 {
   dim_ = toCopy.dim();
   StorageBase<T,ST>::size_ = toCopy.size();
@@ -211,27 +211,27 @@ template <typename T, typename ST>
 }
 
 template<typename T, typename ST>
-inline T* TriStorage2D<T,ST>::row_ptr(ST y)
+inline T* TriStorage2D<T,ST>::row_ptr(ST y) noexcept
 {
   assert(y < dim_);
   return StorageBase<T,ST>::data_ + (y*(y+1))/2;
 }
 
 template<typename T, typename ST>
-inline const T* TriStorage2D<T,ST>::row_ptr(ST y) const
+inline const T* TriStorage2D<T,ST>::row_ptr(ST y) const noexcept
 {
   assert(y < dim_);
   return StorageBase<T,ST>::data_ + (y*(y+1))/2;
 }
 
 template<typename T, typename ST>
-inline ST TriStorage2D<T,ST>::dim() const
+inline ST TriStorage2D<T,ST>::dim() const noexcept
 {
   return dim_;
 }
 
 template <typename T, typename ST>
-inline const T& TriStorage2D<T,ST>::operator()(ST x, ST y) const
+inline const T& TriStorage2D<T,ST>::operator()(ST x, ST y) const noexcept
 {
 #ifdef SAFE_MODE
   if (x >= dim_ || y >= dim_) {
@@ -251,7 +251,7 @@ inline const T& TriStorage2D<T,ST>::operator()(ST x, ST y) const
 }
 
 template <typename T, typename ST>
-inline T& TriStorage2D<T,ST>::operator()(ST x, ST y)
+inline T& TriStorage2D<T,ST>::operator()(ST x, ST y) noexcept
 {
 #ifdef SAFE_MODE
   if (x >= dim_ || y >= dim_) {
@@ -275,7 +275,7 @@ inline T& TriStorage2D<T,ST>::operator()(ST x, ST y)
 
 //existing elements are preserved, new ones are uninitialized
 template<typename T, typename ST>
-void TriStorage2D<T,ST>::resize(ST newDim)
+void TriStorage2D<T,ST>::resize(ST newDim) noexcept
 {
   if (newDim != dim_) {
 
@@ -299,7 +299,7 @@ void TriStorage2D<T,ST>::resize(ST newDim)
 
 //existing elements are preserved, new ones are filled with the second argument
 template<typename T, typename ST>
-void TriStorage2D<T,ST>::resize(ST newDim, const T fill_value)
+void TriStorage2D<T,ST>::resize(ST newDim, const T fill_value) noexcept
 {
   if (newDim != dim_) {
 
@@ -329,7 +329,7 @@ void TriStorage2D<T,ST>::resize(ST newDim, const T fill_value)
 }
 
 template<typename T, typename ST>
-void TriStorage2D<T,ST>::resize_dirty(ST newDim)
+void TriStorage2D<T,ST>::resize_dirty(ST newDim) noexcept
 {
   if (newDim != dim_) {
     if (StorageBase<T,ST>::data_ != 0) {
@@ -352,7 +352,7 @@ void TriStorage2D<T,ST>::swap(TriStorage2D<T,ST>& toSwap) noexcept
 }
 
 template<typename T, typename ST>
-bool operator==(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2)
+bool operator==(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2) noexcept
 {
   if (v1.size() != v2.size())
     return false;
@@ -367,7 +367,7 @@ bool operator==(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2)
 }
 
 template<typename T, typename ST>
-bool operator!=(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2)
+bool operator!=(const TriStorage2D<T,ST>& v1, const TriStorage2D<T,ST>& v2) noexcept
 {
   if (v1.size() != v2.size())
     return true;

@@ -8,13 +8,13 @@
 //matrix determinant via LU-decomposition. It works for any mathematical T thanks to internally working with doubles.
 // But since determinants only exist for square matrices, we do not make this a member.
 template<typename T, typename ST>
-long double matrix_determinant(const Math2D::Matrix<T,ST>& m, const double fullrank_tolerance = 0.0);
+long double matrix_determinant(const Math2D::Matrix<T,ST>& m, const double fullrank_tolerance = 0.0) noexcept;
 
 /****** implementation ****/
 
 //matrix determinant via LU-decomposition
 template<typename T, typename ST>
-long double matrix_determinant(const Math2D::Matrix<T,ST>& m, const double fullrank_tolerance)
+long double matrix_determinant(const Math2D::Matrix<T,ST>& m, const double fullrank_tolerance) noexcept
 {
   if (m.xDim() != m.yDim()) {
     INTERNAL_ERROR << " No determinant for non-square matrix \"" << m.name() << "\" of size "

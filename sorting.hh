@@ -473,7 +473,7 @@ template<typename T1, typename T2>
 inline void merge_sort_key_value(T1* key, T2* value, const size_t nData) noexcept
 {
   if (nData <= MERGE_THRESH)
-    bubble_sort(key, value, nData);
+    bubble_sort_key_value(key, value, nData);
   else {
 
     using KeyRefType = typename std::conditional<std::is_fundamental<T1>::value || std::is_pointer<T1>::value, const T1, const T1&>::type;
@@ -490,12 +490,12 @@ inline void merge_sort_key_value(T1* key, T2* value, const size_t nData) noexcep
     //Makros::unified_move_assign(aux_key, key, half);
     //Makros::unified_move_assign(aux_value, value, half);
 
-    merge_sort(aux_key,aux_value,half);
+    merge_sort_key_value(aux_key,aux_value,half);
 
     //Makros::unified_move_assign(aux_key+half, key+half, nData2);
     //Makros::unified_move_assign(aux_value+half, value+half, nData2);
 
-    merge_sort(aux_key+half,aux_value,half,nData2);
+    merge_sort_key_value(aux_key+half,aux_value+half,nData2);
 
     //now merge the lists
 

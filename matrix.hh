@@ -46,57 +46,57 @@ namespace Math2D {
     virtual const std::string& name() const;
 
     //note: with g++-4.8.5 it is a lot faster to used set_constant(0.0)
-    void set_zeros();
+    void set_zeros() noexcept;
 
-    inline T sum() const;
+    inline T sum() const noexcept;
 
-    inline T row_sum(ST y) const;
+    inline T row_sum(ST y) const noexcept;
 
     /*** maximal element ***/
-    T max() const;
+    T max() const noexcept;
 
     /*** minimal element ***/
-    T min() const;
+    T min() const noexcept;
 
-    inline T row_min(ST y) const;
+    inline T row_min(ST y) const noexcept;
 
-    inline T row_max(ST y) const;
+    inline T row_max(ST y) const noexcept;
 
     /*** maximal absolute element = l-infinity norm ***/
-    T max_abs() const;
+    T max_abs() const noexcept;
 
-    inline void ensure_min(T lower_limit);
+    inline void ensure_min(T lower_limit) noexcept;
 
     /*** L2-norm of the matrix ***/
-    inline double norm() const;
+    inline double norm() const noexcept;
 
     /*** squared L2-norm ***/
-    inline double sqr_norm() const;
+    inline double sqr_norm() const noexcept;
 
     /*** L1-norm of the matrix ***/
-    inline double norm_l1() const;
+    inline double norm_l1() const noexcept;
 
-    inline void add_constant(const T addon);
+    inline void add_constant(const T addon) noexcept;
 
-    inline void add_matrix_multiple(const Matrix<T,ST>& toAdd, const T alpha);
+    inline void add_matrix_multiple(const Matrix<T,ST>& toAdd, const T alpha) noexcept;
 
-    inline void operator=(const Matrix<T,ST>& toCopy);
+    inline void operator=(const Matrix<T,ST>& toCopy) noexcept;
 
     Matrix<T,ST>& operator=(Matrix<T,ST>& toTake) = default;
 
     //---- mathematical operators ----
 
     //addition of another matrix of equal dimensions
-    void operator+=(const Matrix<T,ST>& toAdd);
+    void operator+=(const Matrix<T,ST>& toAdd) noexcept;
 
-    void operator-=(const Matrix<T,ST>& toSub);
+    void operator-=(const Matrix<T,ST>& toSub) noexcept;
 
     //multiplication with a scalar
-    void operator*=(const T scalar);
+    void operator*=(const T scalar) noexcept;
 
-    void elem_mul(const Matrix<T,ST>& v);
+    void elem_mul(const Matrix<T,ST>& v) noexcept;
     
-    void elem_div(const Matrix<T,ST>& v);
+    void elem_div(const Matrix<T,ST>& v) noexcept;
 
     //returns if the operation was successful
     bool savePGM(const std::string& filename, size_t max_intensity, bool fit_to_range = true) const;
@@ -138,7 +138,7 @@ namespace Math2D {
   };
 
   //NOTE: dest can be the same as src1 or src2
-  inline void go_in_neg_direction(Math2D::Matrix<double>& dest, const Math2D::Matrix<double>& src1, const Math2D::Matrix<double>& src2, double alpha)
+  inline void go_in_neg_direction(Math2D::Matrix<double>& dest, const Math2D::Matrix<double>& src1, const Math2D::Matrix<double>& src2, double alpha) noexcept
   {
     assert(dest.dims() == src1.dims());
     assert(dest.dims() == src2.dims());
@@ -147,7 +147,7 @@ namespace Math2D {
 
   //NOTE: dest can be the same as src1 or src2
   inline void assign_weighted_combination(Math2D::Matrix<double>& dest, double w1, const Math2D::Matrix<double>& src1,
-                                          double w2, const Math2D::Matrix<double>& src2)
+                                          double w2, const Math2D::Matrix<double>& src2) noexcept
   {
     assert(dest.dims() == src1.dims());
     assert(dest.dims() == src2.dims());
@@ -157,20 +157,20 @@ namespace Math2D {
   /***************** stand-alone operators and routines ********************/
 
   template<typename T, typename ST>
-  Matrix<T,ST> operator+(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2);
+  Matrix<T,ST> operator+(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2) noexcept;
 
   template<typename T, typename ST>
-  Matrix<T,ST> operator*(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2);
+  Matrix<T,ST> operator*(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2) noexcept;
 
   //streaming
   template <typename T, typename ST>
   std::ostream& operator<<(std::ostream& s, const Matrix<T,ST>& m);
 
   template<typename T, typename ST>
-  Matrix<T,ST> transpose(const Matrix<T,ST>& m);
+  Matrix<T,ST> transpose(const Matrix<T,ST>& m) noexcept;
 
   template<typename T, typename ST>
-  Math1D::Vector<T,ST> operator*(const Matrix<T,ST>& m, const Math1D::Vector<T,ST>& v);
+  Math1D::Vector<T,ST> operator*(const Matrix<T,ST>& m, const Math1D::Vector<T,ST>& v) noexcept;
 }
 
 
@@ -229,18 +229,23 @@ namespace Math2D {
   template<typename T, typename ST>
   /*static*/ const std::string Matrix<T,ST>::matrix_name_ = "unnamed matrix";
 
-  template<typename T, typename ST> Matrix<T,ST>::Matrix() : Storage2D<T,ST>() {}
+  template<typename T, typename ST> 
+  Matrix<T,ST>::Matrix() : Storage2D<T,ST>() {}
 
-  template<typename T, typename ST> Matrix<T,ST>::Matrix(ST xDim, ST yDim) : Storage2D<T,ST>(xDim, yDim)  {}
+  template<typename T, typename ST> 
+  Matrix<T,ST>::Matrix(ST xDim, ST yDim) : Storage2D<T,ST>(xDim, yDim)  {}
 
-  template<typename T, typename ST> Matrix<T,ST>::Matrix(ST xDim, ST yDim, const T default_value) : Storage2D<T,ST>(xDim, yDim, default_value) {}
+  template<typename T, typename ST> 
+  Matrix<T,ST>::Matrix(ST xDim, ST yDim, const T default_value) : Storage2D<T,ST>(xDim, yDim, default_value) {}
 
-  template<typename T, typename ST> Matrix<T,ST>::Matrix(const std::pair<ST,ST> dims) : Storage2D<T,ST>(dims)  {}
+  template<typename T, typename ST> 
+  Matrix<T,ST>::Matrix(const std::pair<ST,ST> dims) : Storage2D<T,ST>(dims)  {}
 
-  template<typename T, typename ST> Matrix<T,ST>::Matrix(const std::pair<ST,ST> dims, T default_value) : Storage2D<T,ST>(dims, default_value) {}
+  template<typename T, typename ST> 
+  Matrix<T,ST>::Matrix(const std::pair<ST,ST> dims, T default_value) : Storage2D<T,ST>(dims, default_value) {}
 
   template<typename T,typename ST>
-  void Matrix<T,ST>::set_zeros()
+  void Matrix<T,ST>::set_zeros() noexcept
   {
     memset(Base::data_,0,Base::size_*sizeof(T));
   }
@@ -254,7 +259,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  inline T Matrix<T,ST>::sum() const
+  inline T Matrix<T,ST>::sum() const noexcept
   {
     const ST size = Base::size_;
     const T_A16* data = Base::data_;
@@ -271,7 +276,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  inline T Matrix<T,ST>::row_sum(ST y) const
+  inline T Matrix<T,ST>::row_sum(ST y) const noexcept
   {
     const ST yDim = Base::yDim_;
     const ST xDim = Base::xDim_;
@@ -282,7 +287,7 @@ namespace Math2D {
 
   /*** maximal element ***/
   template<typename T, typename ST>
-  T Matrix<T,ST>::max() const
+  T Matrix<T,ST>::max() const noexcept
   {
 
     //     T maxel = std::numeric_limits<T,ST>::min();
@@ -301,11 +306,11 @@ namespace Math2D {
   }
 
   template<>
-  float Matrix<float>::max() const;
+  float Matrix<float>::max() const noexcept;
 
   /*** minimal element ***/
   template<typename T, typename ST>
-  T Matrix<T,ST>::min() const
+  T Matrix<T,ST>::min() const noexcept
   {
     //     T minel = std::numeric_limits<T,ST>::max();
     //     for (ST i=0; i < Base::size_; i++) {
@@ -323,17 +328,17 @@ namespace Math2D {
   }
 
   template<>
-  float Matrix<float>::min() const;
+  float Matrix<float>::min() const noexcept;
 
   template<typename T, typename ST>
-  inline T Matrix<T,ST>::row_min(ST y) const
+  inline T Matrix<T,ST>::row_min(ST y) const noexcept
   {
     const T* data = row_ptr(y);
     return *std::min_element(data,data+Base::size_);
   }
 
   template<typename T, typename ST>
-  inline T Matrix<T,ST>::row_max(ST y) const
+  inline T Matrix<T,ST>::row_max(ST y) const noexcept
   {
     const T* data = row_ptr(y);
     return *std::max_element(data,data+Base::size_);
@@ -341,7 +346,7 @@ namespace Math2D {
 
   /*** maximal absolute element = l-infinity norm ***/
   template<typename T, typename ST>
-  T Matrix<T,ST>::max_abs() const
+  T Matrix<T,ST>::max_abs() const noexcept
   {
     const T_A16* data = Base::data_;
 
@@ -355,7 +360,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  inline void Matrix<T,ST>::ensure_min(T lower_limit)
+  inline void Matrix<T,ST>::ensure_min(T lower_limit) noexcept
   {
     const ST size = Base::size_;
     const T_A16* data = Base::data_;
@@ -366,7 +371,7 @@ namespace Math2D {
 
   /*** L2-norm of the matrix ***/
   template<typename T, typename ST>
-  inline double Matrix<T,ST>::norm() const
+  inline double Matrix<T,ST>::norm() const noexcept
   {
     const ST size = Base::size_;
     const T_A16* data = Base::data_;
@@ -381,7 +386,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  inline double Matrix<T,ST>::sqr_norm() const
+  inline double Matrix<T,ST>::sqr_norm() const noexcept
   {
     const ST size = Base::size_;
     const T_A16* data = Base::data_;
@@ -397,7 +402,7 @@ namespace Math2D {
 
   /*** L1-norm of the matrix ***/
   template<typename T, typename ST>
-  inline double Matrix<T,ST>::norm_l1() const
+  inline double Matrix<T,ST>::norm_l1() const noexcept
   {
     const ST size = Base::size_;
     const T_A16* data = Base::data_;
@@ -411,7 +416,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  inline void Matrix<T,ST>::add_constant(const T addon)
+  inline void Matrix<T,ST>::add_constant(const T addon) noexcept
   {
     T_A16* data = Base::data_;
     const ST size = Base::size_;
@@ -423,7 +428,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  inline void Matrix<T,ST>::add_matrix_multiple(const Matrix<T,ST>& toAdd, const T alpha)
+  inline void Matrix<T,ST>::add_matrix_multiple(const Matrix<T,ST>& toAdd, const T alpha) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -451,7 +456,7 @@ namespace Math2D {
   }
 
   template<>
-  inline void Matrix<double>::add_matrix_multiple(const Matrix<double>& toAdd, const double alpha)
+  inline void Matrix<double>::add_matrix_multiple(const Matrix<double>& toAdd, const double alpha) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -469,14 +474,14 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  inline void Matrix<T,ST>::operator=(const Matrix<T,ST>& toCopy)
+  inline void Matrix<T,ST>::operator=(const Matrix<T,ST>& toCopy) noexcept
   {
     Base::operator=(toCopy);
   }
 
   //addition of another matrix of equal dimensions
   template<typename T, typename ST>
-  void Matrix<T,ST>::operator+=(const Matrix<T,ST>& toAdd)
+  void Matrix<T,ST>::operator+=(const Matrix<T,ST>& toAdd) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -503,7 +508,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  void Matrix<T,ST>::operator-=(const Matrix<T,ST>& toSub)
+  void Matrix<T,ST>::operator-=(const Matrix<T,ST>& toSub) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -531,7 +536,7 @@ namespace Math2D {
 
   //multiplication with a scalar
   template<typename T, typename ST>
-  void Matrix<T,ST>::operator*=(const T scalar)
+  void Matrix<T,ST>::operator*=(const T scalar) noexcept
   {
     T_A16* data = Base::data_;
     const ST size = Base::size_;
@@ -545,13 +550,13 @@ namespace Math2D {
   }
 
   template<>
-  void Matrix<float>::operator*=(const float scalar);
+  void Matrix<float>::operator*=(const float scalar) noexcept;
 
   template<>
-  void Matrix<double>::operator*=(const double scalar);
+  void Matrix<double>::operator*=(const double scalar) noexcept;
 
   template<typename T, typename ST>
-  void Matrix<T,ST>::elem_mul(const Matrix<T,ST>& v)
+  void Matrix<T,ST>::elem_mul(const Matrix<T,ST>& v) noexcept
   {
     const ST size = Base::size_;
     T_A16* data = Base::data_;
@@ -563,7 +568,7 @@ namespace Math2D {
   }
     
   template<typename T, typename ST>
-  void Matrix<T,ST>::elem_div(const Matrix<T,ST>& v)
+  void Matrix<T,ST>::elem_div(const Matrix<T,ST>& v) noexcept
   {
     const ST size = Base::size_;
     T_A16* data = Base::data_;
@@ -615,23 +620,30 @@ namespace Math2D {
 
   /***************** implementation of Named Matrix ***********************/
 
-  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix() : Matrix<T,ST>(), name_("zzz") {}
+  template<typename T, typename ST> 
+  NamedMatrix<T,ST>::NamedMatrix() : Matrix<T,ST>(), name_("zzz") {}
 
-  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix(std::string name) : Matrix<T,ST>(), name_(name) {}
+  template<typename T, typename ST> 
+  NamedMatrix<T,ST>::NamedMatrix(std::string name) : Matrix<T,ST>(), name_(name) {}
 
-  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix(ST xDim, ST yDim, std::string name)
+  template<typename T, typename ST> 
+  NamedMatrix<T,ST>::NamedMatrix(ST xDim, ST yDim, std::string name)
     : Matrix<T,ST>(xDim, yDim), name_(name) {}
 
-  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix(ST xDim, ST yDim, T default_value, std::string name)
+  template<typename T, typename ST> 
+  NamedMatrix<T,ST>::NamedMatrix(ST xDim, ST yDim, T default_value, std::string name)
     : Matrix<T,ST>(xDim,yDim,default_value), name_(name) {}
 
-  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix(const std::pair<ST,ST> dims, std::string name)
+  template<typename T, typename ST> 
+  NamedMatrix<T,ST>::NamedMatrix(const std::pair<ST,ST> dims, std::string name)
     : Matrix<T,ST>(dims), name_(name) {}
 
-  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix(const std::pair<ST,ST> dims, T default_value, std::string name)
+  template<typename T, typename ST> 
+  NamedMatrix<T,ST>::NamedMatrix(const std::pair<ST,ST> dims, T default_value, std::string name)
     : Matrix<T,ST>(dims,default_value), name_(name) {}
 
-  template<typename T, typename ST> NamedMatrix<T,ST>::~NamedMatrix() {}
+  template<typename T, typename ST> 
+  NamedMatrix<T,ST>::~NamedMatrix() {}
 
   template<typename T, typename ST>
   inline void NamedMatrix<T,ST>::operator=(const Matrix<T,ST>& toCopy)
@@ -662,7 +674,7 @@ namespace Math2D {
 
   //implementation of stand-alone operators
   template<typename T, typename ST>
-  Matrix<T,ST> operator+(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2)
+  Matrix<T,ST> operator+(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -688,7 +700,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  Matrix<T,ST> operator*(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2)
+  Matrix<T,ST> operator*(const Matrix<T,ST>& m1, const Matrix<T,ST>& m2) noexcept
   {
     //there is room for optimization here
     // but if you want efficient code you should never call a routine that returns a matrix - except if most of your run-time lies elsewhere
@@ -760,7 +772,7 @@ namespace Math2D {
 
 
   template<typename T, typename ST>
-  Matrix<T,ST> transpose(const Matrix<T,ST>& m)
+  Matrix<T,ST> transpose(const Matrix<T,ST>& m) noexcept
   {
     const ST xDim = m.xDim();
     const ST yDim = m.yDim();
@@ -779,7 +791,7 @@ namespace Math2D {
 
 
   template<typename T, typename ST>
-  Math1D::Vector<T,ST> operator*(const Matrix<T,ST>& m, const Math1D::Vector<T,ST>& v)
+  Math1D::Vector<T,ST> operator*(const Matrix<T,ST>& m, const Math1D::Vector<T,ST>& v) noexcept
   {
     //there is room for optimization here
     // but if you want efficient code you should never call a routine that returns a vector - except if most of your run-time lies elsewhere

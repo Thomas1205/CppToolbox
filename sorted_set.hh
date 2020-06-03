@@ -20,66 +20,66 @@ public:
   
   SortedSet(const std::initializer_list<T>& init);
 
-  void swap(SortedSet<T>& other)
+  void swap(SortedSet<T>& other) noexcept
   {
     data_.swap(other.data_);
   }
 
-  size_t size() const
+  size_t size() const noexcept
   {
     return data_.size();
   }
 
-  size_t capacity() const
+  size_t capacity() const noexcept
   {
     return data_.capacity();
   }
 
-  void reserve(size_t size)
+  void reserve(size_t size) noexcept
   {
     data_.reserve(size);
   }
 
-  void clear()
+  void clear() noexcept
   {
     data_.clear();
   }
 
   //for compatibility with the other sets, e.g. use in templates (data are always sorted)
-  const std::vector<T>& unsorted_data() const
+  const std::vector<T>& unsorted_data() const noexcept
   {
     return data_;
   }
 
-  const std::vector<T>& sorted_data() const
+  const std::vector<T>& sorted_data() const noexcept
   {
     return data_;
   }
 
-  bool contains(PassType val) const;
+  bool contains(PassType val) const noexcept;
 
   //returns true if val is new
-  bool insert(PassType val);
+  bool insert(PassType val) noexcept;
 
   //returns true if val is new
-  bool move_insert(T&& val);
+  bool move_insert(T&& val) noexcept;
 
-  void insert_new(PassType val);
+  void insert_new(PassType val) noexcept;
 
-  void move_insert_new(T&& val);
+  void move_insert_new(T&& val) noexcept;
   
-  void insert_largest(PassType val);
+  void insert_largest(PassType val) noexcept;
 
-  void move_insert_largest(T&& val);
+  void move_insert_largest(T&& val) noexcept;
 
   //returns true if val was in the tree
-  bool erase(PassType val);
+  bool erase(PassType val) noexcept;
 
   //returns true if out was in the tree
-  bool replace(PassType out, PassType in);
+  bool replace(PassType out, PassType in) noexcept;
 
   //returns true if out was in the tree
-  bool move_replace(PassType out, T&& in);
+  bool move_replace(PassType out, T&& in) noexcept;
 
 protected:
 
@@ -90,7 +90,7 @@ template<typename T>
 std::ostream& operator<<(std::ostream& os, const SortedSet<T>& set);
 
 template<typename T>
-bool operator==(const SortedSet<T>& set1, const SortedSet<T>& set2);
+bool operator==(const SortedSet<T>& set1, const SortedSet<T>& set2) noexcept;
 
 /********************** implementation ************************/
 
@@ -111,14 +111,14 @@ SortedSet<T>::SortedSet(const std::initializer_list<T>& init)
 }
 
 template<typename T>
-bool SortedSet<T>::contains(PassType val) const
+bool SortedSet<T>::contains(PassType val) const noexcept
 {
   return (binsearch(data_, val) != MAX_UINT);
 }
 
 //returns true if val is new
 template<typename T>
-bool SortedSet<T>::insert(PassType val)
+bool SortedSet<T>::insert(PassType val) noexcept
 {
   //std::cerr << "insert" << std::endl;
   const size_t size = data_.size();
@@ -143,7 +143,7 @@ bool SortedSet<T>::insert(PassType val)
 
 //returns true if val is new
 template<typename T>
-bool SortedSet<T>::move_insert(T&& val)
+bool SortedSet<T>::move_insert(T&& val) noexcept
 {
   //std::cerr << "insert" << std::endl;
   const size_t size = data_.size();
@@ -168,7 +168,7 @@ bool SortedSet<T>::move_insert(T&& val)
 
 //returns true if val is new
 template<typename T>
-void SortedSet<T>::insert_new(PassType val)
+void SortedSet<T>::insert_new(PassType val) noexcept
 {
   //std::cerr << "insert" << std::endl;
   const size_t size = data_.size();
@@ -189,7 +189,7 @@ void SortedSet<T>::insert_new(PassType val)
 
 //returns true if val is new
 template<typename T>
-void SortedSet<T>::move_insert_new(T&& val)
+void SortedSet<T>::move_insert_new(T&& val) noexcept
 {
   //std::cerr << "insert" << std::endl;
   const size_t size = data_.size();
@@ -209,14 +209,14 @@ void SortedSet<T>::move_insert_new(T&& val)
 }
 
 template<typename T>
-void SortedSet<T>::insert_largest(PassType val)
+void SortedSet<T>::insert_largest(PassType val) noexcept
 {
   assert(data_.size() == 0 || data_.back() < val);
   data_.push_back(val);
 }
 
 template<typename T>
-void SortedSet<T>::move_insert_largest(T&& val)
+void SortedSet<T>::move_insert_largest(T&& val) noexcept
 {
   assert(data_.size() == 0 || data_.back() < val);
   data_.push_back(val);
@@ -224,7 +224,7 @@ void SortedSet<T>::move_insert_largest(T&& val)
 
 //returns true if val was in the tree
 template<typename T>
-bool SortedSet<T>::erase(PassType val)
+bool SortedSet<T>::erase(PassType val) noexcept
 {
   //std::cerr << "erase " << val << " from " << data_ << std::endl;
   const size_t pos = binsearch(data_, val);
@@ -242,7 +242,7 @@ bool SortedSet<T>::erase(PassType val)
 
 //returns true if out was in the tree
 template<typename T>
-bool SortedSet<T>::replace(PassType out, PassType in)
+bool SortedSet<T>::replace(PassType out, PassType in) noexcept
 {
   assert(!contains(in));
 
@@ -288,7 +288,7 @@ bool SortedSet<T>::replace(PassType out, PassType in)
 
 //returns true if out was in the tree
 template<typename T>
-bool SortedSet<T>::move_replace(PassType out, T&& in)
+bool SortedSet<T>::move_replace(PassType out, T&& in) noexcept
 {
   assert(!contains(in));
 
@@ -350,7 +350,7 @@ std::ostream& operator<<(std::ostream& os, const SortedSet<T>& set)
 }
 
 template<typename T>
-bool operator==(const SortedSet<T>& set1, const SortedSet<T>& set2)
+bool operator==(const SortedSet<T>& set1, const SortedSet<T>& set2) noexcept
 {
   return (set1.sorted_data() == set2.sorted_data());
 }

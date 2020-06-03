@@ -40,33 +40,33 @@ public:
 
   virtual const std::string& name() const;
 
-  inline const T& operator[](ST i) const;
+  inline const T& operator[](ST i) const noexcept;
 
-  inline T& operator[](ST i);
+  inline T& operator[](ST i) noexcept;
 
   Storage1D<T,ST>& operator=(const Storage1D<T,ST>& toCopy) = default;
 
   Storage1D<T,ST>& operator=(Storage1D<T,ST>&& toTake) = default;
 
-  T back() const;
+  T back() const noexcept;
 
-  T& back();
+  T& back() noexcept;
 
   //maintains the values of existing positions, new ones are undefined
-  void resize(ST new_size);
+  void resize(ST new_size) noexcept;
 
   //maintains the values of existing positions, new ones are undefined. Swapping may be faster if e.g. T is std::vector or Storage1D
   //this should be superfluous now that we use unified_move_assign
   template<class swap_op = SwapOp<T>>
-  void resize_swap(ST newsize, swap_op op);
+  void resize_swap(ST newsize, swap_op op) noexcept;
 
   //maintains the values of exisitng positions, new ones are filled with <code> fill_value </code>  
-  void resize(ST new_size, PassType fill_value);
+  void resize(ST new_size, PassType fill_value) noexcept;
 
   //all elements are undefined after this operation
-  void resize_dirty(ST new_size);
+  void resize_dirty(ST new_size) noexcept;
 
-  inline void range_set_constant(PassType constant, ST start, ST length);
+  inline void range_set_constant(PassType constant, ST start, ST length) noexcept;
 
   void swap(Storage1D<T,ST>& toSwap) noexcept;
 
@@ -215,7 +215,7 @@ Storage1D<T,ST>::Storage1D(Storage1D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
 }
 
 template<typename T,typename ST>
-inline void Storage1D<T,ST>::range_set_constant(Storage1D<T,ST>::PassType constant, ST start, ST length)
+inline void Storage1D<T,ST>::range_set_constant(Storage1D<T,ST>::PassType constant, ST start, ST length) noexcept
 {
   assert(start+length <= Base::size_);
 
@@ -229,7 +229,7 @@ template<typename T,typename ST>
 }
 
 template<typename T,typename ST>
-inline const T& Storage1D<T,ST>::operator[](ST i) const
+inline const T& Storage1D<T,ST>::operator[](ST i) const noexcept
 {
 #ifdef SAFE_MODE
   if (i >= Base::size_) {
@@ -248,7 +248,7 @@ inline const T& Storage1D<T,ST>::operator[](ST i) const
 }
 
 template<typename T,typename ST>
-inline T& Storage1D<T,ST>::operator[](ST i)
+inline T& Storage1D<T,ST>::operator[](ST i) noexcept
 {
 #ifdef SAFE_MODE
   if (i >= Base::size_) {
@@ -265,14 +265,14 @@ inline T& Storage1D<T,ST>::operator[](ST i)
 }
 
 template<typename T,typename ST>
-T Storage1D<T,ST>::back() const
+T Storage1D<T,ST>::back() const noexcept
 {
   assert(Base::size_ > 0);
   return Base::data_[Base::size_-1];
 }
 
 template<typename T,typename ST>
-T& Storage1D<T,ST>::back()
+T& Storage1D<T,ST>::back() noexcept
 {
   assert(Base::size_ > 0);
   return Base::data_[Base::size_-1];
@@ -280,7 +280,7 @@ T& Storage1D<T,ST>::back()
 
 //maintains the values of existing positions, new ones are undefined
 template<typename T,typename ST>
-void Storage1D<T,ST>::resize(ST new_size)
+void Storage1D<T,ST>::resize(ST new_size) noexcept
 {
   if (Base::data_ == 0) {
     Base::data_ = new T[new_size];
@@ -303,7 +303,7 @@ void Storage1D<T,ST>::resize(ST new_size)
 //maintains the values of existing positions, new ones are undefined
 template<typename T, typename ST>
 template<class swap_op>
-void Storage1D<T,ST>::resize_swap(ST new_size, swap_op op)
+void Storage1D<T,ST>::resize_swap(ST new_size, swap_op op) noexcept
 {
   if (Base::data_ == 0) {
     Base::data_ = new T[new_size];
@@ -326,7 +326,7 @@ void Storage1D<T,ST>::resize_swap(ST new_size, swap_op op)
 
 //maintains the values of existing positions, new ones are filled with <code> fill_value </code>
 template<typename T,typename ST>
-void Storage1D<T,ST>::resize(ST new_size, Storage1D<T,ST>::PassType fill_value)
+void Storage1D<T,ST>::resize(ST new_size, Storage1D<T,ST>::PassType fill_value) noexcept
 {
   if (Base::data_ == 0) {
 
@@ -363,7 +363,7 @@ void Storage1D<T,ST>::resize(ST new_size, Storage1D<T,ST>::PassType fill_value)
 
 //all elements are undefined after this operation
 template<typename T,typename ST>
-void Storage1D<T,ST>::resize_dirty(ST new_size)
+void Storage1D<T,ST>::resize_dirty(ST new_size) noexcept
 {
   if (Base::size_ != new_size) {
     if (Base::data_ != 0)

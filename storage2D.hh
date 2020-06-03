@@ -39,53 +39,53 @@ public:
   virtual const std::string& name() const;
 
   //saves all existing entries, new positions contain undefined data
-  void resize(ST newxDim, ST newyDim);
+  void resize(ST newxDim, ST newyDim) noexcept;
 
-  inline void resize(const std::pair<ST,ST> dims)
+  inline void resize(const std::pair<ST,ST> dims) noexcept
   {
     resize(dims.first, dims.second);
   }
 
   //saves all existing entries, new positions are filled with <code> fill_value </code>
-  void resize(ST newxDim, ST newyDim, const T fill_value);
+  void resize(ST newxDim, ST newyDim, const T fill_value) noexcept;
 
-  inline void resize(const std::pair<ST,ST> dims, const T fill_value)
+  inline void resize(const std::pair<ST,ST> dims, const T fill_value) noexcept
   {
     resize(dims.first, dims.second, fill_value);
   }
 
   //all elements are uninitialized after this operation
-  void resize_dirty(ST newxDim, ST newyDim);
+  void resize_dirty(ST newxDim, ST newyDim) noexcept;
 
-  inline void resize_dirty(const std::pair<ST,ST> dims)
+  inline void resize_dirty(const std::pair<ST,ST> dims) noexcept
   {
     resize_dirty(dims.first, dims.second);
   }
 
   //access on an element
-  inline const T& operator()(ST x, ST y) const;
+  inline const T& operator()(ST x, ST y) const noexcept;
 
-  inline T& operator()(ST x, ST y);
+  inline T& operator()(ST x, ST y) noexcept;
 
-  Storage2D<T,ST>& operator=(const Storage2D<T,ST>& toCopy);
+  Storage2D<T,ST>& operator=(const Storage2D<T,ST>& toCopy) noexcept;
 
-  Storage2D<T,ST>& operator=(Storage2D<T,ST>&& toTake);
+  Storage2D<T,ST>& operator=(Storage2D<T,ST>&& toTake) noexcept;
 
-  inline T* row_ptr(ST y);
+  inline T* row_ptr(ST y) noexcept;
 
-  inline T* row_ptr(ST y) const;
+  inline T* row_ptr(ST y) const noexcept;
 
-  inline T value(ST i) const;
+  inline T value(ST i) const noexcept;
 
-  void set_row(ST y, const Storage1D<T,ST>& row_vec);
+  void set_row(ST y, const Storage1D<T,ST>& row_vec) noexcept;
 
-  void get_row(ST y, Storage1D<T,ST>& row_vec) const;
+  void get_row(ST y, Storage1D<T,ST>& row_vec) const noexcept;
 
-  inline ST xDim() const;
+  inline ST xDim() const noexcept;
 
-  inline ST yDim() const;
+  inline ST yDim() const noexcept;
 
-  inline std::pair<ST,ST> dims() const;
+  inline std::pair<ST,ST> dims() const noexcept;
 
   void swap(Storage2D<T,ST>& toSwap) noexcept;
 
@@ -244,21 +244,21 @@ const std::string& Storage2D<T,ST>::name() const
 }
 
 template<typename T, typename ST>
-inline T* Storage2D<T,ST>::row_ptr(ST y)
+inline T* Storage2D<T,ST>::row_ptr(ST y) noexcept
 {
   assert(y <= yDim_); //allow use as endpointer for last row
   return Base::data_ + y * xDim_;
 }
 
 template<typename T, typename ST>
-inline T* Storage2D<T,ST>::row_ptr(ST y) const
+inline T* Storage2D<T,ST>::row_ptr(ST y) const noexcept
 {
   assert(y <= yDim_); //allow use as endpointer for last row
   return Base::data_ + y * xDim_;
 }
 
 template<typename T, typename ST>
-void Storage2D<T,ST>::set_row(ST y, const Storage1D<T,ST>& row_vec)
+void Storage2D<T,ST>::set_row(ST y, const Storage1D<T,ST>& row_vec) noexcept
 {
   assert(y < yDim_);
   assert(row_vec.size() == xDim_);
@@ -268,7 +268,7 @@ void Storage2D<T,ST>::set_row(ST y, const Storage1D<T,ST>& row_vec)
 }
 
 template<typename T, typename ST>
-void Storage2D<T,ST>::get_row(ST y, Storage1D<T,ST>& row_vec) const
+void Storage2D<T,ST>::get_row(ST y, Storage1D<T,ST>& row_vec) const noexcept
 {
   assert(y < yDim_);
   assert(row_vec.size() == xDim_);
@@ -278,31 +278,31 @@ void Storage2D<T,ST>::get_row(ST y, Storage1D<T,ST>& row_vec) const
 }
 
 template<typename T, typename ST>
-inline T Storage2D<T,ST>::value(ST i) const
+inline T Storage2D<T,ST>::value(ST i) const noexcept
 {
   return Base::data_[i];
 }
 
 template<typename T, typename ST>
-inline ST Storage2D<T,ST>::xDim() const
+inline ST Storage2D<T,ST>::xDim() const noexcept
 {
   return xDim_;
 }
 
 template<typename T, typename ST>
-inline ST Storage2D<T,ST>::yDim() const
+inline ST Storage2D<T,ST>::yDim() const noexcept
 {
   return yDim_;
 }
 
 template<typename T, typename ST>
-inline std::pair<ST,ST> Storage2D<T,ST>::dims() const
+inline std::pair<ST,ST> Storage2D<T,ST>::dims() const noexcept
 {
   return std::make_pair(xDim_,yDim_);
 }
 
 template<typename T, typename ST>
-OPTINLINE const T& Storage2D<T,ST>::operator()(ST x, ST y) const
+OPTINLINE const T& Storage2D<T,ST>::operator()(ST x, ST y) const noexcept
 {
 #ifdef SAFE_MODE
   if (x >= xDim_ || y >= yDim_) {
@@ -321,7 +321,7 @@ OPTINLINE const T& Storage2D<T,ST>::operator()(ST x, ST y) const
 
 
 template<typename T, typename ST>
-OPTINLINE T& Storage2D<T,ST>::operator()(ST x, ST y)
+OPTINLINE T& Storage2D<T,ST>::operator()(ST x, ST y) noexcept
 {
 #ifdef SAFE_MODE
   if (x >= xDim_ || y >= yDim_) {
@@ -340,7 +340,7 @@ OPTINLINE T& Storage2D<T,ST>::operator()(ST x, ST y)
 }
 
 template<typename T, typename ST>
-Storage2D<T,ST>&  Storage2D<T,ST>::operator=(const Storage2D<T,ST>& toCopy)
+Storage2D<T,ST>&  Storage2D<T,ST>::operator=(const Storage2D<T,ST>& toCopy) noexcept
 {
   if (Base::size_ != toCopy.size()) {
     if (Base::data_ != 0)
@@ -364,7 +364,7 @@ Storage2D<T,ST>&  Storage2D<T,ST>::operator=(const Storage2D<T,ST>& toCopy)
 }
 
 template<typename T, typename ST>
-Storage2D<T,ST>& Storage2D<T,ST>::operator=(Storage2D<T,ST>&& toTake) 
+Storage2D<T,ST>& Storage2D<T,ST>::operator=(Storage2D<T,ST>&& toTake) noexcept
 {
   delete[] Base::data_;
   Base::data_ = toTake.data_;
@@ -377,7 +377,7 @@ Storage2D<T,ST>& Storage2D<T,ST>::operator=(Storage2D<T,ST>&& toTake)
 }
 
 template<typename T, typename ST>
-void Storage2D<T,ST>::resize(ST newxDim, ST newyDim)
+void Storage2D<T,ST>::resize(ST newxDim, ST newyDim) noexcept
 {
   if (Base::data_ == 0) {
     Base::data_ = new T[newxDim*newyDim];
@@ -401,7 +401,7 @@ void Storage2D<T,ST>::resize(ST newxDim, ST newyDim)
 }
 
 template<typename T, typename ST>
-void Storage2D<T,ST>::resize(ST newxDim, ST newyDim, const T fill_value)
+void Storage2D<T,ST>::resize(ST newxDim, ST newyDim, const T fill_value) noexcept
 {
   const uint newsize = newxDim*newyDim;
 
@@ -432,7 +432,7 @@ void Storage2D<T,ST>::resize(ST newxDim, ST newyDim, const T fill_value)
 }
 
 template<typename T, typename ST>
-void Storage2D<T,ST>::resize_dirty(ST newxDim, ST newyDim)
+void Storage2D<T,ST>::resize_dirty(ST newxDim, ST newyDim) noexcept
 {
   if (newxDim != xDim_ || newyDim != yDim_) {
     if (Base::data_ != 0) {

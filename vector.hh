@@ -46,67 +46,67 @@ namespace Math1D {
     Vector<T,ST>& operator=(Vector<T,ST>&& toTake) = default;
 
     //redefining the operator[] methods because for basic types we can indicate 16-byte alignment
-    inline const T& operator[](ST i) const;
+    inline const T& operator[](ST i) const noexcept;
 
-    inline T& operator[](ST i);
+    inline T& operator[](ST i) noexcept;
 
     //redefining the direct_access methods because for basic types we can indicate 16-byte alignment
-    inline T* direct_access() FLAGALIGNED16;
+    inline T* direct_access() noexcept FLAGALIGNED16;
 
-    inline const T* direct_access() const FLAGALIGNED16;
+    inline const T* direct_access() const noexcept FLAGALIGNED16;
 
-    inline T& direct_access(ST i);
+    inline T& direct_access(ST i) noexcept;
 
-    inline T direct_access(ST i) const;
+    inline T direct_access(ST i) const noexcept;
 
     //redefining the set_constant method because for basic types we can indicate 16-byte alignment
-    inline void set_constant(T constant);
+    inline void set_constant(T constant) noexcept;
 
-    inline T sum() const;
+    inline T sum() const noexcept;
 
-    inline T sum_abs() const;
+    inline T sum_abs() const noexcept;
 
-    inline T range_sum(ST start, ST end) const;
+    inline T range_sum(ST start, ST end) const noexcept;
 
     /*** maximal element ***/
-    T max() const;
+    T max() const noexcept;
 
     /*** minimal element ***/
-    T min() const;
+    T min() const noexcept;
 
     /*** maximal absolute element = l-infinity norm ***/
-    T max_abs() const;
+    T max_abs() const noexcept;
 
-    inline void ensure_min(T lower_limit);
+    inline void ensure_min(T lower_limit) noexcept;
 
     /*** L2-norm of the vector ***/
-    inline double norm() const;
+    inline double norm() const noexcept;
 
-    inline T norm_T() const;
+    inline T norm_T() const noexcept;
 
-    inline double sqr_norm() const;
+    inline double sqr_norm() const noexcept;
 
     /*** L1-norm of the vector ***/
-    inline double norm_l1() const;
+    inline double norm_l1() const noexcept;
 
-    inline void add_constant(const T addon);
+    inline void add_constant(const T addon) noexcept;
 
     //note: with g++-4.8.5 it is a lot faster to use set_constant(0.0)
-    void set_zeros();
+    void set_zeros() noexcept;
 
-    inline void add_vector_multiple(const Math1D::Vector<T,ST>& vec, const T alpha);
+    inline void add_vector_multiple(const Math1D::Vector<T,ST>& vec, const T alpha) noexcept;
 
-    bool is_sorted() const;
+    bool is_sorted() const noexcept;
 
-    void operator+=(const Vector<T,ST>& v);
+    void operator+=(const Vector<T,ST>& v) noexcept;
 
-    void operator-=(const Vector<T,ST>& v);
+    void operator-=(const Vector<T,ST>& v) noexcept;
 
-    void operator*=(const T constant);
+    void operator*=(const T constant) noexcept;
 
-    void elem_mul(const Vector<T,ST>& v);
+    void elem_mul(const Vector<T,ST>& v) noexcept;
     
-    void elem_div(const Vector<T,ST>& v);
+    void elem_div(const Vector<T,ST>& v) noexcept;
 
     virtual const std::string& name() const;
 
@@ -148,7 +148,7 @@ namespace Math1D {
   };
 
   //NOTE: dest can be the same as src1 or src2
-  inline void go_in_neg_direction(Math1D::Vector<double>& dest, const Math1D::Vector<double>& src1, const Math1D::Vector<double>& src2, double alpha)
+  inline void go_in_neg_direction(Math1D::Vector<double>& dest, const Math1D::Vector<double>& src1, const Math1D::Vector<double>& src2, double alpha) noexcept
   {
     assert(dest.size() == src1.size());
     assert(dest.size() == src2.size());
@@ -157,7 +157,7 @@ namespace Math1D {
 
   //NOTE: dest can be the same as src1 or src2
   inline void assign_weighted_combination(Math1D::Vector<double>& dest, double w1, const Math1D::Vector<double>& src1,
-                                          double w2, const Math1D::Vector<double>& src2)
+                                          double w2, const Math1D::Vector<double>& src2) noexcept
   {
     assert(dest.size() == src1.size());
     assert(dest.size() == src2.size());
@@ -168,17 +168,17 @@ namespace Math1D {
   /*************** operators *********************/
   /***********************************************/
   template<typename T,typename ST>
-  Vector<T,ST> operator+(const Vector<T,ST>& v1, const Vector<T,ST>& v2);
+  Vector<T,ST> operator+(const Vector<T,ST>& v1, const Vector<T,ST>& v2) noexcept;
 
   template<typename T,typename ST>
-  Vector<T,ST> operator-(const Vector<T,ST>& v1, const Vector<T,ST>& v2);
+  Vector<T,ST> operator-(const Vector<T,ST>& v1, const Vector<T,ST>& v2) noexcept;
 
   //scalar product of two vectors
   template<typename T,typename ST>
-  inline T operator%(const Vector<T,ST>& v1, const Vector<T,ST>& v2);
+  inline T operator%(const Vector<T,ST>& v1, const Vector<T,ST>& v2) noexcept;
 
   template<typename T,typename ST>
-  Vector<T,ST> cross(const Vector<T,ST>& v1, const Vector<T,ST>& v2);
+  Vector<T,ST> cross(const Vector<T,ST>& v1, const Vector<T,ST>& v2) noexcept;
 
   //streaming
   template<typename T,typename ST>
@@ -257,7 +257,7 @@ namespace Math1D {
   Vector<T,ST>::~Vector() {}
 
   template<typename T,typename ST>
-  inline T Vector<T,ST>::sum() const
+  inline T Vector<T,ST>::sum() const noexcept
   {
     const ST size = Base::size_;
     const T_A16* data = Base::data_;
@@ -276,7 +276,7 @@ namespace Math1D {
   }
   
   template<typename T,typename ST>
-  inline T Vector<T,ST>::sum_abs() const
+  inline T Vector<T,ST>::sum_abs() const noexcept
   {
     const ST size = Base::size_;
     const T_A16* data = Base::data_;
@@ -291,7 +291,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline T Vector<T,ST>::range_sum(ST start, ST end) const
+  inline T Vector<T,ST>::range_sum(ST start, ST end) const noexcept
   {
     const ST size = Base::size_;
     const T_A16* data = Base::data_;
@@ -312,13 +312,13 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  void Vector<T,ST>::set_zeros()
+  void Vector<T,ST>::set_zeros() noexcept
   {
     memset(Base::data_,0,Base::size_*sizeof(T));
   }
 
   template<typename T,typename ST>
-  inline T* Vector<T,ST>::direct_access() //not allowed to repeat FLAGALIGNED16 in definition
+  inline T* Vector<T,ST>::direct_access() noexcept //not allowed to repeat FLAGALIGNED16 in definition
   {
     T_A16* data = Base::data_;
     assertAligned16(data);
@@ -326,7 +326,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline const T* Vector<T,ST>::direct_access() const //not allowed to repeat FLAGALIGNED16 in definition
+  inline const T* Vector<T,ST>::direct_access() const noexcept //not allowed to repeat FLAGALIGNED16 in definition
   {
     const T_A16* data = Base::data_;
     assertAligned16(data);
@@ -334,7 +334,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline T& Vector<T,ST>::direct_access(ST i)
+  inline T& Vector<T,ST>::direct_access(ST i) noexcept
   {
     T_A16* data = Base::data_;
     assertAligned16(data);
@@ -343,7 +343,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline T Vector<T,ST>::direct_access(ST i) const
+  inline T Vector<T,ST>::direct_access(ST i) const noexcept
   {
     const T_A16* data = Base::data_;
     assertAligned16(data);
@@ -353,7 +353,7 @@ namespace Math1D {
 
   //redefining the set_constant method because for basic types we can indicate 16-byte alignment
   template<typename T,typename ST>
-  inline void Vector<T,ST>::set_constant(const T constant)
+  inline void Vector<T,ST>::set_constant(const T constant) noexcept
   {
     T_A16* data = Base::data_;
     const ST size = Base::size_;
@@ -364,7 +364,7 @@ namespace Math1D {
 
   /*** maximal element ***/
   template<typename T,typename ST>
-  inline T Vector<T,ST>::max() const
+  inline T Vector<T,ST>::max() const noexcept
   {
     const ST size = Base::size_;
 
@@ -380,10 +380,10 @@ namespace Math1D {
   }
 
   template<>
-  float Vector<float>::max() const;
+  float Vector<float>::max() const noexcept;
 
   template<typename T,typename ST>
-  T Vector<T,ST>::min() const
+  T Vector<T,ST>::min() const noexcept
   {
     const ST size = Base::size_;
 
@@ -399,11 +399,11 @@ namespace Math1D {
   }
 
   template<>
-  float Vector<float>::min() const;
+  float Vector<float>::min() const noexcept;
 
   /*** maximal absolute element = l-infinity norm ***/
   template<typename T,typename ST>
-  T Vector<T,ST>::max_abs() const
+  T Vector<T,ST>::max_abs() const noexcept
   {
     const ST size = Base::size_;
     const T_A16* data = Base::data_;
@@ -418,7 +418,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline void Vector<T,ST>::ensure_min(T lower_limit)
+  inline void Vector<T,ST>::ensure_min(T lower_limit) noexcept
   {
     const ST size = Base::size_;
     const T_A16* data = Base::data_;
@@ -429,7 +429,7 @@ namespace Math1D {
 
   /*** L2-norm of the vector ***/
   template<typename T,typename ST>
-  inline double Vector<T,ST>::norm() const
+  inline double Vector<T,ST>::norm() const noexcept
   {
     const ST size = Base::size_;
 
@@ -447,7 +447,7 @@ namespace Math1D {
 
   /*** L2-norm of the vector ***/
   template<typename T,typename ST>
-  inline T Vector<T,ST>::norm_T() const
+  inline T Vector<T,ST>::norm_T() const noexcept
   {
     const ST size = Base::size_;
 
@@ -464,7 +464,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline double Vector<T,ST>::sqr_norm() const
+  inline double Vector<T,ST>::sqr_norm() const noexcept
   {
     const ST size = Base::size_;
 
@@ -482,7 +482,7 @@ namespace Math1D {
 
   /*** L1-norm of the vector ***/
   template<typename T,typename ST>
-  inline double Vector<T,ST>::norm_l1() const
+  inline double Vector<T,ST>::norm_l1() const noexcept
   {
     const ST size = Base::size_;
 
@@ -498,7 +498,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline void Vector<T,ST>::add_constant(const T addon)
+  inline void Vector<T,ST>::add_constant(const T addon) noexcept
   {
     T_A16* data = Base::data_;
     assertAligned16(data);
@@ -509,13 +509,13 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  bool Vector<T,ST>::is_sorted() const
+  bool Vector<T,ST>::is_sorted() const noexcept
   {
     return ::is_sorted(Base::data_, Base::size_);
   }
 
   template<typename T,typename ST>
-  inline void Vector<T,ST>::add_vector_multiple(const Math1D::Vector<T,ST>& v, const T alpha)
+  inline void Vector<T,ST>::add_vector_multiple(const Math1D::Vector<T,ST>& v, const T alpha) noexcept
   {
     const ST size = Base::size_;
 
@@ -545,7 +545,7 @@ namespace Math1D {
   }
 
   template<>
-  inline void Vector<double>::add_vector_multiple(const Math1D::Vector<double>& v, const double alpha)
+  inline void Vector<double>::add_vector_multiple(const Math1D::Vector<double>& v, const double alpha) noexcept
   {
     const size_t size = Base::size_;
 
@@ -563,7 +563,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  void Vector<T,ST>::operator+=(const Vector<T,ST>& v)
+  void Vector<T,ST>::operator+=(const Vector<T,ST>& v) noexcept
   {
     const ST size = Base::size_;
 
@@ -593,7 +593,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  void Vector<T,ST>::operator-=(const Vector<T,ST>& v)
+  void Vector<T,ST>::operator-=(const Vector<T,ST>& v) noexcept
   {
     const ST size = Base::size_;
 
@@ -619,7 +619,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  void Vector<T,ST>::operator*=(const T constant)
+  void Vector<T,ST>::operator*=(const T constant) noexcept
   {
     const ST size = Base::size_;
     T_A16* data = Base::data_;
@@ -632,10 +632,10 @@ namespace Math1D {
   }
 
   template<>
-  void Vector<float>::operator*=(const float scalar);
+  void Vector<float>::operator*=(const float scalar) noexcept;
 
   template<>
-  void Vector<double>::operator*=(const double scalar);
+  void Vector<double>::operator*=(const double scalar) noexcept;
 
   template<typename T,typename ST>
   /*virtual*/ const std::string& Vector<T,ST>::name() const
@@ -644,7 +644,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  void Vector<T,ST>::elem_mul(const Vector<T,ST>& v)
+  void Vector<T,ST>::elem_mul(const Vector<T,ST>& v) noexcept
   {
     const ST size = Base::size_;
     T_A16* data = Base::data_;
@@ -656,7 +656,7 @@ namespace Math1D {
   }
     
   template<typename T,typename ST>
-  void Vector<T,ST>::elem_div(const Vector<T,ST>& v)
+  void Vector<T,ST>::elem_div(const Vector<T,ST>& v) noexcept
   {
     const ST size = Base::size_;
     T_A16* data = Base::data_;
@@ -708,7 +708,7 @@ namespace Math1D {
   /************** implementation of stand-alone routines **********************/
 
   template<typename T,typename ST>
-  Vector<T,ST> operator+(const Vector<T,ST>& v1, const Vector<T,ST>& v2)
+  Vector<T,ST> operator+(const Vector<T,ST>& v1, const Vector<T,ST>& v2) noexcept
   {
     typedef T ALIGNED16 T_A16;
 
@@ -744,7 +744,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  Vector<T,ST> operator-(const Vector<T,ST>& v1, const Vector<T,ST>& v2)
+  Vector<T,ST> operator-(const Vector<T,ST>& v1, const Vector<T,ST>& v2) noexcept
   {
     typedef T ALIGNED16 T_A16;
 
@@ -781,7 +781,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  inline T operator%(const Vector<T,ST>& v1, const Vector<T,ST>& v2)
+  inline T operator%(const Vector<T,ST>& v1, const Vector<T,ST>& v2) noexcept
   {
     typedef T ALIGNED16 T_A16;
 
@@ -822,7 +822,7 @@ namespace Math1D {
   }
 
   template<typename T,typename ST>
-  Vector<T,ST> cross(const Vector<T,ST>& v1, const Vector<T,ST>& v2)
+  Vector<T,ST> cross(const Vector<T,ST>& v1, const Vector<T,ST>& v2) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -847,7 +847,7 @@ namespace Math1D {
 
 
 template<typename T,typename ST>
-inline const T& Math1D::Vector<T,ST>::operator[](ST i) const
+inline const T& Math1D::Vector<T,ST>::operator[](ST i) const noexcept
 {
 #ifdef SAFE_MODE
   if (i >= Base::size_) {
@@ -866,7 +866,7 @@ inline const T& Math1D::Vector<T,ST>::operator[](ST i) const
 }
 
 template<typename T,typename ST>
-inline T& Math1D::Vector<T,ST>::operator[](ST i)
+inline T& Math1D::Vector<T,ST>::operator[](ST i) noexcept
 {
 #ifdef SAFE_MODE
   if (i >= Base::size_) {

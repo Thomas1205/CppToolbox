@@ -12,16 +12,16 @@
 
 //find in a sequence without duplicates
 template<typename T>
-inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& vec, const T val);
+inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& vec, const T val) noexcept;
 
 template<>
-inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, const uint val);
+inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, const uint val) noexcept;
 
 template<typename T>
-inline bool set_contains(const std::vector<T>& vec, const T val);
+inline bool set_contains(const std::vector<T>& vec, const T val) noexcept;
 
 template<>
-inline bool set_contains(const std::vector<uint>& vec, const uint val);
+inline bool set_contains(const std::vector<uint>& vec, const uint val) noexcept;
 
 template<typename T>
 class UnsortedSet {
@@ -37,38 +37,38 @@ public:
 
   UnsortedSet(const std::initializer_list<T>& init);
 
-  void swap(UnsortedSet<T>& other)
+  void swap(UnsortedSet<T>& other) noexcept
   {
     data_.swap(other.data_);
   }
 
-  size_t size() const
+  size_t size() const noexcept
   {
     return data_.size();
   }
 
-  size_t capacity() const
+  size_t capacity() const noexcept
   {
     return data_.capacity();
   }
 
-  void reserve(size_t size)
+  void reserve(size_t size) noexcept
   {
     data_.reserve(size);
   }
 
-  void clear()
+  void clear() noexcept
   {
     data_.clear();
   }
 
-  const std::vector<T>& unsorted_data() const
+  const std::vector<T>& unsorted_data() const noexcept
   {
     return data_;
   }
 
   //const qualifier doesn't make sense here - not returning a reference
-  const std::vector<T> sorted_data() const
+  const std::vector<T> sorted_data() const noexcept
   {
     std::vector<T> result = data_;
     USET_SORT_ALG(result.data(), result.size());
@@ -77,44 +77,44 @@ public:
     return result;
   }
 
-  void get_sorted_data(Storage1D<T>& target) const 
+  void get_sorted_data(Storage1D<T>& target) const noexcept
   {
     assign(target, data_);
     USET_SORT_ALG(target.direct_access(), target.size());    
   }
 
-  bool contains(PassType val) const;
+  bool contains(PassType val) const noexcept;
 
   //returns true if val is new
-  bool insert(PassType val);
+  bool insert(PassType val) noexcept;
 
   //returns true if val is new
-  bool move_insert(T&& val);
+  bool move_insert(T&& val) noexcept;
 
-  void insert_new(PassType val);
+  void insert_new(PassType val) noexcept;
 
-  void move_insert_new(T&& val);
+  void move_insert_new(T&& val) noexcept;
 
   //for compatibility with the other sets (use in templates etc.)
-  inline void insert_largest(PassType val)
+  inline void insert_largest(PassType val) noexcept
   {
     insert_new(val);
   }
 
   //for compatibility with the other sets (use in templates etc.)
-  inline void move_insert_largest(T&& val)
+  inline void move_insert_largest(T&& val) noexcept
   {
     move_insert_new(val);
   }
 
   //returns true if val was in the tree
-  bool erase(PassType val);
+  bool erase(PassType val) noexcept;
 
   //returns true if out was in the tree
-  bool replace(PassType out, PassType in);
+  bool replace(PassType out, PassType in) noexcept;
 
   //returns true if out was in the tree
-  bool move_replace(PassType out, T&& in);
+  bool move_replace(PassType out, T&& in) noexcept;
 
 protected:
 
@@ -140,38 +140,38 @@ public:
 
   UnsortedSetExploitSort(const std::initializer_list<T>& init);
 
-  void swap(UnsortedSetExploitSort<T>& other)
+  void swap(UnsortedSetExploitSort<T>& other) noexcept
   {
     data_.swap(other.data_);
     std::swap(is_sorted_, other.is_sorted_);
   }
 
-  size_t size() const
+  size_t size() const noexcept
   {
     return data_.size();
   }
 
-  size_t capacity() const
+  size_t capacity() const noexcept
   {
     return data_.capacity();
   }
 
-  void reserve(size_t size)
+  void reserve(size_t size) noexcept
   {
     data_.reserve(size);
   }
 
-  void clear()
+  void clear() noexcept
   {
     data_.clear();
   }
 
-  const std::vector<T>& unsorted_data() const
+  const std::vector<T>& unsorted_data() const noexcept
   {
     return data_;
   }
 
-  const std::vector<T>& sorted_data()
+  const std::vector<T>& sorted_data() noexcept
   {
     if (!is_sorted_) {
       USET_SORT_ALG(data_.data(), data_.size());
@@ -183,38 +183,38 @@ public:
     return data_;
   }
 
-  void get_sorted_data(Storage1D<T>& target) const 
+  void get_sorted_data(Storage1D<T>& target) const noexcept
   {
     assign(target, data_);
     USET_SORT_ALG(target.direct_access(), target.size());    
   }
 
-  bool contains(PassType val) const;
+  bool contains(PassType val) const noexcept;
 
   //returns true if val is new
-  bool insert(PassType val);
+  bool insert(PassType val) noexcept;
 
   //returns true if val is new
-  bool move_insert(T&& val);
+  bool move_insert(T&& val) noexcept;
 
-  void insert_new(PassType val);
+  void insert_new(PassType val) noexcept;
 
-  void move_insert_new(T&& val);
-
-  //for compatibility with the other sets (use in templates etc.)
-  inline void insert_largest(PassType val);
+  void move_insert_new(T&& val) noexcept;
 
   //for compatibility with the other sets (use in templates etc.)
-  inline void move_insert_largest(T&& val);
+  inline void insert_largest(PassType val) noexcept;
+
+  //for compatibility with the other sets (use in templates etc.)
+  inline void move_insert_largest(T&& val) noexcept;
 
   //returns true if val was in the tree
-  bool erase(PassType val);
+  bool erase(PassType val) noexcept;
 
   //returns true if out was in the tree
-  bool replace(PassType out, PassType in);
+  bool replace(PassType out, PassType in) noexcept;
 
   //returns true if out was in the tree
-  bool move_replace(PassType out, T&& in);
+  bool move_replace(PassType out, T&& in) noexcept;
 
 protected:
 
@@ -229,7 +229,7 @@ std::ostream& operator<<(std::ostream& os, const UnsortedSetExploitSort<T>& set)
 
 //find in a sequence without duplicates
 template<typename T>
-inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& vec, const T val) 
+inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& vec, const T val) noexcept 
 {
   if (std::is_trivially_copyable<T>::value) {
     const uint pos = Routines::find_unique(vec.data(), val, vec.size());
@@ -243,7 +243,7 @@ inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& ve
 }
 
 template<>
-inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, const uint val) 
+inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, const uint val) noexcept 
 {
   const uint pos = Routines::find_unique_uint(vec.data(), val, vec.size());
   if (pos >= vec.size())
@@ -253,7 +253,7 @@ inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, 
 }
 
 template<typename T>
-inline bool set_contains(const std::vector<T>& vec, const T val) 
+inline bool set_contains(const std::vector<T>& vec, const T val) noexcept 
 {
   if (std::is_trivially_copyable<T>::value) 
     return Routines::contains(vec.data(), val);
@@ -262,7 +262,7 @@ inline bool set_contains(const std::vector<T>& vec, const T val)
 }
 
 template<>
-inline bool set_contains(const std::vector<uint>& vec, const uint val) 
+inline bool set_contains(const std::vector<uint>& vec, const uint val) noexcept 
 {
   return Routines::contains_uint(vec.data(), val, vec.size());
 }
@@ -290,7 +290,7 @@ UnsortedSet<T>::UnsortedSet(const std::initializer_list<T>& init)
 }
 
 template<typename T>
-bool UnsortedSet<T>::contains(PassType val) const
+bool UnsortedSet<T>::contains(PassType val) const noexcept
 {
   //return (set_find(data_, val) != data_.end());
   return set_contains(data_, val);
@@ -298,7 +298,7 @@ bool UnsortedSet<T>::contains(PassType val) const
 
 //returns true if val is new
 template<typename T>
-bool UnsortedSet<T>::insert(PassType val)
+bool UnsortedSet<T>::insert(PassType val) noexcept
 {
   //if (set_find(data_, val) != data_.end())
   //  return false;
@@ -311,7 +311,7 @@ bool UnsortedSet<T>::insert(PassType val)
 
 //returns true if val is new
 template<typename T>
-bool UnsortedSet<T>::move_insert(T&& val)
+bool UnsortedSet<T>::move_insert(T&& val) noexcept
 {
   //if (set_find(data_, val) != data_.end())
   //  return false;
@@ -323,14 +323,14 @@ bool UnsortedSet<T>::move_insert(T&& val)
 }
 
 template<typename T>
-void UnsortedSet<T>::insert_new(PassType val)
+void UnsortedSet<T>::insert_new(PassType val) noexcept
 {
   assert(!contains(val));
   data_.push_back(val);
 }
 
 template<typename T>
-void UnsortedSet<T>::move_insert_new(T&& val)
+void UnsortedSet<T>::move_insert_new(T&& val) noexcept
 {
   assert(!contains(val));
   data_.push_back(val);
@@ -338,7 +338,7 @@ void UnsortedSet<T>::move_insert_new(T&& val)
 
 //returns true if val was in the tree
 template<typename T>
-bool UnsortedSet<T>::erase(PassType val)
+bool UnsortedSet<T>::erase(PassType val) noexcept
 {
   const typename std::vector<T>::const_iterator it = set_find(data_, val);
   if (it == data_.end())
@@ -352,7 +352,7 @@ bool UnsortedSet<T>::erase(PassType val)
 
 //returns true if out was in the tree
 template<typename T>
-bool UnsortedSet<T>::replace(PassType out, PassType in)
+bool UnsortedSet<T>::replace(PassType out, PassType in) noexcept
 {
   assert(!contains(in));
 	
@@ -368,7 +368,7 @@ bool UnsortedSet<T>::replace(PassType out, PassType in)
 
 //returns true if out was in the tree
 template<typename T>
-bool UnsortedSet<T>::move_replace(PassType out, T&& in)
+bool UnsortedSet<T>::move_replace(PassType out, T&& in) noexcept
 {
   assert(!contains(in));
 	
@@ -424,7 +424,7 @@ UnsortedSetExploitSort<T>::UnsortedSetExploitSort(const std::initializer_list<T>
 }
 
 template<typename T>
-bool UnsortedSetExploitSort<T>::contains(PassType val) const
+bool UnsortedSetExploitSort<T>::contains(PassType val) const noexcept
 {
   if (!is_sorted_) {
     //return (set_find(data_, val) != data_.end());
@@ -436,7 +436,7 @@ bool UnsortedSetExploitSort<T>::contains(PassType val) const
 
 //returns true if val is new
 template<typename T>
-bool UnsortedSetExploitSort<T>::insert(PassType val)
+bool UnsortedSetExploitSort<T>::insert(PassType val) noexcept
 {
   const size_t size = data_.size();
   bool is_new = false;
@@ -457,7 +457,7 @@ bool UnsortedSetExploitSort<T>::insert(PassType val)
 
 //returns true if val is new
 template<typename T>
-bool UnsortedSetExploitSort<T>::move_insert(T&& val)
+bool UnsortedSetExploitSort<T>::move_insert(T&& val) noexcept
 {
   const size_t size = data_.size();
   bool is_new = false;
@@ -477,7 +477,7 @@ bool UnsortedSetExploitSort<T>::move_insert(T&& val)
 }
 
 template<typename T>
-void UnsortedSetExploitSort<T>::insert_new(PassType val)
+void UnsortedSetExploitSort<T>::insert_new(PassType val) noexcept
 {
   assert(!contains(val));
   if (is_sorted_) {
@@ -488,7 +488,7 @@ void UnsortedSetExploitSort<T>::insert_new(PassType val)
 }
 
 template<typename T>
-void UnsortedSetExploitSort<T>::move_insert_new(T&& val)
+void UnsortedSetExploitSort<T>::move_insert_new(T&& val) noexcept
 {
   assert(!contains(val));
   if (is_sorted_) {
@@ -500,7 +500,7 @@ void UnsortedSetExploitSort<T>::move_insert_new(T&& val)
 
 //for compatibility with the other sets (use in templates etc.)
 template<typename T>
-inline void UnsortedSetExploitSort<T>::insert_largest(PassType val)
+inline void UnsortedSetExploitSort<T>::insert_largest(PassType val) noexcept
 {
   assert(!contains(val));
   data_.push_back(val);  
@@ -508,7 +508,7 @@ inline void UnsortedSetExploitSort<T>::insert_largest(PassType val)
 
 //for compatibility with the other sets (use in templates etc.)
 template<typename T>
-inline void UnsortedSetExploitSort<T>::move_insert_largest(T&& val)
+inline void UnsortedSetExploitSort<T>::move_insert_largest(T&& val) noexcept
 {
   assert(!contains(val));
   data_.push_back(val);  
@@ -516,7 +516,7 @@ inline void UnsortedSetExploitSort<T>::move_insert_largest(T&& val)
 
 //returns true if val was in the tree
 template<typename T>
-bool UnsortedSetExploitSort<T>::erase(PassType val)
+bool UnsortedSetExploitSort<T>::erase(PassType val) noexcept
 {
   const size_t size = data_.size();
   size_t pos = 0;
@@ -542,7 +542,7 @@ bool UnsortedSetExploitSort<T>::erase(PassType val)
 
 //returns true if out was in the tree
 template<typename T>
-bool UnsortedSetExploitSort<T>::replace(PassType out, PassType in)
+bool UnsortedSetExploitSort<T>::replace(PassType out, PassType in) noexcept
 {
   assert(!contains(in));
 
@@ -573,7 +573,7 @@ bool UnsortedSetExploitSort<T>::replace(PassType out, PassType in)
 
 //returns true if out was in the tree
 template<typename T>
-bool UnsortedSetExploitSort<T>::move_replace(PassType out, T&& in)
+bool UnsortedSetExploitSort<T>::move_replace(PassType out, T&& in) noexcept
 {
   assert(!contains(in));
 

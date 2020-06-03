@@ -20,14 +20,14 @@ struct Dim3D {
 };
 
 template<typename ST>
-bool operator==(const Dim3D<ST>& d1, const Dim3D<ST>& d2)
+bool operator==(const Dim3D<ST>& d1, const Dim3D<ST>& d2) noexcept
 {
 
   return (d1.xDim_ == d2.xDim_ && d1.yDim_ == d2.yDim_ && d1.zDim_ == d2.zDim_);
 }
 
 template<typename ST>
-bool operator!=(const Dim3D<ST>& d1, const Dim3D<ST>& d2)
+bool operator!=(const Dim3D<ST>& d1, const Dim3D<ST>& d2) noexcept
 {
 
   return (d1.xDim_ != d2.xDim_ || d1.yDim_ != d2.yDim_ || d1.zDim_ != d2.zDim_);
@@ -57,56 +57,56 @@ public:
 
   ~Storage3D() = default;
 
-  inline const T& operator()(ST x, ST y, ST z) const;
+  inline const T& operator()(ST x, ST y, ST z) const noexcept;
 
-  inline T& operator()(ST x, ST y, ST z);
+  inline T& operator()(ST x, ST y, ST z) noexcept;
 
   virtual const std::string& name() const;
 
-  inline ST xDim() const;
+  inline ST xDim() const noexcept;
 
-  inline ST yDim() const;
+  inline ST yDim() const noexcept;
 
-  inline ST zDim() const;
+  inline ST zDim() const noexcept;
 
-  Dim3D<ST> dims() const;
+  Dim3D<ST> dims() const noexcept;
 
-  void set_x(ST y, ST z, const Storage1D<T,ST>& vec);
+  void set_x(ST y, ST z, const Storage1D<T,ST>& vec) noexcept;
 
-  void get_x(ST y, ST z, Storage1D<T,ST>& vec) const;
+  void get_x(ST y, ST z, Storage1D<T,ST>& vec) const noexcept;
 
-  void set_y(ST x, ST z, const Storage1D<T,ST>& vec);
+  void set_y(ST x, ST z, const Storage1D<T,ST>& vec) noexcept;
 
-  void get_y(ST x, ST z, Storage1D<T,ST>& vec) const;
+  void get_y(ST x, ST z, Storage1D<T,ST>& vec) const noexcept;
 
-  void set_z(ST x, ST y, const Storage1D<T,ST>& vec);
+  void set_z(ST x, ST y, const Storage1D<T,ST>& vec) noexcept;
 
-  void get_z(ST x, ST y, Storage1D<T,ST>& vec) const;
+  void get_z(ST x, ST y, Storage1D<T,ST>& vec) const noexcept;
 
-  Storage3D<T,ST>& operator=(const Storage3D<T,ST>& toCopy);
+  Storage3D<T,ST>& operator=(const Storage3D<T,ST>& toCopy) noexcept;
 
-  Storage3D<T,ST>& operator=(Storage3D<T,ST>&& toTake);
+  Storage3D<T,ST>& operator=(Storage3D<T,ST>&& toTake) noexcept;
 
   //existing positions are copied, new ones are uninitialized
-  void resize(ST newxDim, ST newyDim, ST newzDim);
+  void resize(ST newxDim, ST newyDim, ST newzDim) noexcept;
 
-  inline void resize(const Dim3D<ST> dims)
+  inline void resize(const Dim3D<ST> dims) noexcept
   {
     resize(dims.xDim_, dims.yDim_, dims.zDim_);
   }
 
   //existing positions are copied, new ones are uninitialized
-  void resize(ST newxDim, ST newyDim, ST newzDim, const T default_value);
+  void resize(ST newxDim, ST newyDim, ST newzDim, const T default_value) noexcept;
 
-  inline void resize(const Dim3D<ST> dims, T default_value)
+  inline void resize(const Dim3D<ST> dims, T default_value) noexcept
   {
     resize(dims.xDim_, dims.yDim_, dims.zDim_, default_value);
   }
 
   //all elements are uninitialized after this operation
-  void resize_dirty(ST newxDim, ST newyDim, ST newzDim);
+  void resize_dirty(ST newxDim, ST newyDim, ST newzDim) noexcept;
 
-  inline void resize_dirty(const Dim3D<ST> dims)
+  inline void resize_dirty(const Dim3D<ST> dims) noexcept
   {
     resize_dirty(dims.xDim_, dims.yDim_, dims.zDim_);
   }
@@ -254,7 +254,7 @@ Storage3D<T,ST>::Storage3D(const Dim3D<ST> dims, const T default_value)
   : StorageBase<T,ST>(dims.xDim_*dims.yDim_*dims.zDim_,default_value), xDim_(dims.xDim_), yDim_(dims.yDim_), zDim_(dims.zDim_) {}
 
 template<typename T, typename ST>
-void Storage3D<T,ST>::set_x(ST y, ST z, const Storage1D<T,ST>& vec)
+void Storage3D<T,ST>::set_x(ST y, ST z, const Storage1D<T,ST>& vec) noexcept
 {
   assert(y < yDim_);
   assert(z < zDim_);
@@ -265,7 +265,7 @@ void Storage3D<T,ST>::set_x(ST y, ST z, const Storage1D<T,ST>& vec)
 }
 
 template<typename T, typename ST>
-void Storage3D<T,ST>::get_x(ST y, ST z, Storage1D<T,ST>& vec) const
+void Storage3D<T,ST>::get_x(ST y, ST z, Storage1D<T,ST>& vec) const noexcept
 {
   assert(y < yDim_);
   assert(z < zDim_);
@@ -276,7 +276,7 @@ void Storage3D<T,ST>::get_x(ST y, ST z, Storage1D<T,ST>& vec) const
 }
 
 template<typename T, typename ST>
-void Storage3D<T,ST>::set_y(ST x, ST z, const Storage1D<T,ST>& vec)
+void Storage3D<T,ST>::set_y(ST x, ST z, const Storage1D<T,ST>& vec) noexcept
 {
   assert(x < xDim_);
   assert(z < zDim_);
@@ -287,7 +287,7 @@ void Storage3D<T,ST>::set_y(ST x, ST z, const Storage1D<T,ST>& vec)
 }
 
 template<typename T, typename ST>
-void Storage3D<T,ST>::get_y(ST x, ST z, Storage1D<T,ST>& vec) const
+void Storage3D<T,ST>::get_y(ST x, ST z, Storage1D<T,ST>& vec) const noexcept
 {
   assert(x < xDim_);
   assert(z < zDim_);
@@ -298,7 +298,7 @@ void Storage3D<T,ST>::get_y(ST x, ST z, Storage1D<T,ST>& vec) const
 }
 
 template<typename T, typename ST>
-void Storage3D<T,ST>::set_z(ST x, ST y, const Storage1D<T,ST>& vec)
+void Storage3D<T,ST>::set_z(ST x, ST y, const Storage1D<T,ST>& vec) noexcept
 {
   assert(x < xDim_);
   assert(y < yDim_);
@@ -313,7 +313,7 @@ void Storage3D<T,ST>::set_z(ST x, ST y, const Storage1D<T,ST>& vec)
 }
 
 template<typename T, typename ST>
-void Storage3D<T,ST>::get_z(ST x, ST y, Storage1D<T,ST>& vec) const
+void Storage3D<T,ST>::get_z(ST x, ST y, Storage1D<T,ST>& vec) const noexcept
 {
   assert(x < xDim_);
   assert(y < yDim_);
@@ -325,7 +325,7 @@ void Storage3D<T,ST>::get_z(ST x, ST y, Storage1D<T,ST>& vec) const
 }
 
 template<typename T, typename ST>
-inline const T& Storage3D<T,ST>::operator()(ST x, ST y, ST z) const
+inline const T& Storage3D<T,ST>::operator()(ST x, ST y, ST z) const noexcept
 {
 #ifdef SAFE_MODE
   if (x >= xDim_ || y >= yDim_ || z >= zDim_) {
@@ -344,7 +344,7 @@ inline const T& Storage3D<T,ST>::operator()(ST x, ST y, ST z) const
 }
 
 template<typename T, typename ST>
-inline T& Storage3D<T,ST>::operator()(ST x, ST y, ST z)
+inline T& Storage3D<T,ST>::operator()(ST x, ST y, ST z) noexcept
 {
 #ifdef SAFE_MODE
   if (x >= xDim_ || y >= yDim_ || z >= zDim_) {
@@ -370,31 +370,31 @@ template<typename T, typename ST>
 }
 
 template<typename T, typename ST>
-inline ST Storage3D<T,ST>::xDim() const
+inline ST Storage3D<T,ST>::xDim() const noexcept
 {
   return xDim_;
 }
 
 template<typename T, typename ST>
-inline ST Storage3D<T,ST>::yDim() const
+inline ST Storage3D<T,ST>::yDim() const noexcept
 {
   return yDim_;
 }
 
 template<typename T, typename ST>
-inline ST Storage3D<T,ST>::zDim() const
+inline ST Storage3D<T,ST>::zDim() const noexcept
 {
   return zDim_;
 }
 
 template<typename T, typename ST>
-Dim3D<ST> Storage3D<T,ST>::dims() const
+Dim3D<ST> Storage3D<T,ST>::dims() const noexcept
 {
   return Dim3D<ST>(xDim_,yDim_,zDim_);
 }
 
 template<typename T, typename ST>
-Storage3D<T,ST>& Storage3D<T,ST>::operator=(const Storage3D<T,ST>& toCopy)
+Storage3D<T,ST>& Storage3D<T,ST>::operator=(const Storage3D<T,ST>& toCopy) noexcept
 {
   if (Base::size_ != toCopy.size()) {
     if (Base::data_ != 0) {
@@ -420,7 +420,7 @@ Storage3D<T,ST>& Storage3D<T,ST>::operator=(const Storage3D<T,ST>& toCopy)
 }
 
 template<typename T, typename ST>
-Storage3D<T,ST>& Storage3D<T,ST>::operator=(Storage3D<T,ST>&& toTake)
+Storage3D<T,ST>& Storage3D<T,ST>::operator=(Storage3D<T,ST>&& toTake) noexcept
 {
   delete[] Base::data_;
   Base::data_ = toTake.data_;
@@ -436,9 +436,9 @@ Storage3D<T,ST>& Storage3D<T,ST>::operator=(Storage3D<T,ST>&& toTake)
 
 //existing positions are copied, new ones are uninitialized
 template<typename T, typename ST>
-void Storage3D<T,ST>::resize(ST newxDim, ST newyDim, ST newzDim)
+void Storage3D<T,ST>::resize(ST newxDim, ST newyDim, ST newzDim) noexcept
 {
-  ST new_size = newxDim*newyDim*newzDim;
+  const ST new_size = newxDim*newyDim*newzDim;
 
   if (newxDim != xDim_ || newyDim != yDim_ || newzDim != zDim_) {
     T* new_data = new T[new_size];
@@ -466,7 +466,7 @@ void Storage3D<T,ST>::resize(ST newxDim, ST newyDim, ST newzDim)
 
 //existing positions are copied, new ones are uninitialized
 template<typename T, typename ST>
-void Storage3D<T,ST>::resize(ST newxDim, ST newyDim, ST newzDim, const T default_value)
+void Storage3D<T,ST>::resize(ST newxDim, ST newyDim, ST newzDim, const T default_value) noexcept
 {
   const ST new_size = newxDim*newyDim*newzDim;
 
@@ -500,7 +500,7 @@ void Storage3D<T,ST>::resize(ST newxDim, ST newyDim, ST newzDim, const T default
 
 //all elements are uninitialized after this operation
 template<typename T, typename ST>
-void Storage3D<T,ST>::resize_dirty(ST newxDim, ST newyDim, ST newzDim)
+void Storage3D<T,ST>::resize_dirty(ST newxDim, ST newyDim, ST newzDim) noexcept
 {
   if (newxDim != xDim_ || newyDim != yDim_ || newzDim != zDim_) {
 

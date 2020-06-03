@@ -43,67 +43,67 @@ public:
   ~FlexibleStorage1D();
 
   //for compatibility with std::vector, e.g. for use in templates
-  T* data() { return Base::direct_access(); }
+  T* data() noexcept { return Base::direct_access(); }
 
   //for compatibility with std::vector, e.g. for use in templates
-  const T* data() const { return Base::direct_access(); }
+  const T* data() const noexcept { return Base::direct_access(); }
 
-  inline T& operator[](ST i) const;
+  inline T& operator[](ST i) const noexcept;
 
-  inline ST reserved_size() const;
+  inline ST reserved_size() const noexcept;
 
   //for compatibility with std::vector, e.g. for use in templates
-  inline ST capacity() const;
+  inline ST capacity() const noexcept;
 
-  void resize(ST size, bool exact_fit = false);
+  void resize(ST size, bool exact_fit = false) noexcept;
 
-  void fit_exactly();
+  void fit_exactly() noexcept;
 
-  void shrink(ST size);
+  void shrink(ST size) noexcept;
 
-  inline void shrink_by(ST reduction);
+  inline void shrink_by(ST reduction) noexcept;
   
-  inline void grow_by_dirty(ST increase);
+  inline void grow_by_dirty(ST increase) noexcept;
   
-  //sometimes you just want a reserved T instead of explicitly appending one, e.g. when you know it's in default state
-  inline T& increase();
+  //append a default of T, i.e. T()
+  inline T& increase() noexcept;
 
-  void reserve(ST size);
+  void reserve(ST size) noexcept;
 
   //if free is true, will free all memory
-  void clear(bool free = false);
+  void clear(bool free = false) noexcept;
 
-  FlexibleStorage1D<T,ST>& operator=(const FlexibleStorage1D<T,ST>& toCopy);
+  FlexibleStorage1D<T,ST>& operator=(const FlexibleStorage1D<T,ST>& toCopy) noexcept;
 
-  FlexibleStorage1D<T,ST>& operator=(FlexibleStorage1D<T,ST>&& toTake);
+  FlexibleStorage1D<T,ST>& operator=(FlexibleStorage1D<T,ST>&& toTake) noexcept;
 
-  inline T back() const;
+  inline T back() const noexcept;
 
-  inline T& back();
+  inline T& back() noexcept;
 
-  ST append(PassType val);
+  ST append(PassType val) noexcept;
     
-  ST move_append(T&& val);
+  ST move_append(T&& val) noexcept;
 
   //shortcut when you are sure the allocated memory suffices
-  inline void append_trusting(PassType val);
+  inline void append_trusting(PassType val) noexcept;
 
   //for compatibility with std::vector, e.g. for use in templates
-  inline void push_back(PassType val);
+  inline void push_back(PassType val) noexcept;
 
-  void append(Storage1D<T,ST>& toAppend);
+  void append(Storage1D<T,ST>& toAppend) noexcept;
 
-  void append(FlexibleStorage1D<T,ST>& toAppend);
+  void append(FlexibleStorage1D<T,ST>& toAppend) noexcept;
 
-  void erase(ST pos);
+  void erase(ST pos) noexcept;
   
-  void erase_several(ST pos, ST nToErase);
+  void erase_several(ST pos, ST nToErase) noexcept;
 
-  void insert(ST pos, T val);
+  void insert(ST pos, T val) noexcept;
 
-  void insert_several(ST pos, T* vals, ST nData);
+  void insert_several(ST pos, T* vals, ST nData) noexcept;
 
-  void swap(FlexibleStorage1D<T,ST>& toSwap);
+  void swap(FlexibleStorage1D<T,ST>& toSwap) noexcept;
 
 protected:
 
@@ -115,10 +115,10 @@ template<typename T, typename ST>
 std::ostream& operator<<(std::ostream& s, const FlexibleStorage1D<T,ST>& v);
 
 template<typename T, typename ST>
-bool operator==(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2);
+bool operator==(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2) noexcept;
 
 template<typename T, typename ST>
-bool operator!=(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2);
+bool operator!=(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2) noexcept;
 
 template<typename T, typename ST=size_t>
 class NamedFlexibleStorage1D : public FlexibleStorage1D<T,ST> {
@@ -211,7 +211,7 @@ FlexibleStorage1D<T,ST>::FlexibleStorage1D(FlexibleStorage1D<T,ST>&& toTake) : S
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::swap(FlexibleStorage1D<T,ST>& toSwap)
+void FlexibleStorage1D<T,ST>::swap(FlexibleStorage1D<T,ST>& toSwap) noexcept
 {
   std::swap(Base::data_,toSwap.data_);
   std::swap(Base::size_,toSwap.size_);
@@ -219,7 +219,7 @@ void FlexibleStorage1D<T,ST>::swap(FlexibleStorage1D<T,ST>& toSwap)
 }
 
 template<typename T, typename ST>
-FlexibleStorage1D<T,ST>& FlexibleStorage1D<T,ST>::operator=(const FlexibleStorage1D<T,ST>& toCopy)
+FlexibleStorage1D<T,ST>& FlexibleStorage1D<T,ST>::operator=(const FlexibleStorage1D<T,ST>& toCopy) noexcept
 {
   uint new_res = toCopy.reserved_size();
   if (new_res != reserved_size_) {
@@ -240,14 +240,14 @@ FlexibleStorage1D<T,ST>& FlexibleStorage1D<T,ST>::operator=(const FlexibleStorag
 }
 
 template<typename T, typename ST> 
-FlexibleStorage1D<T,ST>& FlexibleStorage1D<T,ST>::operator=(FlexibleStorage1D<T,ST>&& toTake)
+FlexibleStorage1D<T,ST>& FlexibleStorage1D<T,ST>::operator=(FlexibleStorage1D<T,ST>&& toTake) noexcept
 {
   delete[] Base::data_;
   Base::data_ = toTake.data_;
   toTake.data_ = 0;
   
   Base::size_ = toTake.size_;
-  Base::reserved_size_ = toTake.reserved_size_;
+  reserved_size_ = toTake.reserved_size_;
   
   return *this;
 }
@@ -258,19 +258,19 @@ FlexibleStorage1D<T,ST>::~FlexibleStorage1D()
 }
 
 template<typename T, typename ST>
-inline ST FlexibleStorage1D<T,ST>::reserved_size() const
+inline ST FlexibleStorage1D<T,ST>::reserved_size() const noexcept
 {
   return reserved_size_;
 }
 
 template<typename T, typename ST>
-inline ST FlexibleStorage1D<T,ST>::capacity() const
+inline ST FlexibleStorage1D<T,ST>::capacity() const noexcept
 {
   return reserved_size_;
 }
 
 template<typename T, typename ST>
-inline T FlexibleStorage1D<T,ST>::back() const
+inline T FlexibleStorage1D<T,ST>::back() const noexcept
 {
   assert(Base::size_ > 0);
   assert(Base::data_ != 0);
@@ -278,7 +278,7 @@ inline T FlexibleStorage1D<T,ST>::back() const
 }
 
 template<typename T, typename ST>
-inline T& FlexibleStorage1D<T,ST>::back()
+inline T& FlexibleStorage1D<T,ST>::back() noexcept
 {
   assert(Base::size_ > 0);
   assert(Base::data_ != 0);
@@ -286,7 +286,7 @@ inline T& FlexibleStorage1D<T,ST>::back()
 }
 
 template<typename T, typename ST>
-ST FlexibleStorage1D<T,ST>::append(FlexibleStorage1D<T,ST>::PassType val)
+ST FlexibleStorage1D<T,ST>::append(FlexibleStorage1D<T,ST>::PassType val) noexcept
 {
   if (Base::size_ == reserved_size_) {
 
@@ -311,7 +311,7 @@ ST FlexibleStorage1D<T,ST>::append(FlexibleStorage1D<T,ST>::PassType val)
 }
 
 template<typename T, typename ST>
-ST FlexibleStorage1D<T,ST>::move_append(T&& val)
+ST FlexibleStorage1D<T,ST>::move_append(T&& val) noexcept
 {
   if (Base::size_ == reserved_size_) {
 
@@ -337,7 +337,7 @@ ST FlexibleStorage1D<T,ST>::move_append(T&& val)
 
 //shortcut when you are sure the allocated memory suffices
 template<typename T, typename ST>
-inline void FlexibleStorage1D<T,ST>::append_trusting(FlexibleStorage1D<T,ST>::PassType val)
+inline void FlexibleStorage1D<T,ST>::append_trusting(FlexibleStorage1D<T,ST>::PassType val) noexcept
 {
   assert(Base::size_ < reserved_size_);
   Base::data_[Base::size_] = val;
@@ -345,13 +345,13 @@ inline void FlexibleStorage1D<T,ST>::append_trusting(FlexibleStorage1D<T,ST>::Pa
 }
 
 template<typename T, typename ST>
-inline void FlexibleStorage1D<T,ST>::push_back(FlexibleStorage1D<T,ST>::PassType val)
+inline void FlexibleStorage1D<T,ST>::push_back(FlexibleStorage1D<T,ST>::PassType val) noexcept
 {
   append(val);
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::append(Storage1D<T,ST>& toAppend)
+void FlexibleStorage1D<T,ST>::append(Storage1D<T,ST>& toAppend) noexcept
 {
   if (reserved_size_ < Base::size_ + toAppend.size()) {
 
@@ -375,7 +375,7 @@ void FlexibleStorage1D<T,ST>::append(Storage1D<T,ST>& toAppend)
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::append(FlexibleStorage1D<T,ST>& toAppend)
+void FlexibleStorage1D<T,ST>::append(FlexibleStorage1D<T,ST>& toAppend) noexcept
 {
   if (reserved_size_ < Base::size_ + toAppend.size()) {
 
@@ -400,7 +400,7 @@ void FlexibleStorage1D<T,ST>::append(FlexibleStorage1D<T,ST>& toAppend)
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::resize(ST size, bool exact_fit)
+void FlexibleStorage1D<T,ST>::resize(ST size, bool exact_fit) noexcept
 {
   if (size > reserved_size_ || size < (reserved_size_ / 3) ) {
 
@@ -432,7 +432,7 @@ void FlexibleStorage1D<T,ST>::resize(ST size, bool exact_fit)
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::fit_exactly()
+void FlexibleStorage1D<T,ST>::fit_exactly() noexcept
 {
   if (reserved_size_ != Base::size_) {
     
@@ -446,21 +446,21 @@ void FlexibleStorage1D<T,ST>::fit_exactly()
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::shrink(ST size)
+void FlexibleStorage1D<T,ST>::shrink(ST size) noexcept
 {
   assert(size <= Base::size_);
   Base::size_ = size;
 }
 
 template<typename T, typename ST>
-inline void FlexibleStorage1D<T,ST>::shrink_by(ST reduction)
+inline void FlexibleStorage1D<T,ST>::shrink_by(ST reduction) noexcept
 {
   assert(reduction <= Base::size_);
   Base::size_ -= reduction;
 }
 
 template<typename T, typename ST>
-inline void FlexibleStorage1D<T,ST>::grow_by_dirty(ST increase)
+inline void FlexibleStorage1D<T,ST>::grow_by_dirty(ST increase) noexcept
 {
   const ST size = Base::size_ + increase;
  
@@ -481,7 +481,7 @@ inline void FlexibleStorage1D<T,ST>::grow_by_dirty(ST increase)
 }
 
 template<typename T, typename ST>
-inline T& FlexibleStorage1D<T,ST>::increase() 
+inline T& FlexibleStorage1D<T,ST>::increase() noexcept
 {
   if (Base::size_ == reserved_size_) 
   {
@@ -494,12 +494,13 @@ inline T& FlexibleStorage1D<T,ST>::increase()
     Base::data_ = new_data;    
   }
 
+  Base::data_[Base::size_] = T();  //basic types are uninitialized
   Base::size_++;
   return Base::data_[Base::size_-1];
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::reserve(ST size)
+void FlexibleStorage1D<T,ST>::reserve(ST size) noexcept
 {
   if (size > Base::size_ && size != reserved_size_) {
 
@@ -514,7 +515,7 @@ void FlexibleStorage1D<T,ST>::reserve(ST size)
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::clear(bool free)
+void FlexibleStorage1D<T,ST>::clear(bool free) noexcept
 {
   Base::size_ = 0; 
   if (free) {
@@ -525,7 +526,7 @@ void FlexibleStorage1D<T,ST>::clear(bool free)
 }
 
 template<typename T, typename ST>
-inline T& FlexibleStorage1D<T,ST>::operator[](ST i) const
+inline T& FlexibleStorage1D<T,ST>::operator[](ST i) const noexcept
 {
 #ifdef SAFE_MODE
   if (i >= Base::size_) {
@@ -542,7 +543,7 @@ inline T& FlexibleStorage1D<T,ST>::operator[](ST i) const
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::erase(ST pos)
+void FlexibleStorage1D<T,ST>::erase(ST pos) noexcept
 {
   if (pos < Base::size_)
   {
@@ -552,7 +553,7 @@ void FlexibleStorage1D<T,ST>::erase(ST pos)
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::erase_several(ST pos, ST nToErase)
+void FlexibleStorage1D<T,ST>::erase_several(ST pos, ST nToErase) noexcept
 {
   if (pos < Base::size_) 
   {
@@ -563,7 +564,7 @@ void FlexibleStorage1D<T,ST>::erase_several(ST pos, ST nToErase)
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::insert(ST pos, T val)
+void FlexibleStorage1D<T,ST>::insert(ST pos, T val) noexcept
 {
   if (pos <= Base::size_)
   {
@@ -574,7 +575,7 @@ void FlexibleStorage1D<T,ST>::insert(ST pos, T val)
 }
 
 template<typename T, typename ST>
-void FlexibleStorage1D<T,ST>::insert_several(ST pos, T* vals, ST nData)
+void FlexibleStorage1D<T,ST>::insert_several(ST pos, T* vals, ST nData) noexcept
 {
   if (pos <= Base::size_)
   {
@@ -598,7 +599,7 @@ std::ostream& operator<<(std::ostream& s, const FlexibleStorage1D<T,ST>& v)
 }
 
 template<typename T, typename ST>
-bool operator==(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2)
+bool operator==(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2) noexcept
 {
   if (v1.size() != v2.size())
     return false;
@@ -611,7 +612,7 @@ bool operator==(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>
 }
 
 template<typename T, typename ST>
-bool operator!=(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2)
+bool operator!=(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>& v2) noexcept
 {
   if (v1.size() != v2.size())
     return true;

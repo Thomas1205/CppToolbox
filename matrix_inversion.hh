@@ -10,13 +10,13 @@ class NotInvertibleException {};
 
 //T should be a floating point (inverse of integer matrix isn't integer!)
 template<typename T, typename ST>
-void invert_matrix(const Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result) /*throw (NotInvertibleException)*/;
+void invert_matrix(const Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result);
 
 //T should be a floating point (inverse of integer matrix isn't integer!)
 //the matrix toInvert is modified in case the dimension of the matrix is greater than 2.
 //toInvert then contains the identity matrix (up to roundoff errors) after the call.
 template<typename T, typename ST>
-void invert_and_destroy_matrix(Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result) /*throw (NotInvertibleException)*/;
+void invert_and_destroy_matrix(Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result);
 
 
 /********* implementation **********/
@@ -24,7 +24,7 @@ void invert_and_destroy_matrix(Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,
 ** one of the standard packages. Most likely there are faster and more robust solutions out there. **/
 
 template<typename T, typename ST>
-void invert_matrix(const Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result) /*throw (NotInvertibleException)*/
+void invert_matrix(const Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result)
 {
   const ST dim = toInvert.xDim();
   if (toInvert.yDim() != dim) {
@@ -64,7 +64,7 @@ void invert_matrix(const Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& r
 }
 
 template<typename T, typename ST>
-void invert_and_destroy_matrix(Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result) /*throw (NotInvertibleException)*/
+void invert_and_destroy_matrix(Math2D::Matrix<T,ST>& toInvert, Math2D::Matrix<T,ST>& result)
 {
   const ST dim = toInvert.xDim();
   if (toInvert.yDim() != dim) {

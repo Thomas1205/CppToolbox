@@ -46,30 +46,30 @@ namespace Math2D {
     virtual const std::string& name() const;
 
     /*** maximal element ***/
-    T max() const;
+    T max() const noexcept;
 
     /*** minimal element ***/
-    T min() const;
+    T min() const noexcept;
 
     /*** maximal absolute element = l-infinity norm ***/
-    T max_abs() const;
+    T max_abs() const noexcept;
 
-    void add_constant(const T addon);
+    void add_constant(const T addon) noexcept;
 
     //---- mathematical operators ----
 
     //multiplication with a scalar
-    void operator*=(const T scalar);
+    void operator*=(const T scalar) noexcept;
 
   protected:
     //the following routines are protected to avoid adding (etc.) e.g. a symmetric matrix to a lower triangular one
     // (the implemented effect is not the expected one, in fact the correct result would be a full matrix without symmetry)
-    inline void add_matrix_multiple(const TriMatrix<T,ST>& toAdd, T alpha);
+    inline void add_matrix_multiple(const TriMatrix<T,ST>& toAdd, T alpha) noexcept;
 
     //addition of another matrix of equal dimensions
-    void operator+=(const TriMatrix<T,ST>& toAdd);
+    void operator+=(const TriMatrix<T,ST>& toAdd) noexcept;
 
-    void operator-=(const TriMatrix<T,ST>& toSub);
+    void operator-=(const TriMatrix<T,ST>& toSub) noexcept;
 
     static const std::string trimatrix_name_;
   };
@@ -128,37 +128,37 @@ namespace Math2D {
 
     virtual const std::string& name() const;
 
-    bool is_lower_triangular() const;
+    bool is_lower_triangular() const noexcept;
 
     //transform a lower into an upper triangular matrix (very cheap operation: only requires toggling a flag)
-    void transpose();
+    void transpose() noexcept;
 
-    T sum() const;
+    T sum() const noexcept;
 
-    long double determinant() const;
+    long double determinant() const noexcept;
 
     /*** L2-norm of the matrix ***/
-    double norm() const;
+    double norm() const noexcept;
 
     /*** squared L2-norm ***/
-    double sqr_norm() const;
+    double sqr_norm() const noexcept;
 
     /*** L1-norm of the matrix ***/
-    double norm_l1() const;
+    double norm_l1() const noexcept;
 
 
     // --- routines to access the protected members of TriMatrix
 
-    void add_matrix_multiple(const TriangularMatrix<T,ST>& toAdd, const T alpha);
+    void add_matrix_multiple(const TriangularMatrix<T,ST>& toAdd, const T alpha) noexcept;
 
     //addition of another matrix of equal dimensions
-    void operator+=(const TriangularMatrix<T,ST>& toAdd);
+    void operator+=(const TriangularMatrix<T,ST>& toAdd) noexcept;
 
-    void operator-=(const TriangularMatrix<T,ST>& toSub);
+    void operator-=(const TriangularMatrix<T,ST>& toSub) noexcept;
 
-    void elem_mul(const TriangularMatrix<T,ST>& v);
+    void elem_mul(const TriangularMatrix<T,ST>& v) noexcept;
     
-    void elem_div(const TriangularMatrix<T,ST>& v);
+    void elem_div(const TriangularMatrix<T,ST>& v) noexcept;
 
   protected:
 
@@ -172,13 +172,13 @@ namespace Math2D {
   std::ostream& operator<<(std::ostream& s, const TriangularMatrix<T,ST>& m);
 
   template<typename T, typename ST>
-  TriangularMatrix<T,ST> operator+(const TriangularMatrix<T,ST>& m1, const TriangularMatrix<T,ST>& m2);
+  TriangularMatrix<T,ST> operator+(const TriangularMatrix<T,ST>& m1, const TriangularMatrix<T,ST>& m2) noexcept;
 
   template<typename T, typename ST>
-  Math1D::Vector<T,ST> operator*(const TriangularMatrix<T,ST>& m, const Math1D::Vector<T,ST>& vec);
+  Math1D::Vector<T,ST> operator*(const TriangularMatrix<T,ST>& m, const Math1D::Vector<T,ST>& vec) noexcept;
 
   template<typename T, typename ST>
-  void assign(Matrix<T,ST>& dest, const TriangularMatrix<T,ST>& src);
+  void assign(Matrix<T,ST>& dest, const TriangularMatrix<T,ST>& src) noexcept;
 
 
   /**************** ***********/
@@ -209,9 +209,9 @@ namespace Math2D {
     virtual const std::string& name() const;
 
     //access on an element (handling is asymmetric)
-    inline const T& operator()(ST x, ST y) const;
+    inline const T& operator()(ST x, ST y) const noexcept;
 
-    inline T& operator()(ST x, ST y);
+    inline T& operator()(ST x, ST y) noexcept;
 
   protected:
     static const std::string triasym_matrix_name_;
@@ -246,23 +246,23 @@ namespace Math2D {
 
     virtual const std::string& name() const;
 
-    T sum() const;
+    T sum() const noexcept;
 
     //TODO/future ideas:
     // - (permuted?) cholesky factorization
     // - inversion/solution of linear systems via cholesky factorization
     // - determinant via cholesky factorization
 
-    void add_matrix_multiple(const SymmetricMatrix<T,ST>& toAdd, const T alpha);
+    void add_matrix_multiple(const SymmetricMatrix<T,ST>& toAdd, const T alpha) noexcept;
 
     //addition of another matrix of equal dimensions
-    void operator+=(const SymmetricMatrix<T,ST>& toAdd);
+    void operator+=(const SymmetricMatrix<T,ST>& toAdd) noexcept;
 
-    void operator-=(const SymmetricMatrix<T,ST>& toSub);
+    void operator-=(const SymmetricMatrix<T,ST>& toSub) noexcept;
 
-    void elem_mul(const SymmetricMatrix<T,ST>& v);
+    void elem_mul(const SymmetricMatrix<T,ST>& v) noexcept;
     
-    void elem_div(const SymmetricMatrix<T,ST>& v);
+    void elem_div(const SymmetricMatrix<T,ST>& v) noexcept;
 
   protected:
     static const std::string symmetric_matrix_name_;
@@ -273,13 +273,13 @@ namespace Math2D {
   std::ostream& operator<<(std::ostream& s, const SymmetricMatrix<T,ST>& m);
 
   template<typename T, typename ST>
-  SymmetricMatrix<T,ST> operator+(const SymmetricMatrix<T,ST>& m1, const SymmetricMatrix<T,ST>& m2);
+  SymmetricMatrix<T,ST> operator+(const SymmetricMatrix<T,ST>& m1, const SymmetricMatrix<T,ST>& m2) noexcept;
 
   template<typename T, typename ST>
-  Math1D::Vector<T,ST> operator*(const SymmetricMatrix<T,ST>& m, const Math1D::Vector<T,ST>& vec);
+  Math1D::Vector<T,ST> operator*(const SymmetricMatrix<T,ST>& m, const Math1D::Vector<T,ST>& vec) noexcept;
 
   template<typename T, typename ST>
-  void assign(Matrix<T,ST>& dest, const SymmetricMatrix<T,ST>& src);
+  void assign(Matrix<T,ST>& dest, const SymmetricMatrix<T,ST>& src) noexcept;
 
 }
 
@@ -397,13 +397,17 @@ namespace Math2D {
   template<typename T, typename ST>
   /*static*/ const std::string TriMatrix<T,ST>::trimatrix_name_ = "unnamed trimatrix";
 
-  template<typename T, typename ST> TriMatrix<T,ST>::TriMatrix() : TriStorage2D<T,ST>() {}
+  template<typename T, typename ST> 
+  TriMatrix<T,ST>::TriMatrix() : TriStorage2D<T,ST>() {}
 
-  template<typename T, typename ST> TriMatrix<T,ST>::TriMatrix(ST dim) : TriStorage2D<T,ST>(dim)  {}
+  template<typename T, typename ST> 
+  TriMatrix<T,ST>::TriMatrix(ST dim) : TriStorage2D<T,ST>(dim)  {}
 
-  template<typename T, typename ST> TriMatrix<T,ST>::TriMatrix(ST dim, const T default_value) : TriStorage2D<T,ST>(dim, default_value) {}
+  template<typename T, typename ST> 
+  TriMatrix<T,ST>::TriMatrix(ST dim, const T default_value) : TriStorage2D<T,ST>(dim, default_value) {}
 
-  template<typename T, typename ST> TriMatrix<T,ST>::~TriMatrix() {}
+  template<typename T, typename ST> 
+  TriMatrix<T,ST>::~TriMatrix() {}
 
   template<typename T, typename ST>
   /*virtual*/ const std::string& TriMatrix<T,ST>::name() const
@@ -413,7 +417,7 @@ namespace Math2D {
 
   /*** maximal element ***/
   template<typename T, typename ST>
-  T TriMatrix<T,ST>::max() const
+  T TriMatrix<T,ST>::max() const noexcept
   {
     const T_A16* data = Base::data_;
     const ST size = Base::size_;
@@ -425,7 +429,7 @@ namespace Math2D {
 
   /*** minimal element ***/
   template<typename T, typename ST>
-  T TriMatrix<T,ST>::min() const
+  T TriMatrix<T,ST>::min() const noexcept
   {
     const T_A16* data = Base::data_;
     const ST size = Base::size_;
@@ -437,7 +441,7 @@ namespace Math2D {
 
   /*** maximal absolute element = l-infinity norm ***/
   template<typename T, typename ST>
-  T TriMatrix<T,ST>::max_abs() const
+  T TriMatrix<T,ST>::max_abs() const noexcept
   {
     const T_A16* data = Base::data_;
     const ST size = Base::size_;
@@ -456,7 +460,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  void TriMatrix<T,ST>::add_constant(const T addon)
+  void TriMatrix<T,ST>::add_constant(const T addon) noexcept
   {
     const T_A16* data = Base::data_;
     const ST size = Base::size_;
@@ -468,7 +472,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  inline void TriMatrix<T,ST>::add_matrix_multiple(const TriMatrix<T,ST>& toAdd, T alpha)
+  inline void TriMatrix<T,ST>::add_matrix_multiple(const TriMatrix<T,ST>& toAdd, T alpha) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -494,7 +498,7 @@ namespace Math2D {
   }
 
   template<>
-  inline void TriMatrix<double>::add_matrix_multiple(const TriMatrix<double>& toAdd, double alpha)
+  inline void TriMatrix<double>::add_matrix_multiple(const TriMatrix<double>& toAdd, double alpha) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -513,7 +517,7 @@ namespace Math2D {
 
   //addition of another matrix of equal dimensions
   template<typename T, typename ST>
-  void TriMatrix<T,ST>::operator+=(const TriMatrix<T,ST>& toAdd)
+  void TriMatrix<T,ST>::operator+=(const TriMatrix<T,ST>& toAdd) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -537,7 +541,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  void TriMatrix<T,ST>::operator-=(const TriMatrix<T,ST>& toSub)
+  void TriMatrix<T,ST>::operator-=(const TriMatrix<T,ST>& toSub) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -562,7 +566,7 @@ namespace Math2D {
 
   //multiplication with a scalar
   template<typename T, typename ST>
-  void TriMatrix<T,ST>::operator*=(const T scalar)
+  void TriMatrix<T,ST>::operator*=(const T scalar) noexcept
   {
     T_A16* attr_restrict data = Base::data_;
 
@@ -631,14 +635,14 @@ namespace Math2D {
   template<typename T, typename ST> TriangularMatrix<T,ST>::~TriangularMatrix() {}
 
   template<typename T, typename ST>
-  bool TriangularMatrix<T,ST>::is_lower_triangular() const
+  bool TriangularMatrix<T,ST>::is_lower_triangular() const noexcept
   {
     return is_lower_triangular_;
   }
 
   //transform a lower into an upper triangular matrix (very cheap operation: only requires toggling a flag)
   template<typename T, typename ST>
-  void TriangularMatrix<T,ST>::transpose()
+  void TriangularMatrix<T,ST>::transpose() noexcept
   {
     is_lower_triangular_ = !is_lower_triangular_;
   }
@@ -651,7 +655,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  T TriangularMatrix<T,ST>::sum() const
+  T TriangularMatrix<T,ST>::sum() const noexcept
   {
     const T_A16* attr_restrict data = Base::data_;
     const ST size = Base::size_;
@@ -665,7 +669,7 @@ namespace Math2D {
 
   /*** L2-norm of the matrix ***/
   template<typename T, typename ST>
-  double TriangularMatrix<T,ST>::norm() const
+  double TriangularMatrix<T,ST>::norm() const noexcept
   {
     const T_A16* attr_restrict data = Base::data_;
     const ST size = Base::size_;
@@ -680,7 +684,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  double TriangularMatrix<T,ST>::sqr_norm() const
+  double TriangularMatrix<T,ST>::sqr_norm() const noexcept
   {
     const T_A16* attr_restrict data = Base::data_;
     const ST size = Base::size_;
@@ -696,7 +700,7 @@ namespace Math2D {
 
   /*** L1-norm of the matrix ***/
   template<typename T, typename ST>
-  double TriangularMatrix<T,ST>::norm_l1() const
+  double TriangularMatrix<T,ST>::norm_l1() const noexcept
   {
     const T_A16* attr_restrict data = Base::data_;
     const ST size = Base::size_;
@@ -711,7 +715,7 @@ namespace Math2D {
 
 
   template<typename T, typename ST>
-  long double TriangularMatrix<T,ST>::determinant() const
+  long double TriangularMatrix<T,ST>::determinant() const noexcept
   {
     const ST dim = Base::dim_;
 
@@ -723,20 +727,20 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  void TriangularMatrix<T,ST>::add_matrix_multiple(const TriangularMatrix<T,ST>& toAdd, const T alpha)
+  void TriangularMatrix<T,ST>::add_matrix_multiple(const TriangularMatrix<T,ST>& toAdd, const T alpha) noexcept
   {
     TriMatrix<T,ST>::add_matrix_multiple(toAdd,alpha);
   }
 
   //addition of another matrix of equal dimensions
   template<typename T, typename ST>
-  void TriangularMatrix<T,ST>::operator+=(const TriangularMatrix<T,ST>& toAdd)
+  void TriangularMatrix<T,ST>::operator+=(const TriangularMatrix<T,ST>& toAdd) noexcept
   {
     TriMatrix<T,ST>::operator+=(toAdd);
   }
 
   template<typename T, typename ST>
-  void TriangularMatrix<T,ST>::operator-=(const TriangularMatrix<T,ST>& toSub)
+  void TriangularMatrix<T,ST>::operator-=(const TriangularMatrix<T,ST>& toSub) noexcept
   {
     TriMatrix<T,ST>::operator-=(toSub);
   }
@@ -782,7 +786,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  TriangularMatrix<T,ST> operator+(const TriangularMatrix<T,ST>& m1, const TriangularMatrix<T,ST>& m2)
+  TriangularMatrix<T,ST> operator+(const TriangularMatrix<T,ST>& m1, const TriangularMatrix<T,ST>& m2) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -817,7 +821,7 @@ namespace Math2D {
 
   //CAUTION: this currently reflects the product for a LOWER triangular matrix
   template<typename T, typename ST>
-  Math1D::Vector<T,ST> operator*(const TriangularMatrix<T,ST>& m, const Math1D::Vector<T,ST>& vec)
+  Math1D::Vector<T,ST> operator*(const TriangularMatrix<T,ST>& m, const Math1D::Vector<T,ST>& vec) noexcept
   {
     const ST dim = m.dim();
 
@@ -848,7 +852,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  void TriangularMatrix<T,ST>::elem_mul(const TriangularMatrix<T,ST>& v)
+  void TriangularMatrix<T,ST>::elem_mul(const TriangularMatrix<T,ST>& v) noexcept
   {
     assert(Base::size_ == v.size());
     for (ST i = 0; i < Base::size_; i++)
@@ -856,7 +860,7 @@ namespace Math2D {
   }
     
   template<typename T, typename ST>
-  void TriangularMatrix<T,ST>::elem_div(const TriangularMatrix<T,ST>& v)
+  void TriangularMatrix<T,ST>::elem_div(const TriangularMatrix<T,ST>& v) noexcept
   {
     assert(Base::size_ == v.size());
     for (ST i = 0; i < Base::size_; i++)
@@ -864,7 +868,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  void assign(Matrix<T,ST>& dest, const TriangularMatrix<T,ST>& src)
+  void assign(Matrix<T,ST>& dest, const TriangularMatrix<T,ST>& src) noexcept
   {
 
     const ST dim = src.dim();
@@ -917,7 +921,7 @@ namespace Math2D {
 
   //access on an element (handling is asymmetric, if the desired element is outside the triangle we return the zero element)
   template<typename T, typename ST>
-  inline const T& TriangularMatrixAsymAccess<T,ST>::operator()(ST x, ST y) const
+  inline const T& TriangularMatrixAsymAccess<T,ST>::operator()(ST x, ST y) const noexcept
   {
 
 #ifdef SAFE_MODE
@@ -945,7 +949,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  inline T& TriangularMatrixAsymAccess<T,ST>::operator()(ST x, ST y)
+  inline T& TriangularMatrixAsymAccess<T,ST>::operator()(ST x, ST y) noexcept
   {
     //essentially the same access pattern as for symmetric access, only in safe mode failure is returned
 
@@ -975,13 +979,17 @@ namespace Math2D {
   template<typename T, typename ST>
   /*static*/ const std::string SymmetricMatrix<T,ST>::symmetric_matrix_name_ = "unnamed symmetric matrix";
 
-  template<typename T, typename ST> SymmetricMatrix<T,ST>::SymmetricMatrix() : TriMatrix<T,ST>() {}
+  template<typename T, typename ST> 
+  SymmetricMatrix<T,ST>::SymmetricMatrix() : TriMatrix<T,ST>() {}
 
-  template<typename T, typename ST> SymmetricMatrix<T,ST>::SymmetricMatrix(ST dim) : TriMatrix<T,ST>(dim)  {}
+  template<typename T, typename ST> 
+  SymmetricMatrix<T,ST>::SymmetricMatrix(ST dim) : TriMatrix<T,ST>(dim)  {}
 
-  template<typename T, typename ST> SymmetricMatrix<T,ST>::SymmetricMatrix(ST dim, T default_value) : TriMatrix<T,ST>(dim, default_value) {}
+  template<typename T, typename ST> 
+  SymmetricMatrix<T,ST>::SymmetricMatrix(ST dim, T default_value) : TriMatrix<T,ST>(dim, default_value) {}
 
-  template<typename T, typename ST> SymmetricMatrix<T,ST>::~SymmetricMatrix() {}
+  template<typename T, typename ST> 
+  SymmetricMatrix<T,ST>::~SymmetricMatrix() {}
 
   template<typename T, typename ST>
   /*virtual*/ const std::string& SymmetricMatrix<T,ST>::name() const
@@ -990,7 +998,7 @@ namespace Math2D {
   }
 
   template<typename T, typename ST>
-  T SymmetricMatrix<T,ST>::sum() const
+  T SymmetricMatrix<T,ST>::sum() const noexcept
   {
     const ST dim = Base::dim_;
 
@@ -1011,26 +1019,26 @@ namespace Math2D {
 
 
   template<typename T, typename ST>
-  void SymmetricMatrix<T,ST>::add_matrix_multiple(const SymmetricMatrix<T,ST>& toAdd, T alpha)
+  void SymmetricMatrix<T,ST>::add_matrix_multiple(const SymmetricMatrix<T,ST>& toAdd, T alpha) noexcept
   {
     TriMatrix<T,ST>::add_matrix_multiple(toAdd,alpha);
   }
 
   //addition of another matrix of equal dimensions
   template<typename T, typename ST>
-  void SymmetricMatrix<T,ST>::operator+=(const SymmetricMatrix<T,ST>& toAdd)
+  void SymmetricMatrix<T,ST>::operator+=(const SymmetricMatrix<T,ST>& toAdd) noexcept
   {
     TriMatrix<T,ST>::operator+=(toAdd);
   }
 
   template<typename T, typename ST>
-  void SymmetricMatrix<T,ST>::operator-=(const SymmetricMatrix<T,ST>& toSub)
+  void SymmetricMatrix<T,ST>::operator-=(const SymmetricMatrix<T,ST>& toSub) noexcept
   {
     TriMatrix<T,ST>::operator-=(toSub);
   }
 
   template<typename T, typename ST>
-  void SymmetricMatrix<T,ST>::elem_mul(const SymmetricMatrix<T,ST>& v)
+  void SymmetricMatrix<T,ST>::elem_mul(const SymmetricMatrix<T,ST>& v) noexcept
   {
     assert(Base::size_ == v.size());
     for (ST i = 0; i < Base::size_; i++)
@@ -1038,7 +1046,7 @@ namespace Math2D {
   }
     
   template<typename T, typename ST>
-  void SymmetricMatrix<T,ST>::elem_div(const SymmetricMatrix<T,ST>& v)
+  void SymmetricMatrix<T,ST>::elem_div(const SymmetricMatrix<T,ST>& v) noexcept
   {
     assert(Base::size_ == v.size());
     for (ST i = 0; i < Base::size_; i++)
@@ -1075,7 +1083,7 @@ namespace Math2D {
 
 
   template<typename T, typename ST>
-  SymmetricMatrix<T,ST> operator+(const SymmetricMatrix<T,ST>& m1, const SymmetricMatrix<T,ST>& m2)
+  SymmetricMatrix<T,ST> operator+(const SymmetricMatrix<T,ST>& m1, const SymmetricMatrix<T,ST>& m2) noexcept
   {
 
 #ifndef DONT_CHECK_VECTOR_ARITHMETIC
@@ -1109,7 +1117,7 @@ namespace Math2D {
 
 
   template<typename T, typename ST>
-  Math1D::Vector<T,ST> operator*(const SymmetricMatrix<T,ST>& m, const Math1D::Vector<T,ST>& vec)
+  Math1D::Vector<T,ST> operator*(const SymmetricMatrix<T,ST>& m, const Math1D::Vector<T,ST>& vec) noexcept
   {
     const ST dim = m.dim();
 
@@ -1130,7 +1138,7 @@ namespace Math2D {
 
 
   template<typename T, typename ST>
-  void assign(Matrix<T,ST>& dest, const SymmetricMatrix<T,ST>& src)
+  void assign(Matrix<T,ST>& dest, const SymmetricMatrix<T,ST>& src) noexcept
   {
     const ST dim = src.dim();
 

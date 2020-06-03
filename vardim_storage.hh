@@ -23,21 +23,21 @@ public:
 
   ~VarDimStorage();
 
-  size_t dim(uint n) const;
+  size_t dim(uint n) const noexcept;
 
-  const Math1D::Vector<size_t>& dims();
+  const Math1D::Vector<size_t>& dims() noexcept;
 
-  size_t nDims() const;
+  size_t nDims() const noexcept;
 
-  const Math1D::Vector<size_t>& dim_vector() const;
+  const Math1D::Vector<size_t>& dim_vector() const noexcept;
 
-  const T& operator()(Math1D::Vector<size_t>& pos) const;
+  const T& operator()(Math1D::Vector<size_t>& pos) const noexcept;
 
-  T& operator()(Math1D::Vector<size_t>& pos);
+  T& operator()(Math1D::Vector<size_t>& pos) noexcept;
 
-  T data(uint pos) const;
+  T data(uint pos) const noexcept;
 
-  VarDimStorage<T>& operator=(const VarDimStorage& toCopy);
+  VarDimStorage<T>& operator=(const VarDimStorage& toCopy) noexcept;
 
   VarDimStorage<T>& operator=(VarDimStorage&& toTake) = default;
 
@@ -47,10 +47,10 @@ protected:
 };
 
 template<typename T, typename ST>
-bool operator==(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2);
+bool operator==(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2) noexcept;
 
 template<typename T, typename ST>
-bool operator!=(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2);
+bool operator!=(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2) noexcept;
 
 
 /*********** implementation *******/
@@ -109,7 +109,7 @@ VarDimStorage<T>::~VarDimStorage()
 }
 
 template<typename T>
-VarDimStorage<T>& VarDimStorage<T>::operator=(const VarDimStorage& toCopy)
+VarDimStorage<T>& VarDimStorage<T>::operator=(const VarDimStorage& toCopy) noexcept
 {
   Base::size_ = toCopy.size();
   dim_ = toCopy.dim_vector();
@@ -123,37 +123,37 @@ VarDimStorage<T>& VarDimStorage<T>::operator=(const VarDimStorage& toCopy)
 }
 
 template<typename T>
-size_t VarDimStorage<T>::dim(uint n) const
+size_t VarDimStorage<T>::dim(uint n) const noexcept
 {
   return dim_[n];
 }
 
 template<typename T>
-size_t VarDimStorage<T>::nDims() const
+size_t VarDimStorage<T>::nDims() const noexcept
 {
   return dim_.size();
 }
 
 template<typename T>
-const Math1D::Vector<size_t>& VarDimStorage<T>::dims()
+const Math1D::Vector<size_t>& VarDimStorage<T>::dims() noexcept
 {
   return dim_;
 }
 
 template<typename T>
-T VarDimStorage<T>::data(uint pos) const
+T VarDimStorage<T>::data(uint pos) const noexcept
 {
   return Base::data_[pos];
 }
 
 template<typename T>
-const Math1D::Vector<size_t>& VarDimStorage<T>::dim_vector() const
+const Math1D::Vector<size_t>& VarDimStorage<T>::dim_vector() const noexcept
 {
   return dim_;
 }
 
 template<typename T>
-const T& VarDimStorage<T>::operator()(Math1D::Vector<size_t>& pos) const
+const T& VarDimStorage<T>::operator()(Math1D::Vector<size_t>& pos) const noexcept
 {
   assert(pos.size() == dim_.size());
 
@@ -173,7 +173,7 @@ const T& VarDimStorage<T>::operator()(Math1D::Vector<size_t>& pos) const
 }
 
 template<typename T>
-T& VarDimStorage<T>::operator()(Math1D::Vector<size_t>& pos)
+T& VarDimStorage<T>::operator()(Math1D::Vector<size_t>& pos) noexcept
 {
   assert(pos.size() == dim_.size());
 
@@ -193,7 +193,7 @@ T& VarDimStorage<T>::operator()(Math1D::Vector<size_t>& pos)
 }
 
 template<typename T, typename ST>
-bool operator==(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2)
+bool operator==(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2) noexcept
 {
   if (v1.dims() != v2.dims())
     return false;
@@ -213,7 +213,7 @@ bool operator==(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2)
 }
 
 template<typename T, typename ST>
-bool operator!=(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2)
+bool operator!=(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2) noexcept
 {
   return !(v1 == v2);
 }
