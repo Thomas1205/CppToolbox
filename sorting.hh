@@ -18,74 +18,80 @@
 
 //c++-11 provides this in <algorithm>
 template<typename T>
-bool is_sorted(const T* data, const size_t nData);
+bool is_sorted(const T* data, const size_t nData) noexcept;
 
 template<typename T>
-bool is_reverse_sorted(const T* data, const size_t nData);
+bool is_reverse_sorted(const T* data, const size_t nData) noexcept;
 
 template<typename T>
-bool is_unique_sorted(const T* data, const size_t nData);
+bool is_unique_sorted(const T* data, const size_t nData) noexcept;
 
 template<typename T>
-bool is_unique_reverse_sorted(const T* data, const size_t nData);
+bool is_unique_reverse_sorted(const T* data, const size_t nData) noexcept;
 
 /***** plain sorting ****/
 
-template<typename T>
-inline void bubble_sort(T* data, const size_t nData);
+template<typename T, typename Swap = SwapOp<T> >
+inline void bubble_sort(T* data, const size_t nData) noexcept;
+
+template<typename T, typename Swap = SwapOp<T> >
+inline void batch_bubble_sort(T* data, const size_t nData) noexcept;
+
+template<typename T, typename Swap = SwapOp<T> >
+inline void bubble_sort_prepro(T* data, const size_t nData) noexcept;
+
+template<typename T> //upshift can use c++ moves, no swap involved
+inline void shift_bubble_sort(T* data, const size_t nData) noexcept;
+
+template<typename T> //upshift can use c++ moves, no swap involved
+inline void shift_bubble_sort_withmoves(T* data, const size_t nData) noexcept;
 
 template<typename T>
-inline void batch_bubble_sort(T* data, const size_t nData);
-
-template<typename T>
-inline void bubble_sort_prepro(T* data, const size_t nData);
-
-template<typename T>
-inline void shift_bubble_sort(T* data, const size_t nData);
-
-template<typename T>
-void merge_sort(T* data, const size_t nData);
+void merge_sort(T* data, const size_t nData) noexcept;
 
 //interface to std::sort
 template<typename T>
-void std_sort(T* data, const size_t nData);
+void std_sort(T* data, const size_t nData) noexcept;
 
 /***** key-value sort *****/
 
-template<typename T1, typename T2>
-inline void bubble_sort_key_value(T1* key, T2* value, const size_t nData);
+template<typename T1, typename T2, typename ValSwap = SwapOp<T2> >
+inline void bubble_sort_key_value(T1* key, T2* value, const size_t nData) noexcept;
+
+template<typename T1, typename T2, typename ValSwap = SwapOp<T2> >
+inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData) noexcept;
+
+template<typename T1, typename T2, typename ValSwap = SwapOp<T2> >
+inline void bubble_sort_key_value_prepro(T1* key, T2* value, const size_t nData) noexcept;
+
+template<typename T1, typename T2> //upshift can use c++ moves, no swap involved
+inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData) noexcept;
+
+template<typename T1, typename T2> //upshift can use c++ moves, no swap involved
+inline void shift_bubble_sort_key_value_keymoves(T1* key, T2* value, const size_t nData) noexcept;
 
 template<typename T1, typename T2>
-inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData);
-
-template<typename T1, typename T2>
-inline void bubble_sort_key_value_prepro(T1* key, T2* value, const size_t nData);
-
-template<typename T1, typename T2>
-inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData);
-
-template<typename T1, typename T2>
-inline void merge_sort_key_value(T1* key, T2* value, const size_t nData);
+inline void merge_sort_key_value(T1* key, T2* value, const size_t nData) noexcept;
 
 /***** index sorting *****/
 
 template<typename T, typename ST>
-inline void index_bubble_sort(const T* data, ST* indices, ST nData);
+inline void index_bubble_sort(const T* data, ST* indices, ST nData) noexcept;
 
 template<typename T, typename ST>
-inline void index_batch_bubble_sort(const T* data, ST* indices, ST nData);
+inline void index_batch_bubble_sort(const T* data, ST* indices, ST nData) noexcept;
 
 template<typename T, typename ST>
-void index_merge_sort(const T* data, ST* indices, const ST nData);
+void index_merge_sort(const T* data, ST* indices, const ST nData) noexcept;
 
 template<typename T, typename ST>
-void index_quick_sort(const T* data, ST* indices, const ST nData);
+void index_quick_sort(const T* data, ST* indices, const ST nData) noexcept;
 
 
 /************ implementation  *************/
 
 template<typename T>
-bool is_sorted(const T* data, const size_t nData)
+bool is_sorted(const T* data, const size_t nData) noexcept
 {
   for (size_t i=1; i < nData; i++) {
     if (data[i] < data[i-1])
@@ -96,7 +102,7 @@ bool is_sorted(const T* data, const size_t nData)
 }
 
 template<typename T>
-bool is_reverse_sorted(const T* data, const size_t nData)
+bool is_reverse_sorted(const T* data, const size_t nData) noexcept
 {
   for (size_t i=1; i < nData; i++) {
     if (data[i-1] < data[i])
@@ -107,7 +113,7 @@ bool is_reverse_sorted(const T* data, const size_t nData)
 }
 
 template<typename T>
-bool is_unique_sorted(const T* data, const size_t nData)
+bool is_unique_sorted(const T* data, const size_t nData) noexcept
 {
   for (size_t i=1; i < nData; i++) {
     if (data[i] <= data[i-1])
@@ -118,7 +124,7 @@ bool is_unique_sorted(const T* data, const size_t nData)
 }
 
 template<typename T>
-bool is_unique_reverse_sorted(const T* data, const size_t nData)
+bool is_unique_reverse_sorted(const T* data, const size_t nData) noexcept
 {
   for (size_t i=1; i < nData; i++) {
     if (data[i-1] <= data[i])
@@ -130,9 +136,11 @@ bool is_unique_reverse_sorted(const T* data, const size_t nData)
 
 /**** plain ***/
 
-template<typename T>
-inline void bubble_sort(T* data, const size_t nData)
+template<typename T, typename Swap>
+inline void bubble_sort(T* data, const size_t nData) noexcept
 {
+  const static Swap swapobj;
+  
   size_t last_flip = nData;
 
   while (last_flip > 1) {
@@ -142,7 +150,7 @@ inline void bubble_sort(T* data, const size_t nData)
     for (size_t l=1; l < last_flip; l++) {
 
       if (data[l] < data[l-1]) {
-        std::swap(data[l],data[l-1]);
+        swapobj(data[l],data[l-1]);
         flip = l;
       }
     }
@@ -151,8 +159,8 @@ inline void bubble_sort(T* data, const size_t nData)
   }
 }
 
-template<typename T>
-inline void batch_bubble_sort(T* data, const size_t nData)
+template<typename T, typename Swap>
+inline void batch_bubble_sort(T* data, const size_t nData) noexcept
 { 
   size_t last_flip = nData;
 
@@ -180,7 +188,7 @@ inline void batch_bubble_sort(T* data, const size_t nData)
         }
 
 #ifdef USE_ROUTINES
-        Routines::nontrivial_reverse(data+l-1, end-l+1);
+        Routines::nontrivial_reverse<T,Swap>(data+l-1, end-l+1);
 #else
         std::reverse(data+l-1, data+end);
 #endif
@@ -199,23 +207,24 @@ inline void batch_bubble_sort(T* data, const size_t nData)
   }
 }
 
-
-template<typename T>
-inline void bubble_sort_prepro(T* data, const size_t nData)
+template<typename T, typename Swap>
+inline void bubble_sort_prepro(T* data, const size_t nData) noexcept
 {
+  const static Swap swapobj;
+
   const size_t thresh = 5;
 
   if (nData > thresh) {
     //try to ameliorate some bad cases
     for (uint i = nData-1; i >= thresh-1; i--) {
       if ( data[i] < data[0] )
-        std::swap(data[i],data[0]);
+        swapobj(data[i],data[0]);
     }
   }
 }
 
-template<typename T>
-inline void shift_bubble_sort(T* data, const size_t nData)
+template<typename T> //upshift can use c++ moves, no swap involved
+inline void shift_bubble_sort(T* data, const size_t nData) noexcept
 {
   for (size_t l=1; l < nData; l++) {
     const T curdat = data[l];
@@ -232,30 +241,48 @@ inline void shift_bubble_sort(T* data, const size_t nData)
   }
 }
 
-template<typename T>
-void merge_sort(T* data, const size_t nData)
+template<typename T> //upshift can use c++ moves, no swap involved
+inline void shift_bubble_sort_withmoves(T* data, const size_t nData) noexcept
 {
-  if (nData <= MERGE_THRESH)
+  for (size_t l=1; l < nData; l++) {
+    const T& curdat = data[l];
+    size_t inspos = l;
+    while (inspos > 0 && curdat < data[inspos-1])
+      inspos--;
+
+    if (inspos != l) {
+      T temp = std::move(data[l]);
+      Routines::upshift_array(data, inspos, l, 1);
+      //for (size_t ll = l; ll > inspos; ll--)
+      //  data[ll] = data[ll-1];
+      data[inspos] = temp;
+    }
+  }
+}
+
+template<typename T>
+void merge_sort(T* data, const size_t nData) noexcept
+{  
+  if (nData <= MERGE_THRESH) 
     bubble_sort(data, nData);
   else {
+ 
+    using RefType = typename std::conditional<std::is_fundamental<T>::value || std::is_pointer<T>::value, const T, const T&>::type;
 
     const size_t half = nData / 2;
     const size_t nData2 = nData-half;
 
     T* aux_data = new T[nData];
 
-    Makros::unified_assign(aux_data, data, half);
-    //memcpy(aux_data,data,half*sizeof(T));
+    Makros::unified_move_assign(aux_data, data, nData);
+    
+    //Makros::unified_move_assign(aux_data, data, half);
+    //Makros::unified_move_assign(aux_data+half, data+half, nData2);
 
     merge_sort(aux_data,half);
-
-    Makros::unified_assign(aux_data+half, data+half, nData2);
-    //memcpy(aux_data+half,data+half,nData2*sizeof(T));
-
-    merge_sort(data+half,nData2);
-
+    merge_sort(aux_data+half,nData2);
+    
     //now merge the lists
-
     const T* data1 = aux_data;
     const T* data2 = aux_data+half;
 
@@ -266,16 +293,17 @@ void merge_sort(T* data, const size_t nData)
     //while(k1 < half && k2 < nData2) {
     while (true) {
 
-      const T d1 = data1[k1];
-      const T d2 = data2[k2];
+      RefType d1 = data1[k1];
+      RefType d2 = data2[k2];
+            
       if (d1 <= d2) {
-        data[k] = d1;
+        data[k] = std::move(d1);
         k1++;
         if (k1 >= half)
           break;
       }
       else {
-        data[k] = d2;
+        data[k] = std::move(d2);
         k2++;
         if (k2 >= nData2)
           break;
@@ -285,10 +313,9 @@ void merge_sort(T* data, const size_t nData)
     }
 
     //copy the rest
-    Makros::unified_assign(data+k, data1+k1, half-k1);
-    //memcpy(data+k,data1+k1,(half-k1)*sizeof(ST));
-    Makros::unified_assign(data+k, data2+k1, nData2-k2);
-    //memcpy(data+k,data2+k2,(nData2-k2)*sizeof(ST));
+    k++;
+    Makros::unified_move_assign(data+k, data1+k1, half-k1);
+    Makros::unified_move_assign(data+k, data2+k2, nData2-k2);
 
     delete[] aux_data;
   }
@@ -296,16 +323,18 @@ void merge_sort(T* data, const size_t nData)
 
 //interface to std::sort
 template<typename T>
-void std_sort(T* data, const size_t nData)
+void std_sort(T* data, const size_t nData) noexcept
 {
   std::sort(data, data+nData);
 }
 
 /**** key-value ****/
 
-template<typename T1, typename T2>
-inline void bubble_sort_key_value(T1* key, T2* value, const size_t nData)
+template<typename T1, typename T2, typename ValSwap>
+inline void bubble_sort_key_value(T1* key, T2* value, const size_t nData) noexcept
 {
+  const static ValSwap valswapobj;
+  
   size_t last_flip = nData;
 
   while (last_flip > 1) {
@@ -317,7 +346,7 @@ inline void bubble_sort_key_value(T1* key, T2* value, const size_t nData)
       if (key[j] < key[j-1]) {
 
         std::swap(key[j],key[j-1]);
-        std::swap(value[j],value[j-1]);
+        valswapobj(value[j],value[j-1]);
         flip = j;
       }
     }
@@ -326,8 +355,8 @@ inline void bubble_sort_key_value(T1* key, T2* value, const size_t nData)
   }
 }
 
-template<typename T1, typename T2>
-inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
+template<typename T1, typename T2, typename ValSwap>
+inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData) noexcept
 {
   size_t last_flip = nData;
 
@@ -356,7 +385,7 @@ inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
         //std::cerr << "reversing from " << (l-1) << " to excl. " << end << std::endl;
 #ifdef USE_ROUTINES
         Routines::nontrivial_reverse(key+l-1, end-l+1);
-        Routines::nontrivial_reverse(value+l-1, end-l+1);
+        Routines::nontrivial_reverse<T2,ValSwap>(value+l-1, end-l+1);
 #else
         std::reverse(key+l-1, key+end);
         std::reverse(value+l-1, value+end);
@@ -375,9 +404,11 @@ inline void batch_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
   }
 }
 
-template<typename T1, typename T2>
-inline void bubble_sort_key_value_prepro(T1* key, T2* value, const size_t nData)
+template<typename T1, typename T2, typename ValSwap>
+inline void bubble_sort_key_value_prepro(T1* key, T2* value, const size_t nData) noexcept
 {
+  const static ValSwap valswapobj;
+
   const size_t thresh = 5;
 
   if (nData > thresh) {
@@ -385,15 +416,15 @@ inline void bubble_sort_key_value_prepro(T1* key, T2* value, const size_t nData)
     for (uint i = nData-1; i >= thresh-1; i--) {
       if (key[i] < key[0]) {
         std::swap(key[i],key[0]);
-        std::swap(value[i],value[0]);
+        valswapobj(value[i],value[0]);
       }
     }
   }
 }
 
 template<typename T1, typename T2>
-inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
-{
+inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData) noexcept
+{  
   for (size_t j=1; j < nData; j++) {
     const T1 curkey = key[j];
     size_t inspos = j;
@@ -401,7 +432,7 @@ inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
       inspos--;
 
     if (inspos != j) {
-      const T2 curval = value[j];
+      const T2 curval = std::move(value[j]);
       Routines::upshift_array(key, inspos, j, 1);
       Routines::upshift_array(value, inspos, j, 1);
       // for (size_t jj = j; jj > inspos; jj--) {
@@ -414,12 +445,38 @@ inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData)
   }
 }
 
+template<typename T1, typename T2> //upshift can use c++ moves, no swap involved
+inline void shift_bubble_sort_key_value_keymoves(T1* key, T2* value, const size_t nData) noexcept
+{
+  for (size_t j=1; j < nData; j++) {
+    const T1 &curkey = key[j];
+    size_t inspos = j;
+    while (inspos > 0 && curkey < key[inspos-1])
+      inspos--;
+
+    if (inspos != j) {
+      const T1 temp = std::move(key[j]);
+      const T2 curval = std::move(value[j]);
+      Routines::upshift_array(key, inspos, j, 1);
+      Routines::upshift_array(value, inspos, j, 1);
+      // for (size_t jj = j; jj > inspos; jj--) {
+        // key[jj] = key[jj-1];
+        // value[jj] = value[jj-1];
+      // }
+      key[inspos] = temp;
+      value[inspos] = curval;
+    }
+  }  
+}
+
 template<typename T1, typename T2>
-inline void merge_sort_key_value(T1* key, T2* value, const size_t nData)
+inline void merge_sort_key_value(T1* key, T2* value, const size_t nData) noexcept
 {
   if (nData <= MERGE_THRESH)
     bubble_sort(key, value, nData);
   else {
+
+    using KeyRefType = typename std::conditional<std::is_fundamental<T1>::value || std::is_pointer<T1>::value, const T1, const T1&>::type;
 
     const size_t half = nData / 2;
     const size_t nData2 = nData-half;
@@ -427,13 +484,16 @@ inline void merge_sort_key_value(T1* key, T2* value, const size_t nData)
     T1* aux_key = new T1[nData];
     T2* aux_value = new T2[nData];
 
-    Makros::unified_assign(aux_key, key, half);
-    Makros::unified_assign(aux_value, value, half);
+    Makros::unified_move_assign(aux_key, key, nData);
+    Makros::unified_move_assign(aux_value, value, nData);
+
+    //Makros::unified_move_assign(aux_key, key, half);
+    //Makros::unified_move_assign(aux_value, value, half);
 
     merge_sort(aux_key,aux_value,half);
 
-    Makros::unified_assign(aux_key+half, key+half, nData2);
-    Makros::unified_assign(aux_value+half, value+half, nData2);
+    //Makros::unified_move_assign(aux_key+half, key+half, nData2);
+    //Makros::unified_move_assign(aux_value+half, value+half, nData2);
 
     merge_sort(aux_key+half,aux_value,half,nData2);
 
@@ -448,21 +508,20 @@ inline void merge_sort_key_value(T1* key, T2* value, const size_t nData)
     size_t k2=0;
     size_t k=0;
 
-    //while(k1 < half && k2 < nData2) {
     while (true) {
 
-      const T1 d1 = key1[k1];
-      const T1 d2 = key2[k2];
+      const KeyRefType d1 = key1[k1];
+      const KeyRefType d2 = key2[k2];
       if (d1 <= d2) {
-        key[k] = d1;
-        value[k] = value1[k1];
+        key[k] = std::move(d1);
+        value[k] = std::move(value1[k1]);
         k1++;
         if (k1 >= half)
           break;
       }
       else {
-        key[k] = d2;
-        value[k] = value2[k2];
+        key[k] = std::move(d2);
+        value[k] = std::move(value2[k2]);
         k2++;
         if (k2 >= nData2)
           break;
@@ -472,10 +531,11 @@ inline void merge_sort_key_value(T1* key, T2* value, const size_t nData)
     }
 
     //copy the rest
-    Makros::unified_assign(key+k, key1+k1, half-k1);
-    Makros::unified_assign(value+k, value1+k1, half-k1);
-    Makros::unified_assign(key+k, key2+k1, nData2-k2);
-    Makros::unified_assign(value+k, value2+k1, nData2-k2);
+    k++;
+    Makros::unified_move_assign(key+k, key1+k1, half-k1);
+    Makros::unified_move_assign(value+k, value1+k1, half-k1);
+    Makros::unified_move_assign(key+k, key2+k2, nData2-k2);
+    Makros::unified_move_assign(value+k, value2+k2, nData2-k2);
 
     delete[] aux_key;
     delete[] aux_value;
@@ -485,7 +545,7 @@ inline void merge_sort_key_value(T1* key, T2* value, const size_t nData)
 /**** index ****/
 
 template<typename T, typename ST>
-inline void index_bubble_sort(const T* data, ST* indices, const ST nData)
+inline void index_bubble_sort(const T* data, ST* indices, const ST nData) noexcept
 {
   for (uint i=0; i < nData; i++)
     indices[i] = i;
@@ -516,7 +576,7 @@ inline void index_bubble_sort(const T* data, ST* indices, const ST nData)
 }
 
 template<typename T, typename ST>
-inline void index_batch_bubble_sort(const T* data, ST* indices, ST nData)
+inline void index_batch_bubble_sort(const T* data, ST* indices, ST nData) noexcept
 {
   size_t last_flip = nData;
 
@@ -547,10 +607,10 @@ inline void index_batch_bubble_sort(const T* data, ST* indices, ST nData)
 }
 
 template<typename T, typename ST>
-void aux_index_quick_sort(const T* data, ST* indices, const ST nData);
+void aux_index_quick_sort(const T* data, ST* indices, const ST nData) noexcept;
 
 template<typename T, typename ST>
-void aux_index_merge_sort(const T* data, ST* indices, const ST nData)
+void aux_index_merge_sort(const T* data, ST* indices, const ST nData) noexcept
 {
   //std::cerr << "nData: "<< nData << std::endl;
 
@@ -583,14 +643,14 @@ void aux_index_merge_sort(const T* data, ST* indices, const ST nData)
 
     ST* aux_indices = new ST[nData];
 
-    Makros::unified_assign(aux_indices, indices, half);
-    //memcpy(aux_indices,indices,half*sizeof(ST));
+    Makros::unified_move_assign(aux_indices, indices, nData);
+
+    //Makros::unified_move_assign(aux_indices, indices, half);
 
     aux_index_merge_sort(data,aux_indices,half);
     //aux_index_quick_sort(data,aux_indices,half);
 
-    Makros::unified_assign(aux_indices+half, indices+half, nData2);
-    //memcpy(aux_indices+half,indices+half,nData2*sizeof(ST));
+    //Makros::unified_move_assign(aux_indices+half, indices+half, nData2);
 
     aux_index_merge_sort(data,aux_indices+half,nData2);
     //aux_index_quick_sort(data,aux_indices+half,nData2);
@@ -624,10 +684,9 @@ void aux_index_merge_sort(const T* data, ST* indices, const ST nData)
     }
 
     //copy the rest
-    Makros::unified_assign(indices+k, index1+k1, half-k1);
-    //memcpy(indices+k,index1+k1,(half-k1)*sizeof(ST));
-    Makros::unified_assign(indices+k,index2+k2,nData2-k2);
-    //memcpy(indices+k,index2+k2,(nData2-k2)*sizeof(ST));
+    k++;
+    Makros::unified_move_assign(indices+k, index1+k1, half-k1);
+    Makros::unified_move_assign(indices+k,index2+k2,nData2-k2);
 
     delete[] aux_indices;
   }
@@ -635,7 +694,7 @@ void aux_index_merge_sort(const T* data, ST* indices, const ST nData)
 
 //this is still fixed to memcpy
 template<typename T, typename ST>
-void aux_index_merge_sort_4split(const T* data, ST* indices, const ST nData)
+void aux_index_merge_sort_4split(const T* data, ST* indices, const ST nData) noexcept
 {
   //std::cerr << "nData: "<< nData << std::endl;
 
@@ -664,6 +723,8 @@ void aux_index_merge_sort_4split(const T* data, ST* indices, const ST nData)
 
     uint nData1to3 = nData/4;
     uint nData4 = nData-3*nData1to3;
+
+    //TODO: use unified_move_assign and a single array
 
     Storage1D<ST> index[4];
 
@@ -723,7 +784,7 @@ void aux_index_merge_sort_4split(const T* data, ST* indices, const ST nData)
 }
 
 template<typename T, typename ST>
-void index_merge_sort(const T* data, ST* indices, const ST nData)
+void index_merge_sort(const T* data, ST* indices, const ST nData) noexcept
 {
   //std::cerr << "sorting " << nData << " entries" << std::endl;
 
@@ -735,7 +796,7 @@ void index_merge_sort(const T* data, ST* indices, const ST nData)
 
 
 template<typename T, typename ST>
-void aux_index_quick_sort(const T* data, ST* indices, const ST nData)
+void aux_index_quick_sort(const T* data, ST* indices, const ST nData) noexcept
 {
 
   //std::cerr << "nData: " << nData << std::endl;
@@ -818,7 +879,7 @@ void aux_index_quick_sort(const T* data, ST* indices, const ST nData)
 }
 
 template<typename T, typename ST>
-void index_quick_sort(const T* data, ST* indices, const ST nData)
+void index_quick_sort(const T* data, ST* indices, const ST nData) noexcept
 {
   //std::cerr << "sorting " << nData << " entries" << std::endl;
 

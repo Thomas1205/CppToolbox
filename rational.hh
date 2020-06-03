@@ -108,7 +108,7 @@ Rational64 approx_r64(double d);
 namespace Makros {
 
   template<>
-  inline Rational64 abs(Rational64 arg)
+  inline Rational64 abs(Rational64 arg) noexcept
   {
     return rabs(arg);
   }

@@ -137,107 +137,107 @@ namespace Makros {
   //making log, exp, pow and abs a template is convenient when you want to call the proper function inside your own template
 
   template<typename T>
-  inline T log(T arg)
+  inline T log(T arg) noexcept
   {
     return T(::log(double(arg)));
   }
 
   //specializations:
   template<>
-  inline float log(float arg)
+  inline float log(float arg) noexcept
   {
     return logf(arg);
   }
 
   template<>
-  inline double log(double arg)
+  inline double log(double arg) noexcept
   {
     return ::log(arg);
   }
 
   template<>
-  inline long double log(long double arg)
+  inline long double log(long double arg) noexcept
   {
     return logl(arg);
   }
 
   template<typename T>
-  inline T sqrt(T arg)
+  inline T sqrt(T arg) noexcept
   {
     return T(::sqrt(double(arg)));
   }
 
   //specializations:
   template<>
-  inline float sqrt(float arg)
+  inline float sqrt(float arg) noexcept
   {
     return sqrtf(arg);
   }
 
   template<>
-  inline double sqrt(double arg)
+  inline double sqrt(double arg) noexcept
   {
     return ::sqrt(arg);
   }
 
   template<>
-  inline long double sqrt(long double arg)
+  inline long double sqrt(long double arg) noexcept
   {
     return sqrtl(arg);
   }
 
   template<typename T>
-  inline T exp(T arg)
+  inline T exp(T arg) noexcept
   {
     return T(::exp(double(arg)));
   }
 
   //specializations:
   template<>
-  inline float exp(float arg)
+  inline float exp(float arg) noexcept
   {
     return expf(arg);
   }
 
   template<>
-  inline double exp(double arg)
+  inline double exp(double arg) noexcept
   {
     return ::exp(arg);
   }
 
   template<>
-  inline long double exp(long double arg)
+  inline long double exp(long double arg) noexcept
   {
     return expl(arg);
   }
 
   template<typename T>
-  inline T pow(T base, T exponent)
+  inline T pow(T base, T exponent) noexcept
   {
     return T(::pow(double(base),double(exponent)));
   }
 
   //specializations:
   template<>
-  inline float pow(float base, float exponent)
+  inline float pow(float base, float exponent) noexcept
   {
     return powf(base,exponent);
   }
 
   template<>
-  inline double pow(double base, double exponent)
+  inline double pow(double base, double exponent) noexcept
   {
     return ::pow(base,exponent);
   }
 
   template<>
-  inline long double pow(long double base, long double exponent)
+  inline long double pow(long double base, long double exponent) noexcept
   {
     return powl(base,exponent);
   }
 
   template<typename T>
-  inline T abs(T arg)
+  inline T abs(T arg) noexcept
   {
     if (std::is_unsigned<T>::value) //will be if constexpr when going to C++-17
       return arg;
@@ -247,54 +247,54 @@ namespace Makros {
   }
 
   template<>
-  inline uchar abs(uchar arg)
+  inline uchar abs(uchar arg) noexcept
   {
     return arg;
   }
 
   template<>
-  inline ushort abs(ushort arg)
+  inline ushort abs(ushort arg) noexcept
   {
     return arg;
   }
 
   template<>
-  inline uint abs(uint arg)
+  inline uint abs(uint arg) noexcept
   {
     return arg;
   }
 
   template<>
-  inline UInt64 abs(UInt64 arg)
+  inline UInt64 abs(UInt64 arg) noexcept
   {
     return arg;
   }
 
   template<>
-  inline Int64 abs(Int64 arg)
+  inline Int64 abs(Int64 arg) noexcept
   {
     return llabs(arg);
   }
 
   template<>
-  inline float abs(float arg)
+  inline float abs(float arg) noexcept
   {
     return fabsf(arg);
   }
 
   template<>
-  inline double abs(double arg)
+  inline double abs(double arg) noexcept
   {
     return fabs(arg);
   }
 
   template<>
-  inline long double abs(long double arg)
+  inline long double abs(long double arg) noexcept
   {
     return fabsl(arg);
   }
 
-  inline void copy_byte_array(char_A16* attr_restrict dest, const char_A16* attr_restrict source, const size_t nBytes)
+  inline void copy_byte_array(char_A16* attr_restrict dest, const char_A16* attr_restrict source, const size_t nBytes) noexcept
   {
 #if !defined(USE_SSE) || USE_SSE < 4
     memcpy(dest, source, nBytes);
@@ -322,7 +322,7 @@ namespace Makros {
   }
 
   template<typename T>
-  inline void unified_assign(T* attr_restrict dest, const T* attr_restrict source, size_t size)
+  inline void unified_assign(T* attr_restrict dest, const T* attr_restrict source, size_t size) noexcept
   {
     if (std::is_trivially_copyable<T>::value) //will be if constexpr when going to C++-17
       memcpy(dest, source, size * sizeof(T));
@@ -334,61 +334,61 @@ namespace Makros {
 
   //some specializations for compilers who do not optimize entirely
   template<>
-  inline void unified_assign(char* attr_restrict dest, const char* attr_restrict source, size_t size)
+  inline void unified_assign(char* attr_restrict dest, const char* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(char));
   }
 
   template<>
-  inline void unified_assign(uchar* attr_restrict dest, const uchar* attr_restrict source, size_t size)
+  inline void unified_assign(uchar* attr_restrict dest, const uchar* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(uchar));
   }
 
   template<>
-  inline void unified_assign(short* attr_restrict dest, const short* attr_restrict source, size_t size)
+  inline void unified_assign(short* attr_restrict dest, const short* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(short));
   }
 
   template<>
-  inline void unified_assign(ushort* attr_restrict dest, const ushort* attr_restrict source, size_t size)
+  inline void unified_assign(ushort* attr_restrict dest, const ushort* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(ushort));
   }
 
   template<>
-  inline void unified_assign(int* attr_restrict dest, const int* attr_restrict source, size_t size)
+  inline void unified_assign(int* attr_restrict dest, const int* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(int));
   }
 
   template<>
-  inline void unified_assign(uint* attr_restrict dest, const uint* attr_restrict source, size_t size)
+  inline void unified_assign(uint* attr_restrict dest, const uint* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(uint));
   }
 
   template<>
-  inline void unified_assign(float* attr_restrict dest, const float* attr_restrict source, size_t size)
+  inline void unified_assign(float* attr_restrict dest, const float* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(float));
   }
 
   template<>
-  inline void unified_assign(double* attr_restrict dest, const double* attr_restrict source, size_t size)
+  inline void unified_assign(double* attr_restrict dest, const double* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(double));
   }
 
   template<>
-  inline void unified_assign(long double* attr_restrict dest, const long double* attr_restrict source, size_t size)
+  inline void unified_assign(long double* attr_restrict dest, const long double* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(long double));
   }
 
   template<typename T>
-  inline void unified_move_assign(T* attr_restrict dest, const T* attr_restrict source, size_t size)
+  inline void unified_move_assign(T* attr_restrict dest, const T* attr_restrict source, size_t size) noexcept
   {
     if (std::is_trivially_copyable<T>::value) //will be if constexpr when going to C++-17
       memcpy(dest, source, size * sizeof(T));
@@ -400,31 +400,31 @@ namespace Makros {
 
   //some specializations for compilers who do not optimize entirely
   template<>
-  inline void unified_move_assign(int* attr_restrict dest, const int* attr_restrict source, size_t size)
+  inline void unified_move_assign(int* attr_restrict dest, const int* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(int));
   }
 
   template<>
-  inline void unified_move_assign(uint* attr_restrict dest, const uint* attr_restrict source, size_t size)
+  inline void unified_move_assign(uint* attr_restrict dest, const uint* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(uint));
   }
 
   template<>
-  inline void unified_move_assign(float* attr_restrict dest, const float* attr_restrict source, size_t size)
+  inline void unified_move_assign(float* attr_restrict dest, const float* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(float));
   }
 
   template<>
-  inline void unified_move_assign(double* attr_restrict dest, const double* attr_restrict source, size_t size)
+  inline void unified_move_assign(double* attr_restrict dest, const double* attr_restrict source, size_t size) noexcept
   {
     memcpy(dest, source, size * sizeof(double));
   }
 
 
-  inline size_t highest_bit(size_t val)
+  inline size_t highest_bit(size_t val) noexcept
   {
     assert(val > 0);
     size_t ret = 0;
@@ -558,13 +558,13 @@ inline uint convert<uint>(const std::string s)
 
 //C++20 has bit_cast in <bit>
 template<typename T1, typename T2>
-T2 reinterpret(const T1 arg) {
+T2 reinterpret(const T1 arg)  noexcept {
   assert(sizeof(T1) == sizeof(T2));
   return *reinterpret_cast<T2*>(&arg);
 }
 
 template<typename T1, typename T2>
-void operator+=(std::pair<T1,T2>& x, const std::pair<T1,T2>& y)
+void operator+=(std::pair<T1,T2>& x, const std::pair<T1,T2>& y) noexcept
 {
   x.first += y.first;
   x.second += y.second;
@@ -588,7 +588,7 @@ void operator+=(std::pair<T1,T2>& x, const std::pair<T1,T2>& y)
 #define WARNING std::cerr << "WARNING[" << __FILE__ << ":" << __LINE__ << "]:" << std::endl
 
 template<typename T>
-inline T sign(T arg)
+inline T sign(T arg) noexcept
 {
   if (arg < ((T) 0.0) )
     return ((T) -1.0);
@@ -599,7 +599,7 @@ inline T sign(T arg)
 }
 
 template<typename T>
-inline T robust_sign(T arg, T tolerance)
+inline T robust_sign(T arg, T tolerance) noexcept
 {
   if (arg < ((T) -tolerance) )
     return ((T) -1.0);
@@ -611,7 +611,7 @@ inline T robust_sign(T arg, T tolerance)
 
 //load a cache line into the L0 processor cache
 template<typename T>
-inline void prefetcht0(const T* ptr)
+inline void prefetcht0(const T* ptr) noexcept
 {
 #if USE_SSE >= 1
   //prefetch is part of SSE1
@@ -621,7 +621,7 @@ inline void prefetcht0(const T* ptr)
 
 //load a cache line into the L1 processor cache
 template<typename T>
-inline void prefetcht1(const T* ptr)
+inline void prefetcht1(const T* ptr) noexcept
 {
 #if USE_SSE >= 1
   //prefetch is part of SSE1
@@ -631,7 +631,7 @@ inline void prefetcht1(const T* ptr)
 
 //load a cache line into the L2 processor cache
 template<typename T>
-inline void prefetcht2(const T* ptr)
+inline void prefetcht2(const T* ptr) noexcept
 {
 #if USE_SSE >= 1
   //prefetch is part of SSE1
@@ -641,7 +641,7 @@ inline void prefetcht2(const T* ptr)
 
 //load a cache line into the nontemporal cache, when you think you won't need the data again
 template<typename T>
-inline void prefetchnta(const T* ptr)
+inline void prefetchnta(const T* ptr) noexcept
 {
 #if USE_SSE >= 1
   //prefetch is part of SSE1
@@ -656,7 +656,7 @@ namespace Makros {
   template<typename T1, typename T2>
   class first_lower {
   public:
-    bool operator()(const std::pair<T1,T2>& p1, const std::pair<T1,T2>& p2)
+    bool operator()(const std::pair<T1,T2>& p1, const std::pair<T1,T2>& p2) noexcept
     {
       return (p1.first < p2.first);
     }
@@ -665,7 +665,7 @@ namespace Makros {
   template<typename T1, typename T2>
   class first_higher {
   public:
-    bool operator()(const std::pair<T1,T2>& p1, const std::pair<T1,T2>& p2)
+    bool operator()(const std::pair<T1,T2>& p1, const std::pair<T1,T2>& p2) noexcept
     {
       return (p1.first > p2.first);
     }
@@ -677,7 +677,7 @@ template<typename T>
 class SwapOp {
 public:
 
-  inline void operator()(T& val1, T& val2) const
+  inline void operator()(T& val1, T& val2) const  noexcept
   {
     std::swap(val1, val2);
   }
@@ -687,7 +687,7 @@ template<typename T>
 class SpecialSwapOp {
 public:
 
-  inline void operator()(T& val1, T& val2) const
+  inline void operator()(T& val1, T& val2) const noexcept
   {
     val1.swap(val2);
   }

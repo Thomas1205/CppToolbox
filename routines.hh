@@ -48,109 +48,109 @@ namespace Routines {
   
   /***************** reverse *******************/
 
-  template<typename T, typename Swap = SwapOp<T>>
-  inline void reverse(T* data, const size_t nData);
+  template<typename T, typename Swap = SwapOp<T> >
+  inline void reverse(T* data, const size_t nData) noexcept;
   
   /***************** downshift *****************/
 
   template<typename T>
-  inline void downshift_array(T* data, const uint pos, const uint shift, const uint nData);
+  inline void downshift_array(T* data, const uint pos, const uint shift, const uint nData) noexcept;
 
   /***************** upshift *****************/
 
   template<typename T>
-  inline void upshift_array(T* data, const int pos, const int last, const int shift);
+  inline void upshift_array(T* data, const int pos, const int last, const int shift) noexcept;
 
   /***************** binary search in sorted data *************/
 
   template<typename T>
-  inline size_t binsearch(const T* data, const T key, const size_t nData);
+  inline size_t binsearch(const T* data, const T key, const size_t nData) noexcept;
 
   template<typename T>
-  inline size_t binsearch_insertpos(const T* data, const T key, const size_t nData);
+  inline size_t binsearch_insertpos(const T* data, const T key, const size_t nData) noexcept;
 
   /***************** find unique *****************/
 
   //if T has size 1,2,4 or 8 this is always a bit-based comparison
   template<typename T> 
-  inline uint find_unique(const T* data, const T key, const uint nData);
+  inline uint find_unique(const T* data, const T key, const uint nData) noexcept;
 
-  inline uint find_unique_uint(const uint* data, const uint key, const uint nData);
+  inline uint find_unique_uint(const uint* data, const uint key, const uint nData) noexcept;
 
-  inline uint find_unique_int(const int* data, const int key, const uint nData);
+  inline uint find_unique_int(const int* data, const int key, const uint nData) noexcept;
 
   //non-standard treatment of NAN and INF, just bit-comparisons
-  inline uint find_unique_float(const float* data, const float key, const uint nData);
+  inline uint find_unique_float(const float* data, const float key, const uint nData) noexcept;
 
   /***************** find first *****************/
 
   //if T has size 1,2,4 or 8 this is always a bit-based comparison
   template<typename T> 
-  inline uint find_first(const T* data, const T key, const uint nData);
+  inline uint find_first(const T* data, const T key, const uint nData) noexcept;
 
-  inline uint find_first_uint(const uint* data, const uint key, const uint nData);
+  inline uint find_first_uint(const uint* data, const uint key, const uint nData) noexcept;
 
-  inline uint find_first_int(const int* data, const int key, const uint nData);
+  inline uint find_first_int(const int* data, const int key, const uint nData) noexcept;
 
   /***************** contains *****************/
 
-  inline bool contains_nan(const double_A16* data, const size_t nData); 
+  inline bool contains_nan(const double_A16* data, const size_t nData) noexcept; 
 
-  inline bool contains_nan(const float_A16* data, const size_t nData);
+  inline bool contains_nan(const float_A16* data, const size_t nData) noexcept;
 
   //if T has size 1,2,4 or 8 this is always a bit-based comparison
   template<typename T>
-  inline bool contains(const T* data, const T key, const size_t nData);
+  inline bool contains(const T* data, const T key, const size_t nData) noexcept;
 
-  inline bool contains_uchar(const uchar* data, const uchar key, const size_t nData);
+  inline bool contains_uchar(const uchar* data, const uchar key, const size_t nData) noexcept;
 
-  inline bool contains_ushort(const ushort* data, const ushort key, const size_t nData);
+  inline bool contains_ushort(const ushort* data, const ushort key, const size_t nData) noexcept;
 
-  inline bool contains_uint(const uint* data, const uint key, const size_t nData);
+  inline bool contains_uint(const uint* data, const uint key, const size_t nData) noexcept;
 
-  inline bool contains_uint64(const UInt64* data, const UInt64 key, const size_t nData);
+  inline bool contains_uint64(const UInt64* data, const UInt64 key, const size_t nData) noexcept;
 
   /***************** equals ****************/
 
   //if T has size 1,2,4 or 8 this is always a bit-based comparison
   template<typename T>
-  inline bool equals(const T* data1, const T* data2, const size_t nData);
+  inline bool equals(const T* data1, const T* data2, const size_t nData) noexcept;
 
-  inline bool equals_uchar(const uchar* data1, const uchar* data2, const size_t nData);
+  inline bool equals_uchar(const uchar* data1, const uchar* data2, const size_t nData) noexcept;
   
-  inline bool equals_ushort(const ushort* data1, const ushort* data2, const size_t nData);
+  inline bool equals_ushort(const ushort* data1, const ushort* data2, const size_t nData) noexcept;
   
-  inline bool equals_uint(const uint* data1, const uint* data2, const size_t nData);
+  inline bool equals_uint(const uint* data1, const uint* data2, const size_t nData) noexcept;
   
-  inline bool equals_uint64(const UInt64* data1, const UInt64* data2, const size_t nData);
+  inline bool equals_uint64(const UInt64* data1, const UInt64* data2, const size_t nData) noexcept;
 
   /***************** min, max, min+arg_min, max+arg_max *******/
 
-  inline void find_max_and_argmax(const double_A16* data, const size_t nData, double& max_val, size_t& arg_max);
+  inline void find_max_and_argmax(const double_A16* data, const size_t nData, double& max_val, size_t& arg_max) noexcept;
 
-  inline void find_min_and_argmin(const double_A16* data, const size_t nData, double& min_val, size_t& arg_max);
+  inline void find_min_and_argmin(const double_A16* data, const size_t nData, double& min_val, size_t& arg_max) noexcept;
 
-  inline void find_max_and_argmax(const float_A16* data, const size_t nData, float& max_val, size_t& arg_max);
+  inline void find_max_and_argmax(const float_A16* data, const size_t nData, float& max_val, size_t& arg_max) noexcept;
 
-  inline void find_min_and_argmin(const float_A16* data, const size_t nData, float& min_val, size_t& arg_max);
+  inline void find_min_and_argmin(const float_A16* data, const size_t nData, float& min_val, size_t& arg_max) noexcept;
 
   /***************** array additions with multiplications *************/
 
   //performs data[i] -= factor*data2[i] for each i
   //this is a frequent operation in the conjugate gradient algorithm
   inline void array_subtract_multiple(double_A16* attr_restrict data, const size_t nData, double factor,
-                                      const double_A16* attr_restrict data2);
+                                      const double_A16* attr_restrict data2) noexcept;
 
   inline void array_add_multiple(double_A16* attr_restrict data, const size_t nData, double factor,
-                                 const double_A16* attr_restrict data2);
+                                 const double_A16* attr_restrict data2) noexcept;
 
   //NOTE: despite attr_restrict, you can safely pass the same for dest and src1 or src2
   inline void go_in_neg_direction(double_A16* attr_restrict dest, const size_t nData, const double_A16* attr_restrict src1,
-                                  const double_A16* attr_restrict src2, double alpha);
+                                  const double_A16* attr_restrict src2, double alpha) noexcept;
 
   //NOTE: despite attr_restrict, you can safely pass the same for dest and src1 or src2
   inline void assign_weighted_combination(double_A16* attr_restrict dest, const size_t nData, double w1, const double_A16* attr_restrict src1,
-                                          double w2, const double_A16* attr_restrict src2);
+                                          double w2, const double_A16* attr_restrict src2) noexcept;
 
     
   /***************************** implementation ******************************/
@@ -159,7 +159,7 @@ namespace Routines {
   
   //no plans for specialized 16 routines at present
   
-  inline void nontrivial_reverse_byte_array(uchar* data, const size_t nData)
+  inline void nontrivial_reverse_byte_array(uchar* data, const size_t nData) noexcept
   {
     assert(nData >= 2);
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -235,7 +235,7 @@ namespace Routines {
 #endif
   }
 
-  inline void reverse_byte_array(uchar* data, const size_t nData) 
+  inline void reverse_byte_array(uchar* data, const size_t nData) noexcept
   {
 #if !defined(USE_SSE) || USE_SSE < 5
     std::reverse(data, data + nData);
@@ -246,7 +246,7 @@ namespace Routines {
 #endif  
   }
   
-  inline void nontrivial_reverse_uint_array(uint* data, const size_t nData)
+  inline void nontrivial_reverse_uint_array(uint* data, const size_t nData) noexcept
   {
     assert(nData >= 2);
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -295,7 +295,7 @@ namespace Routines {
 #endif      
   }
   
-  inline void reverse_uint_array(uint* data, const size_t nData) 
+  inline void reverse_uint_array(uint* data, const size_t nData) noexcept 
   {
 #if !defined(USE_SSE) || USE_SSE < 5
     std::reverse(data, data + nData);
@@ -306,7 +306,7 @@ namespace Routines {
 #endif  
   }
 
-  inline void reverse_4doubles(double* data) {
+  inline void reverse_4doubles(double* data) noexcept {
 
     asm __volatile__ ("vmovupd %[d], %%ymm0 \n\t"
                       "vperm2f128 $1, %%ymm0, %%ymm0, %%ymm0 \n\t"
@@ -315,7 +315,7 @@ namespace Routines {
                       : [d] "+m" (data[0]) : : "ymm0", "memory");          
   }
 
-  inline void nontrivial_reverse_double_array(double* data, const size_t nData) 
+  inline void nontrivial_reverse_double_array(double* data, const size_t nData) noexcept 
   {
     assert(nData >= 2);
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -356,7 +356,7 @@ namespace Routines {
 #endif    
   }
 
-  inline void reverse_double_array(double* data, const size_t nData) 
+  inline void reverse_double_array(double* data, const size_t nData) noexcept 
   {
 #if !defined(USE_SSE) || USE_SSE < 5
     std::reverse(data, data + nData);
@@ -368,7 +368,7 @@ namespace Routines {
   }
 
   template<typename T, typename Swap>
-  inline void nontrivial_reverse(T* data, const size_t nData) 
+  inline void nontrivial_reverse(T* data, const size_t nData) noexcept 
   {    
     assert(nData >= 2);
     if (sizeof(T) == 1)
@@ -390,43 +390,43 @@ namespace Routines {
   }
 
   template<>
-  inline void nontrivial_reverse<uint,SwapOp<uint> >(uint* data, const size_t nData) 
+  inline void nontrivial_reverse<uint,SwapOp<uint> >(uint* data, const size_t nData) noexcept 
   {
     nontrivial_reverse_uint_array(data, nData);
   }
   
   template<>
-  inline void nontrivial_reverse<int,SwapOp<int> >(int* data, const size_t nData) 
+  inline void nontrivial_reverse<int,SwapOp<int> >(int* data, const size_t nData) noexcept 
   {
     nontrivial_reverse_uint_array((uint*) data, nData);
   }
 
   template<>
-  inline void nontrivial_reverse<float,SwapOp<float> >(float* data, const size_t nData) 
+  inline void nontrivial_reverse<float,SwapOp<float> >(float* data, const size_t nData) noexcept 
   {
     nontrivial_reverse_uint_array((uint*) data, nData);
   }
 
   template<>
-  inline void nontrivial_reverse<double,SwapOp<double> >(double* data, const size_t nData) 
+  inline void nontrivial_reverse<double,SwapOp<double> >(double* data, const size_t nData) noexcept 
   {
     nontrivial_reverse_double_array(data, nData);
   }
   
   template<>
-  inline void nontrivial_reverse<Int64,SwapOp<Int64> >(Int64* data, const size_t nData) 
+  inline void nontrivial_reverse<Int64,SwapOp<Int64> >(Int64* data, const size_t nData) noexcept 
   {
     nontrivial_reverse_double_array((double*) data, nData);
   }
 
   template<>
-  inline void nontrivial_reverse<UInt64,SwapOp<UInt64> >(UInt64* data, const size_t nData) 
+  inline void nontrivial_reverse<UInt64,SwapOp<UInt64> >(UInt64* data, const size_t nData) noexcept 
   {
     nontrivial_reverse_double_array((double*) data, nData);
   }
   
-  template<typename T, typename Swap = SwapOp<T>>
-  inline void reverse(T* data, const size_t nData) 
+  template<typename T, typename Swap = SwapOp<T> >
+  inline void reverse(T* data, const size_t nData) noexcept 
   {
     if (nData >= 2)     
       nontrivial_reverse<T,Swap>(data, nData);
@@ -434,7 +434,7 @@ namespace Routines {
   
   /***************** downshift *****************/
 
-  inline void downshift_uint_array(uint* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_uint_array(uint* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     assert(shift <= nData);
     uint i = pos;
@@ -475,19 +475,19 @@ namespace Routines {
 #endif
   }
 
-  inline void downshift_int_array(int* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_int_array(int* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     static_assert(sizeof(int) == sizeof(uint), "wrong size");
     downshift_uint_array((uint*) data, pos, shift, nData);
   }
 
-  inline void downshift_float_array(float* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_float_array(float* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     static_assert(sizeof(int) == sizeof(uint), "wrong size");
     downshift_uint_array((uint*) data, pos, shift, nData);
   }
 
-  inline void downshift_double_array(double* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_double_array(double* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     uint i = pos;
     const uint end = nData-shift;
@@ -527,7 +527,7 @@ namespace Routines {
   }
 
   template<typename T>
-  inline void downshift_array(T* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_array(T* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     //c++-20 offers shift_left and shift_right in <algorithm>
     const uint end = nData-shift;
@@ -542,7 +542,7 @@ namespace Routines {
   }
 
   template<>
-  inline void downshift_array(char* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_array(char* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     //test of the specialized routine downshift_double_array is TODO
     const uint end = nData-shift;
@@ -550,7 +550,7 @@ namespace Routines {
   }  
 
   template<>
-  inline void downshift_array(uchar* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_array(uchar* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     //test of the specialized routine downshift_double_array is TODO
     const uint end = nData-shift;
@@ -558,7 +558,7 @@ namespace Routines {
   }  
 
   template<>
-  inline void downshift_array(short* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_array(short* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     //test of the specialized routine downshift_ushort_array is TODO
     const uint end = nData-shift;
@@ -566,7 +566,7 @@ namespace Routines {
   }  
 
   template<>
-  inline void downshift_array(ushort* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_array(ushort* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     //test of the specialized routine downshift_double_array is TODO
     const uint end = nData-shift;
@@ -574,25 +574,25 @@ namespace Routines {
   }  
 
   template<>
-  inline void downshift_array(uint* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_array(uint* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     downshift_uint_array(data, pos, shift, nData);
   }
 
   template<>
-  inline void downshift_array(int* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_array(int* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     downshift_int_array(data, pos, shift, nData);
   }
 
   template<>
-  inline void downshift_array(float* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_array(float* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     downshift_float_array(data, pos, shift, nData);
   }
 
   template<>
-  inline void downshift_array(double* data, const uint pos, const uint shift, const uint nData)
+  inline void downshift_array(double* data, const uint pos, const uint shift, const uint nData) noexcept
   {
     //test of the specialized routine downshift_double_array is TODO
     const uint end = nData-shift;
@@ -601,7 +601,7 @@ namespace Routines {
 
   /***************** upshift *****************/
 
-  inline void upshift_uint_array(uint* data, const int pos, const int last, const int shift)
+  inline void upshift_uint_array(uint* data, const int pos, const int last, const int shift) noexcept
   {
     assert(shift > 0);
     int k = last;
@@ -641,19 +641,19 @@ namespace Routines {
 #endif
   }
 
-  inline void upshift_int_array(int* data, const int pos, const int last, const int shift)
+  inline void upshift_int_array(int* data, const int pos, const int last, const int shift) noexcept
   {
     static_assert(sizeof(int) == sizeof(uint), "wrong size");
     upshift_uint_array((uint*) data, pos, last, shift);
   }
 
-  inline void upshift_float_array(float* data, const int pos, const int last, const int shift)
+  inline void upshift_float_array(float* data, const int pos, const int last, const int shift) noexcept
   {
     static_assert(sizeof(float) == sizeof(uint), "wrong size");
     upshift_uint_array((uint*) data, pos, last, shift);
   }
 
-  inline void upshift_double_array(double* data, const int pos, const int last, const int shift)
+  inline void upshift_double_array(double* data, const int pos, const int last, const int shift) noexcept
   {
     assert(shift > 0);
     int k = last;
@@ -695,14 +695,14 @@ namespace Routines {
   }
 
   template<typename T>
-  inline void standard_upshift_array(T* data, const int pos, const int last, const int shift)
+  inline void standard_upshift_array(T* data, const int pos, const int last, const int shift) noexcept
   {
     for (int k = last; k >= pos+shift; k--) 
       data[k] = std::move(data[k-shift]);
   }
 
   template<typename T>
-  inline void upshift_array(T* data, const int pos, const int last, const int shift)
+  inline void upshift_array(T* data, const int pos, const int last, const int shift) noexcept
   {
     assert(shift > 0);
     //c++-20 offers shift_left and shift_right in <algorithm>
@@ -715,25 +715,25 @@ namespace Routines {
   }
 
   template<>
-  inline void upshift_array(uint* data, const int pos, const int last, const int shift)
+  inline void upshift_array(uint* data, const int pos, const int last, const int shift) noexcept
   {
     upshift_uint_array(data, pos, last, shift);
   }
 
   template<>
-  inline void upshift_array(int* data, const int pos, const int last, const int shift)
+  inline void upshift_array(int* data, const int pos, const int last, const int shift) noexcept
   {
     upshift_int_array(data, pos, last, shift);
   }
 
   template<>
-  inline void upshift_array(float* data, const int pos, const int last, const int shift)
+  inline void upshift_array(float* data, const int pos, const int last, const int shift) noexcept
   {
     upshift_float_array(data, pos, last, shift);
   }
 
   template<>
-  inline void upshift_array(double* data, const int pos, const int last, const int shift)
+  inline void upshift_array(double* data, const int pos, const int last, const int shift) noexcept
   {
     upshift_double_array(data, pos, last, shift);
   }
@@ -741,7 +741,7 @@ namespace Routines {
   /***************** find unique *****************/
 
   //data should contain key at most once
-  inline uint find_unique_uint(const uint* data, const uint key, const uint nData)
+  inline uint find_unique_uint(const uint* data, const uint key, const uint nData) noexcept
   {
     uint i = 0;
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -856,19 +856,19 @@ namespace Routines {
   }
 
   //data should contain key at most once
-  inline uint find_unique_int(const int* data, const int key, const uint nData)
+  inline uint find_unique_int(const int* data, const int key, const uint nData) noexcept
   {
     return find_unique_uint((const uint*) data, (const uint) key, nData);
   }
 
-  inline uint find_unique_float(const float* data, const float key, const uint nData)
+  inline uint find_unique_float(const float* data, const float key, const uint nData) noexcept
   {
     //NOTE: raw byte equality compare gives non-standard treatment of nan and +/- inf
     return find_unique_uint((const uint*) data, reinterpret<const float, const uint>(key), nData);
   }
 
   template<typename T> 
-  inline uint find_unique(const T* data, const T key, const uint nData)
+  inline uint find_unique(const T* data, const T key, const uint nData) noexcept
   {
     if (sizeof(T) == 4) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
@@ -881,7 +881,7 @@ namespace Routines {
 
   /***************** find first *****************/
 
-  inline uint find_first_uint(const uint* data, const uint key, const uint nData)
+  inline uint find_first_uint(const uint* data, const uint key, const uint nData) noexcept
   {
     uint i = 0;
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -948,13 +948,13 @@ namespace Routines {
     return MAX_UINT;
   }
 
-  inline uint find_first_int(const int* data, const int key, const uint nData)
+  inline uint find_first_int(const int* data, const int key, const uint nData) noexcept
   {
     return find_first_uint((uint*) data, key, nData);
   }
 
   template<typename T> 
-  inline uint find_first(const T* data, const T key, const uint nData)
+  inline uint find_first(const T* data, const T key, const uint nData) noexcept
   {
     if (sizeof(T) == 4) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
@@ -967,7 +967,7 @@ namespace Routines {
 
   /******** contains *******/
   
-  inline bool contains_nan(const float_A16* data, const size_t nData) 
+  inline bool contains_nan(const float_A16* data, const size_t nData) noexcept 
   {
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -1019,7 +1019,7 @@ namespace Routines {
     return false;
   }
 
-  inline bool contains_nan(const double_A16* data, const size_t nData) 
+  inline bool contains_nan(const double_A16* data, const size_t nData) noexcept
   {
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -1057,7 +1057,7 @@ namespace Routines {
   }
 
   template<typename T>
-  inline bool contains(const T* data, const T key, const size_t nData) 
+  inline bool contains(const T* data, const T key, const size_t nData) noexcept
   {
     if (sizeof(T) == 1) {
       return contains_uchar((const uchar*) data, reinterpret<const T, const uchar>(key), nData);
@@ -1077,7 +1077,7 @@ namespace Routines {
       return (std::find(data, data + nData, key) != data + nData);
   }
 
-  inline bool contains_uchar(const uchar* data, const uchar key, const size_t nData)
+  inline bool contains_uchar(const uchar* data, const uchar key, const size_t nData) noexcept
   {
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -1135,7 +1135,7 @@ namespace Routines {
     return false;    
   }
 
-  inline bool contains_ushort(const ushort* data, const ushort key, const size_t nData) {
+  inline bool contains_ushort(const ushort* data, const ushort key, const size_t nData) noexcept {
 
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -1192,7 +1192,7 @@ namespace Routines {
     return false;
   }
 
-  inline bool contains_uint(const uint* data, const uint key, const size_t nData) 
+  inline bool contains_uint(const uint* data, const uint key, const size_t nData) noexcept 
   {
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -1247,7 +1247,7 @@ namespace Routines {
     return false;
   }
 
-  inline bool contains_uint64(const UInt64* data, const UInt64 key, const size_t nData) 
+  inline bool contains_uint64(const UInt64* data, const UInt64 key, const size_t nData) noexcept
   {
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -1308,7 +1308,7 @@ namespace Routines {
 
   //if T has size 1,2,4 or 8 this is always a bit-based comparison
   template<typename T>
-  inline bool equals(const T* data1, const T* data2, const size_t nData)
+  inline bool equals(const T* data1, const T* data2, const size_t nData) noexcept
   {
     if (sizeof(T) == 1) {
       return equals_uchar((uchar*) data1, (uchar*) data2, nData);
@@ -1333,7 +1333,7 @@ namespace Routines {
     }    
   }
 
-  inline bool equals_uchar(const uchar* data1, const uchar* data2, const size_t nData)
+  inline bool equals_uchar(const uchar* data1, const uchar* data2, const size_t nData) noexcept
   {
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -1391,7 +1391,7 @@ namespace Routines {
     return true;
   }
 
-  inline bool equals_ushort(const ushort* data1, const ushort* data2, const size_t nData)
+  inline bool equals_ushort(const ushort* data1, const ushort* data2, const size_t nData) noexcept
   {
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -1449,7 +1449,7 @@ namespace Routines {
     return true;    
   }
   
-  inline bool equals_uint(const uint* data1, const uint* data2, const size_t nData)
+  inline bool equals_uint(const uint* data1, const uint* data2, const size_t nData) noexcept
   {
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -1507,7 +1507,7 @@ namespace Routines {
     return true;
   }
 
-  inline bool equals_uint64(const UInt64* data1, const UInt64* data2, const size_t nData)
+  inline bool equals_uint64(const UInt64* data1, const UInt64* data2, const size_t nData) noexcept
   {
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -1567,7 +1567,7 @@ namespace Routines {
 
   /******** min, max, min+arg_min, max+arg_max *******/
 
-  inline float max(const float_A16* data, const size_t nData)
+  inline float max(const float_A16* data, const size_t nData) noexcept
   {
     float max_val=MIN_FLOAT;
     float cur_datum;
@@ -1610,7 +1610,7 @@ namespace Routines {
     return max_val;
   }
 
-  inline float min(const float_A16* data, const size_t nData)
+  inline float min(const float_A16* data, const size_t nData) noexcept
   {
     float min_val=MAX_FLOAT;
     float cur_datum;
@@ -1652,7 +1652,7 @@ namespace Routines {
     return min_val;
   }
 
-  inline void find_max_and_argmax(const float_A16* data, const size_t nData, float& max_val, size_t& arg_max)
+  inline void find_max_and_argmax(const float_A16* data, const size_t nData, float& max_val, size_t& arg_max) noexcept
   {
     max_val = MIN_FLOAT;
     arg_max = MAX_UINT;
@@ -1790,7 +1790,7 @@ namespace Routines {
 #endif
   }
 
-  inline void find_max_and_argmax(const double_A16* data, const size_t nData, double& max_val, size_t& arg_max)
+  inline void find_max_and_argmax(const double_A16* data, const size_t nData, double& max_val, size_t& arg_max) noexcept
   {
     max_val = MIN_DOUBLE;
     arg_max = MAX_UINT;
@@ -1940,7 +1940,7 @@ namespace Routines {
 #endif
   }
 
-  inline void find_min_and_argmin(const float_A16* data, const size_t nData, float& min_val, size_t& arg_min)
+  inline void find_min_and_argmin(const float_A16* data, const size_t nData, float& min_val, size_t& arg_min) noexcept
   {
     min_val = MAX_FLOAT;
     arg_min = MAX_UINT;
@@ -2085,7 +2085,7 @@ namespace Routines {
 #endif
   }
 
-  inline void find_min_and_argmin(const double_A16* data, const size_t nData, double& min_val, size_t& arg_min)
+  inline void find_min_and_argmin(const double_A16* data, const size_t nData, double& min_val, size_t& arg_min) noexcept
   {
     min_val = MAX_DOUBLE;
     arg_min = MAX_UINT;
@@ -2235,7 +2235,7 @@ namespace Routines {
 
   /******************** array mul *********************/
 
-  inline void mul_array(float_A16* data, const size_t nData, const float constant)
+  inline void mul_array(float_A16* data, const size_t nData, const float constant) noexcept
   {
     assertAligned16(data);
 
@@ -2292,7 +2292,7 @@ namespace Routines {
 #endif
   }
 
-  inline void mul_array(double_A16* data, const size_t nData, const double constant)
+  inline void mul_array(double_A16* data, const size_t nData, const double constant) noexcept
   {
     size_t i = 0;
 #if !defined(USE_SSE) || USE_SSE < 2
@@ -2351,7 +2351,7 @@ namespace Routines {
   //performs data[i] -= factor*data2[i] for each i
   //this is a frequent operation in the conjugate gradient algorithm
   inline void array_subtract_multiple(double_A16* attr_restrict data, const size_t nData, double factor,
-                                      const double_A16* attr_restrict data2)
+                                      const double_A16* attr_restrict data2) noexcept
   {
     assertAligned16(data);
 
@@ -2417,14 +2417,14 @@ namespace Routines {
   }
 
   inline void array_add_multiple(double_A16* attr_restrict data, const size_t nData, double factor,
-                                 const double_A16* attr_restrict data2)
+                                 const double_A16* attr_restrict data2) noexcept
   {
     array_subtract_multiple(data, nData, -factor, data2);
   }
 
   //NOTE: despite attr_restrict, you can safely pass the same for dest and src1 or src2
   inline void go_in_neg_direction(double_A16* attr_restrict dest, const size_t nData, const double_A16* attr_restrict src1,
-                                  const double_A16* attr_restrict src2, double alpha)
+                                  const double_A16* attr_restrict src2, double alpha) noexcept
   {
     assertAligned16(dest);
 
@@ -2482,7 +2482,7 @@ namespace Routines {
 
   //NOTE: despite attr_restrict, you can safely pass the same for dest and src1 or src2
   inline void assign_weighted_combination(double_A16* attr_restrict dest, const size_t nData, double w1, const double_A16* attr_restrict src1,
-                                          double w2, const double_A16* attr_restrict src2)
+                                          double w2, const double_A16* attr_restrict src2) noexcept
   {
     size_t i = 0;
 #if !defined(USE_SSE) || USE_SSE < 5
@@ -2534,13 +2534,13 @@ namespace Routines {
   /***************** dot product  *****************/  
   
   template<typename T>
-  inline T dotprod(const T* data1, const T* data2, const size_t size) 
+  inline T dotprod(const T* data1, const T* data2, const size_t size) noexcept
   {
     return std::inner_product(data1, data1+size, data2, (T) 0);
   }
 
   template<>
-  inline double dotprod(const double* data1, const double* data2, const size_t size) 
+  inline double dotprod(const double* data1, const double* data2, const size_t size) noexcept
   {
 #if !defined(USE_SSE) || USE_SSE < 5          
     return std::inner_product((double_A16*) data1, (double_A16*) data1+size, data2, 0.0);
@@ -2580,7 +2580,7 @@ namespace Routines {
 
   //binary search, returns MAX_UINT if key is not found, otherwise the position in the vector
   template<typename T>
-  inline size_t binsearch(const T* data, const T key, const size_t nData)
+  inline size_t binsearch(const T* data, const T key, const size_t nData) noexcept
   {
     if (nData == 0 || key < data[0] || key > data[nData-1])
       return MAX_UINT;
@@ -2610,7 +2610,7 @@ namespace Routines {
   }
 
   template<typename T>
-  inline size_t binsearch_insertpos(const T* data, const T key, const size_t nData)
+  inline size_t binsearch_insertpos(const T* data, const T key, const size_t nData) noexcept
   {
     if (nData == 0 || key <= data[0])
       return 0;

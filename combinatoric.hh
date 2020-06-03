@@ -8,38 +8,38 @@
 #include "vector.hh"
 #include <vector>
 
-uint fac(uint n);
+uint fac(uint n) noexcept;
 
-long double ldfac(uint n);
+long double ldfac(uint n) noexcept;
 
-uint choose(uint n, uint k);
+uint choose(uint n, uint k) noexcept;
 
-long double ldchoose(uint n, uint k);
+long double ldchoose(uint n, uint k) noexcept;
 
-long double ldchoose(uint n, uint k, const Math1D::Vector<long double>& ld_fac);
+long double ldchoose(uint n, uint k, const Math1D::Vector<long double>& ld_fac) noexcept;
 
 //NOTE: C++-17 provides std::gcd in <numeric>
 
 // greatest common divisor via the Euclidean algorithm
-uint gcd(uint n1, uint n2);
+uint gcd(uint n1, uint n2) noexcept;
 
 // greatest common divisor via the Euclidean algorithm
-inline UInt64 gcd64(UInt64 n1, UInt64 n2);
+inline UInt64 gcd64(UInt64 n1, UInt64 n2) noexcept;
 
 //returns if n is a prime number (0,1,2,3 all count as prime)
 template<typename T>
-bool is_prime(const T n);
+bool is_prime(const T n) noexcept;
 
 //returns 1 for primes
 template<typename T>
-T lowest_divisor(const T n);
+T lowest_divisor(const T n) noexcept;
 
 template<typename T>
-void get_prime_divisors(T n, std::vector<T>& divisors);
+void get_prime_divisors(T n, std::vector<T>& divisors) noexcept;
 
 /**** implementation ****/
 
-inline UInt64 gcd64(UInt64 n1, UInt64 n2)
+inline UInt64 gcd64(UInt64 n1, UInt64 n2) noexcept
 {
   if (n1 < n2)
     std::swap(n1,n2);
@@ -53,7 +53,7 @@ inline UInt64 gcd64(UInt64 n1, UInt64 n2)
   return n1;
 }
 
-inline UInt64 gcd_mixed_128_64(UInt64 n1_high, UInt64 n1_low, UInt64 n2)
+inline UInt64 gcd_mixed_128_64(UInt64 n1_high, UInt64 n1_low, UInt64 n2) noexcept
 {
   assert(n1_high > 0);
 
@@ -81,7 +81,7 @@ inline UInt64 gcd_mixed_128_64(UInt64 n1_high, UInt64 n1_low, UInt64 n2)
 
 //returns if n is a prime number (0,1,2,3 all count as prime)
 template<typename T>
-bool is_prime(const T n)
+bool is_prime(const T n) noexcept
 {
   static_assert(std::is_unsigned<T>::value, "not unsigned");
   
@@ -101,7 +101,7 @@ bool is_prime(const T n)
 
 //returns 1 for primes
 template<typename T>
-T lowest_divisor(const T n) 
+T lowest_divisor(const T n) noexcept
 {
   static_assert(std::is_unsigned<T>::value, "not unsigned");
   
@@ -120,7 +120,7 @@ T lowest_divisor(const T n)
 }
 
 template<typename T>
-void get_prime_divisors(T n, std::vector<T>& divisors) 
+void get_prime_divisors(T n, std::vector<T>& divisors) noexcept
 {
   static_assert(std::is_unsigned<T>::value, "not unsigned");
 
