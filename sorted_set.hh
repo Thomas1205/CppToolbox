@@ -211,6 +211,8 @@ bool SortedSet<T>::replace(PassType out, PassType in) noexcept
 {
   assert(!contains(in));
 
+  //std::cerr << "replace " << out << " by " << in << std::endl;
+
 #if 0
   bool b = erase(out);
   insert(in);
@@ -225,10 +227,11 @@ bool SortedSet<T>::replace(PassType out, PassType in) noexcept
       while (npos > 0 && in < Base::data_[npos-1])
         npos--;
 
-      //TODO: call shift function - untested
-      //Routines::upshift_array(Base::data_.data(), npos, pos, 1);
-      for (size_t k = pos; k > npos; k--)
-        Base::data_[k] = Base::data_[k-1];
+      //std::cerr << "A. npos: " << npos << std::endl;
+
+      Routines::upshift_array(Base::data_.data(), npos, pos, 1);
+      //for (size_t k = pos; k > npos; k--)
+      //  Base::data_[k] = Base::data_[k-1];
       Base::data_[npos] = in;
     }
     else if (pos+1 < size && Base::data_[pos+1] < in) {
@@ -236,10 +239,11 @@ bool SortedSet<T>::replace(PassType out, PassType in) noexcept
       while (npos+1 < size && Base::data_[npos+1] < in)
         npos++;
 
-      //TODO: call shift function -- untested
+      //std::cerr << "B. npos: " << npos << std::endl;
+
       Routines::downshift_array(Base::data_.data(), pos, 1, npos+1);      
-      for (size_t k = pos; k < npos; k++)
-        Base::data_[k] = Base::data_[k+1];
+      //for (size_t k = pos; k < npos; k++)
+      //  Base::data_[k] = Base::data_[k+1];
       Base::data_[npos] = in;
     }
     else
@@ -275,9 +279,9 @@ bool SortedSet<T>::move_replace(PassType out, T&& in) noexcept
       while (npos > 0 && in < Base::data_[npos-1])
         npos--;
 
-      //TODO: call shift function
-      for (size_t k = pos; k > npos; k--)
-        Base::data_[k] = Base::data_[k-1];
+      Routines::upshift_array(Base::data_.data(), npos, pos, 1);
+      //for (size_t k = pos; k > npos; k--)
+      //  Base::data_[k] = Base::data_[k-1];
       Base::data_[npos] = in;
     }
     else if (pos+1 < size && Base::data_[pos+1] < in) {
@@ -285,9 +289,9 @@ bool SortedSet<T>::move_replace(PassType out, T&& in) noexcept
       while (npos+1 < size && Base::data_[npos+1] < in)
         npos++;
 
-      //TODO: call shift function
-      for (size_t k = pos; k < npos; k++)
-        Base::data_[k] = Base::data_[k+1];
+      Routines::downshift_array(Base::data_.data(), pos, 1, npos+1);      
+      //for (size_t k = pos; k < npos; k++)
+      //  Base::data_[k] = Base::data_[k+1];
       Base::data_[npos] = in;
     }
     else
