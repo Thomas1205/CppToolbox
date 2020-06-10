@@ -1338,6 +1338,24 @@ namespace Routines {
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
     
+    for (; i + 8 <= nData; i += 8) {
+
+      const UInt64* t1 = (UInt64*) (data1 + i);
+      const UInt64* t2 = (UInt64*) (data2 + i);
+      
+      if ((*t1) != (*t2))
+        return false;
+    }    
+    
+    for (; i + 4 <= nData; i += 4) {
+
+      const uint* t1 = (uint*) (data1 + i);
+      const uint* t2 = (uint*) (data2 + i);
+      
+      if ((*t1) != (*t2))
+        return false;
+    }    
+        
     for (; i < nData; i++) {
       if (data1[i] != data2[i])
         return false;
@@ -1382,6 +1400,24 @@ namespace Routines {
         return false;
     }      
 
+    for (; i + 8 <= nData; i += 8) {
+
+      const UInt64* t1 = (UInt64*) (data1 + i);
+      const UInt64* t2 = (UInt64*) (data2 + i);
+      
+      if ((*t1) != (*t2))
+        return false;
+    }    
+
+    for (; i + 4 <= nData; i += 4) {
+
+      const uint* t1 = (uint*) (data1 + i);
+      const uint* t2 = (uint*) (data2 + i);
+      
+      if ((*t1) != (*t2))
+        return false;
+    }    
+
     for (; i < nData; i++) {
       if (data1[i] != data2[i])
         return false;
@@ -1395,6 +1431,24 @@ namespace Routines {
   {
     size_t i = 0;  
 #if !defined(USE_SSE) || USE_SSE < 5
+
+    for (; i + 4 <= nData; i += 4) {
+
+      const UInt64* t1 = (UInt64*) (data1 + i);
+      const UInt64* t2 = (UInt64*) (data2 + i);
+      
+      if ((*t1) != (*t2))
+        return false;
+    }    
+
+    for (; i + 2 <= nData; i += 2) {
+
+      const uint* t1 = (uint*) (data1 + i);
+      const uint* t2 = (uint*) (data2 + i);
+      
+      if ((*t1) != (*t2))
+        return false;
+    }    
     
     for (; i < nData; i++) {
       if (data1[i] != data2[i])
@@ -1439,6 +1493,24 @@ namespace Routines {
       if (found != 0)
         return false;
     }      
+
+    for (; i + 4 <= nData; i += 4) {
+
+      const UInt64* t1 = (UInt64*) (data1 + i);
+      const UInt64* t2 = (UInt64*) (data2 + i);
+      
+      if ((*t1) != (*t2))
+        return false;
+    }    
+
+    for (; i + 2 <= nData; i += 2) {
+
+      const uint* t1 = (uint*) (data1 + i);
+      const uint* t2 = (uint*) (data2 + i);
+      
+      if ((*t1) != (*t2))
+        return false;
+    }    
 
     for (; i < nData; i++) {
       if (data1[i] != data2[i])

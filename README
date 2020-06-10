@@ -7,23 +7,27 @@ SIMPLE TYPES
 
 - some basic typedefs and macros (makros.hh)
 
-- a class for computations with rational numbers (rational.*), based on 64 bit integers for both numerator and denominator), 
-  with a check for overflow (on a 64 bit operating system and if x86-AT&T assembler is supported).
+- a class for computations with rational numbers (rational.*), based on 64 bit integers for both numerator and denominator), with a check for overflow 
+  (on a 64 bit operating system and if x86-AT&T assembler is supported).
 
 DATA CLASSES
 
 - template classes for 1, 2 and 3-dimensional containers, optionally with bound checks and object names stored as strings. 
   Plus container classes for a variable dimension size and for symmetric matrices.
 
-- template classes for matrices, vectors and tensors, as an extension of the above containers. Includes saving matrices and tensors 
-  as PGMs or PPMs. Furthermore, a basic matrix inversion is provided (matrix_inversion.hh).
+- template classes for matrices, vectors and tensors, as an extension of the above containers. Includes saving matrices and tensors as PGMs or PPMs. 
+  Furthermore, a basic matrix inversion (matrix_inversion.hh) and the calculation of matrix determinants (matrix_determinant.hh) are provided. 
 
 - template classes for gray-level and color images including loading PGMs and PPMs (extensions of the above mathematical objects). 
 
 - a generic application class to ease the parsing of command line arguments. This includes the specification of mandatory parameters 
   as well as default values. Filenames are checked for existence.
 
-- sets in three variants: based on array trees, based on sorted arrays and based on unsorted arrays.
+- sets in three variants: based on array trees, based on sorted arrays and based on unsorted arrays (with an extra variant exploiting sort when present).
+
+- maps with plain keys: as sorted arrays and as unsorted arrays (with an extra variant exploiting sort when present).
+
+- maps with hashing: as sorted hash arrays and as unsorted hash arrays (with an extra variant exploiting sort when present).
 
 BASIC ROUTINES
 

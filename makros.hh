@@ -656,7 +656,7 @@ namespace Makros {
   template<typename T1, typename T2>
   class first_lower {
   public:
-    bool operator()(const std::pair<T1,T2>& p1, const std::pair<T1,T2>& p2) noexcept
+    inline bool operator()(const std::pair<T1,T2>& p1, const std::pair<T1,T2>& p2) const noexcept
     {
       return (p1.first < p2.first);
     }
@@ -665,7 +665,7 @@ namespace Makros {
   template<typename T1, typename T2>
   class first_higher {
   public:
-    bool operator()(const std::pair<T1,T2>& p1, const std::pair<T1,T2>& p2) noexcept
+    inline bool operator()(const std::pair<T1,T2>& p1, const std::pair<T1,T2>& p2) const noexcept
     {
       return (p1.first > p2.first);
     }

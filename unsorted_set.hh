@@ -24,23 +24,14 @@ template<>
 inline bool set_contains(const std::vector<uint>& vec, const uint val) noexcept;
 
 template<typename T>
-class UnsortedSet {
-public:	
-  
-  using PassType = typename std::conditional<std::is_fundamental<T>::value || std::is_pointer<T>::value, const T, const T&>::type;
-  
-  UnsortedSet() {}
+class SetBase {
+public:
 
-  UnsortedSet(const UnsortedSet<T>& toCopy);
+  SetBase() {}
 
-  UnsortedSet(UnsortedSet<T>&& toTake);
+  SetBase(const SetBase<T>& toCopy) { data_ = toCopy.data_; }
 
-  UnsortedSet(const std::initializer_list<T>& init);
-
-  void swap(UnsortedSet<T>& other) noexcept
-  {
-    data_.swap(other.data_);
-  }
+  SetBase(SetBase<T>&& toTake) { data_ = std::move(toTake.data_); }
 
   size_t size() const noexcept
   {
@@ -57,20 +48,45 @@ public:
     data_.reserve(size);
   }
 
-  void clear() noexcept
+  void clear() noexcept 
   {
     data_.clear();
   }
 
+protected:
+
+  std::vector<T> data_;
+};
+
+template<typename T>
+class UnsortedSet : public SetBase<T> {
+public:	
+  
+  using Base = SetBase<T>;
+  using PassType = typename std::conditional<std::is_fundamental<T>::value || std::is_pointer<T>::value, const T, const T&>::type;
+  
+  UnsortedSet() {}
+
+  UnsortedSet(const UnsortedSet<T>& toCopy) : SetBase<T>(toCopy) {}
+
+  UnsortedSet(UnsortedSet<T>&& toTake) : SetBase<T>(toTake) {}
+
+  UnsortedSet(const std::initializer_list<T>& init);
+
+  void swap(UnsortedSet<T>& other) noexcept
+  {
+    Base::data_.swap(other.data_);
+  }
+
   const std::vector<T>& unsorted_data() const noexcept
   {
-    return data_;
+    return Base::data_;
   }
 
   //const qualifier doesn't make sense here - not returning a reference
   const std::vector<T> sorted_data() const noexcept
   {
-    std::vector<T> result = data_;
+    std::vector<T> result = Base::data_;
     USET_SORT_ALG(result.data(), result.size());
     assert(is_unique_sorted(result.data(), result.size()));
     
@@ -79,7 +95,7 @@ public:
 
   void get_sorted_data(Storage1D<T>& target) const noexcept
   {
-    assign(target, data_);
+    assign(target, Base::data_);
     USET_SORT_ALG(target.direct_access(), target.size());    
   }
 
@@ -115,10 +131,6 @@ public:
 
   //returns true if out was in the tree
   bool move_replace(PassType out, T&& in) noexcept;
-
-protected:
-
-  std::vector<T> data_;
 };
 
 template<typename T>
@@ -127,66 +139,54 @@ std::ostream& operator<<(std::ostream& os, const UnsortedSet<T>& set);
 /********************/
 
 template<typename T>
-class UnsortedSetExploitSort {
+class UnsortedSetExploitSort : public SetBase<T>  {
 public:	
 
+  using Base = SetBase<T>;
   using PassType = typename std::conditional<std::is_fundamental<T>::value || std::is_pointer<T>::value, const T, const T&>::type;
 
   UnsortedSetExploitSort() {}
 
-  UnsortedSetExploitSort(const UnsortedSetExploitSort<T>& toCopy);
+  UnsortedSetExploitSort(const UnsortedSetExploitSort<T>& toCopy) : SetBase<T>(toCopy), is_sorted_(toCopy.is_sorted_) {}
 
-  UnsortedSetExploitSort(UnsortedSetExploitSort<T>&& toTake);
+  UnsortedSetExploitSort(UnsortedSetExploitSort<T>&& toTake) : SetBase<T>(toTake), is_sorted_(toTake.is_sorted_) {}
 
   UnsortedSetExploitSort(const std::initializer_list<T>& init);
 
   void swap(UnsortedSetExploitSort<T>& other) noexcept
   {
-    data_.swap(other.data_);
+    Base::data_.swap(other.data_);
     std::swap(is_sorted_, other.is_sorted_);
-  }
-
-  size_t size() const noexcept
-  {
-    return data_.size();
-  }
-
-  size_t capacity() const noexcept
-  {
-    return data_.capacity();
-  }
-
-  void reserve(size_t size) noexcept
-  {
-    data_.reserve(size);
   }
 
   void clear() noexcept
   {
-    data_.clear();
+    Base::data_.clear();
+    is_sorted_ = true;
   }
 
   const std::vector<T>& unsorted_data() const noexcept
   {
-    return data_;
+    return Base::data_;
   }
 
   const std::vector<T>& sorted_data() noexcept
   {
     if (!is_sorted_) {
-      USET_SORT_ALG(data_.data(), data_.size());
+      USET_SORT_ALG(Base::data_.data(), Base::data_.size());
       //std::cerr << "result: " << result << std::endl;
-      assert(is_unique_sorted(data_.data(), data_.size()));
+      assert(is_unique_sorted(Base::data_.data(), Base::data_.size()));
       is_sorted_ = true;
     }
     
-    return data_;
+    return Base::data_;
   }
 
   void get_sorted_data(Storage1D<T>& target) const noexcept
   {
-    assign(target, data_);
-    USET_SORT_ALG(target.direct_access(), target.size());    
+    assign(target, Base::data_);
+    if (!is_sorted_)
+      USET_SORT_ALG(target.direct_access(), target.size());    
   }
 
   bool contains(PassType val) const noexcept;
@@ -218,7 +218,6 @@ public:
 
 protected:
 
-  std::vector<T> data_;
   bool is_sorted_ = true;
 };
 
@@ -270,21 +269,9 @@ inline bool set_contains(const std::vector<uint>& vec, const uint val) noexcept
 /********************** implementation of UnsortedSet ************************/
 
 template<typename T>
-UnsortedSet<T>::UnsortedSet(const UnsortedSet<T>& toCopy) 
-{
-  data_ = toCopy.data_;
-}
-
-template<typename T>
-UnsortedSet<T>::UnsortedSet(UnsortedSet<T>&& toCopy) 
-{
-  data_ = toCopy.data_;
-}
-
-template<typename T>
 UnsortedSet<T>::UnsortedSet(const std::initializer_list<T>& init)
 {
-  data_.reserve(init.size());
+  Base::data_.reserve(init.size());
   for (typename std::initializer_list<T>::const_iterator it = init.begin(); it != init.end(); it++)
     insert(*it);
 }
@@ -292,20 +279,17 @@ UnsortedSet<T>::UnsortedSet(const std::initializer_list<T>& init)
 template<typename T>
 bool UnsortedSet<T>::contains(PassType val) const noexcept
 {
-  //return (set_find(data_, val) != data_.end());
-  return set_contains(data_, val);
+  return set_contains(Base::data_, val);
 }
 
 //returns true if val is new
 template<typename T>
 bool UnsortedSet<T>::insert(PassType val) noexcept
 {
-  //if (set_find(data_, val) != data_.end())
-  //  return false;
-  if (set_contains(data_, val))
+  if (set_contains(Base::data_, val))
     return false;
 
-  data_.push_back(val);
+  Base::data_.push_back(val);
   return true;
 }
 
@@ -313,12 +297,10 @@ bool UnsortedSet<T>::insert(PassType val) noexcept
 template<typename T>
 bool UnsortedSet<T>::move_insert(T&& val) noexcept
 {
-  //if (set_find(data_, val) != data_.end())
-  //  return false;
-  if (set_contains(data_, val))
+  if (set_contains(Base::data_, val))
     return false;
 
-  data_.push_back(val);
+  Base::data_.push_back(val);
   return true;
 }
 
@@ -326,27 +308,27 @@ template<typename T>
 void UnsortedSet<T>::insert_new(PassType val) noexcept
 {
   assert(!contains(val));
-  data_.push_back(val);
+  Base::data_.push_back(val);
 }
 
 template<typename T>
 void UnsortedSet<T>::move_insert_new(T&& val) noexcept
 {
   assert(!contains(val));
-  data_.push_back(val);
+  Base::data_.push_back(val);
 }
 
 //returns true if val was in the tree
 template<typename T>
 bool UnsortedSet<T>::erase(PassType val) noexcept
 {
-  const typename std::vector<T>::const_iterator it = set_find(data_, val);
-  if (it == data_.end())
+  const typename std::vector<T>::const_iterator it = set_find(Base::data_, val);
+  if (it == Base::data_.end())
     return false;
 
-  size_t pos = it - data_.begin();
-  data_[pos] = data_.back();
-  data_.resize(data_.size()-1);
+  size_t pos = it - Base::data_.begin();
+  Base::data_[pos] = Base::data_.back();
+  Base::data_.resize(Base::data_.size()-1);
   return true;
 }
 
@@ -356,13 +338,13 @@ bool UnsortedSet<T>::replace(PassType out, PassType in) noexcept
 {
   assert(!contains(in));
 	
-  typename std::vector<T>::const_iterator it = set_find(data_, out);
-  if (it == data_.end()) {
-    data_.push_back(in);
+  typename std::vector<T>::const_iterator it = set_find(Base::data_, out);
+  if (it == Base::data_.end()) {
+    Base::data_.push_back(in);
     return false;
   }
   
-  data_[it - data_.begin()] = in;
+  Base::data_[it - Base::data_.begin()] = in;
   return true;
 }
 
@@ -372,13 +354,13 @@ bool UnsortedSet<T>::move_replace(PassType out, T&& in) noexcept
 {
   assert(!contains(in));
 	
-  typename std::vector<T>::const_iterator it = set_find(data_, out);
-  if (it == data_.end()) {
-    data_.push_back(in);
+  typename std::vector<T>::const_iterator it = set_find(Base::data_, out);
+  if (it == Base::data_.end()) {
+    Base::data_.push_back(in);
     return false;
   }
   
-  data_[it - data_.begin()] = in;
+  Base::data_[it - Base::data_.begin()] = in;
   return true;
 }
 
@@ -402,23 +384,9 @@ std::ostream& operator<<(std::ostream& os, const UnsortedSet<T>& set)
 /********************** implementation of UnsortedSetExploitSort ************************/
 
 template<typename T>
-UnsortedSetExploitSort<T>::UnsortedSetExploitSort(const UnsortedSetExploitSort<T>& toCopy)
-{
-  data_ = toCopy.data_;
-  is_sorted_ = toCopy.is_sorted_;
-}
-
-template<typename T>
-UnsortedSetExploitSort<T>::UnsortedSetExploitSort(UnsortedSetExploitSort<T>&& toTake)
-{
-  data_ = toTake.data_;
-  is_sorted_ = toTake.is_sorted_;
-}
-
-template<typename T>
 UnsortedSetExploitSort<T>::UnsortedSetExploitSort(const std::initializer_list<T>& init)
 {
-  data_.reserve(init.size());
+  Base::data_.reserve(init.size());
   for (typename std::initializer_list<T>::const_iterator it = init.begin(); it != init.end(); it++)
     insert(*it);  
 }
@@ -428,29 +396,29 @@ bool UnsortedSetExploitSort<T>::contains(PassType val) const noexcept
 {
   if (!is_sorted_) {
     //return (set_find(data_, val) != data_.end());
-    return set_contains(data_, val);
+    return set_contains(Base::data_, val);
   }
   else 
-    return (Routines::binsearch(data_.data(), val, data_.size()) != MAX_UINT);
+    return (Routines::binsearch(Base::data_.data(), val, Base::data_.size()) != MAX_UINT);
 }
 
 //returns true if val is new
 template<typename T>
 bool UnsortedSetExploitSort<T>::insert(PassType val) noexcept
 {
-  const size_t size = data_.size();
+  const size_t size = Base::data_.size();
   bool is_new = false;
   if (!is_sorted_) {
     //is_new = (set_find(data_, val) != data_.end());
-    is_new = !set_contains(data_, val);
+    is_new = !set_contains(Base::data_, val);
   }
   else 
-    is_new = (Routines::binsearch(data_.data(), val, size) != MAX_UINT);
+    is_new = (Routines::binsearch(Base::data_.data(), val, size) != MAX_UINT);
   
   if (!is_new) {
-    if (is_sorted_ && size > 0 && val < data_.back())
+    if (is_sorted_ && size > 0 && val < Base::data_.back())
       is_sorted_ = false;
-    data_.push_back(val);
+    Base::data_.push_back(val);
   }
   return is_new;
 }
@@ -459,19 +427,18 @@ bool UnsortedSetExploitSort<T>::insert(PassType val) noexcept
 template<typename T>
 bool UnsortedSetExploitSort<T>::move_insert(T&& val) noexcept
 {
-  const size_t size = data_.size();
+  const size_t size = Base::data_.size();
   bool is_new = false;
   if (!is_sorted_) {
-    //is_new = (set_find(data_, val) != data_.end());
-    is_new = !set_contains(data_, val);
+    is_new = !set_contains(Base::data_, val);
   }
   else 
-    is_new = (Routines::binsearch(data_.data(), val, size) != MAX_UINT);
+    is_new = (Routines::binsearch(Base::data_.data(), val, size) != MAX_UINT);
   
   if (!is_new) {
-    if (is_sorted_ && size > 0 && val < data_.back())
+    if (is_sorted_ && size > 0 && val < Base::data_.back())
       is_sorted_ = false;
-    data_.push_back(val);
+    Base::data_.push_back(val);
   }
   return is_new;
 }
@@ -481,10 +448,10 @@ void UnsortedSetExploitSort<T>::insert_new(PassType val) noexcept
 {
   assert(!contains(val));
   if (is_sorted_) {
-    if (data_.size() > 0 && val < data_.back())
+    if (Base::data_.size() > 0 && val < Base::data_.back())
       is_sorted_ = false;
   }
-  data_.push_back(val);  
+  Base::data_.push_back(val);  
 }
 
 template<typename T>
@@ -492,10 +459,10 @@ void UnsortedSetExploitSort<T>::move_insert_new(T&& val) noexcept
 {
   assert(!contains(val));
   if (is_sorted_) {
-    if (data_.size() > 0 && val < data_.back())
+    if (Base::data_.size() > 0 && val < Base::data_.back())
       is_sorted_ = false;
   }
-  data_.push_back(val);  
+  Base::data_.push_back(val);  
 }
 
 //for compatibility with the other sets (use in templates etc.)
@@ -503,7 +470,7 @@ template<typename T>
 inline void UnsortedSetExploitSort<T>::insert_largest(PassType val) noexcept
 {
   assert(!contains(val));
-  data_.push_back(val);  
+  Base::data_.push_back(val);  
 }
 
 //for compatibility with the other sets (use in templates etc.)
@@ -511,32 +478,34 @@ template<typename T>
 inline void UnsortedSetExploitSort<T>::move_insert_largest(T&& val) noexcept
 {
   assert(!contains(val));
-  data_.push_back(val);  
+  Base::data_.push_back(val);  
 }
 
 //returns true if val was in the tree
 template<typename T>
 bool UnsortedSetExploitSort<T>::erase(PassType val) noexcept
 {
-  const size_t size = data_.size();
+  const size_t size = Base::data_.size();
   size_t pos = 0;
   if (!is_sorted_) {
-    const typename std::vector<T>::const_iterator it = set_find(data_, val);
-    if (it == data_.end())
+    const typename std::vector<T>::const_iterator it = set_find(Base::data_, val);
+    if (it == Base::data_.end())
       return false;
-    pos = it - data_.begin();
+    pos = it - Base::data_.begin();
   }
   else {
-    pos = Routines::binsearch(data_.data(), val, data_.size());
+    pos = Routines::binsearch(Base::data_.data(), val, Base::data_.size());
     if (pos == MAX_UINT)
       return false;
   }
   
   if (pos != size - 1) {
-    data_[pos] = data_.back();
+    Base::data_[pos] = Base::data_.back();
     is_sorted_ = false;
   }
-  data_.resize(size-1);
+  if (size <= 2)
+    is_sorted_ = true;
+  Base::data_.resize(size-1);
   return true;  
 }
 
@@ -546,28 +515,28 @@ bool UnsortedSetExploitSort<T>::replace(PassType out, PassType in) noexcept
 {
   assert(!contains(in));
 
-  const size_t size = data_.size();
+  const size_t size = Base::data_.size();
   size_t pos = 0;
   if (!is_sorted_) {
-    const typename std::vector<T>::const_iterator it = set_find(data_, out);
-    if (it == data_.end())
+    const typename std::vector<T>::const_iterator it = set_find(Base::data_, out);
+    if (it == Base::data_.end())
       pos = MAX_UINT;
     else
-      pos = it - data_.begin();
+      pos = it - Base::data_.begin();
   }
   else {
-    pos = Routines::binsearch(data_.data(), out, size);
+    pos = Routines::binsearch(Base::data_.data(), out, size);
   }
     
   if (pos == MAX_UINT) {
-    if (is_sorted_ && size > 0 && in < data_.back())
+    if (is_sorted_ && size > 0 && in < Base::data_.back())
       is_sorted_ = false;
-    data_.push_back(in);
+    Base::data_.push_back(in);
     return false;
   }
   
   is_sorted_ = false;
-  data_[pos] = in;
+  Base::data_[pos] = in;
   return true;
 }
 
@@ -577,35 +546,36 @@ bool UnsortedSetExploitSort<T>::move_replace(PassType out, T&& in) noexcept
 {
   assert(!contains(in));
 
-  const size_t size = data_.size();
+  const size_t size = Base::data_.size();
   size_t pos = 0;
   if (!is_sorted_) {
-    const typename std::vector<T>::const_iterator it = set_find(data_, out);
-    if (it == data_.end())
+    const typename std::vector<T>::const_iterator it = set_find(Base::data_, out);
+    if (it == Base::data_.end())
       pos = MAX_UINT;
     else
-      pos = it - data_.begin();
+      pos = it - Base::data_.begin();
   }
   else {
-    pos = Routines::binsearch(data_.data(), out, size);
+    pos = Routines::binsearch(Base::data_.data(), out, size);
   }
     
   if (pos == MAX_UINT) {
-    if (is_sorted_ && size > 0 && in < data_.back())
+    if (is_sorted_ && size > 0 && in < Base::data_.back())
       is_sorted_ = false;
-    data_.push_back(in);
+    Base::data_.push_back(in);
     return false;
   }
   
   is_sorted_ = false;
-  data_[pos] = in;
+  Base::data_[pos] = in;
   return true;
 }
 
 template<typename T>
 std::ostream& operator<<(std::ostream& os, const UnsortedSetExploitSort<T>& set)
 {
-  const std::vector<T>& data = set.sorted_data();
+  std::vector<T> data;
+  get_sorted_data(data);
   const size_t size = data.size();
 
   os << "{ ";

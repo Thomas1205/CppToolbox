@@ -7,16 +7,18 @@ In contrast, moving to C++-14 or C++-17 will not give a major jump (as far as I 
 - moved to C++-11:
   - made some template specializations obsolete by using constexpr
   - included move constructors and operator=
-- some more SIMD routines, including contains and equals and reverse for bytes
+- some more SIMD routines, including contains, equals and reverse for bytes
 - matrix determinant
 - made prime test etc. a template, added getting the prime divisors of an unsigned integer
 - extended and improved the various sets
+- corrected and improved sorting
+- added maps: with plain keys and with hashing
 
 /***** changes for version 1.15 (February 17 2020) ******/
 
 - TreeSet: efficient search trees based on arrays. Functionality can be extended. No plans for a TreeMap so far.
-- SortedSet: must faster than TreeSet in practice, and simpler. No plans for a SortedMap so far.
-- UnsortedSet: roughly as efficient as SortedSet, even simpler. No plans for an UnsortedMap so far.
+- SortedSet: must faster than TreeSet in practice, and simpler. 
+- UnsortedSet: roughly as efficient as SortedSet, even simpler. 
 - UnsortedSetExploitSort
 - many new basic routines (routines.hh, some moved from macros.hh), most of them with SIMD implementation. Includes reverse and find.
 - corrected and extended rational numbers, plus improved efficiency and cases that can be handled inside precision.
