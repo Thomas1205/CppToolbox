@@ -93,6 +93,8 @@ void index_quick_sort(const T* data, ST* indices, const ST nData) noexcept;
 template<typename T>
 bool is_sorted(const T* data, const size_t nData) noexcept
 {
+  //can we use AVX comparisons here for uint, int, float and double? 
+  
   for (size_t i=1; i < nData; i++) {
     if (data[i] < data[i-1])
       return false;
@@ -263,6 +265,10 @@ inline void shift_bubble_sort_withmoves(T* data, const size_t nData) noexcept
 template<typename T>
 void merge_sort(T* data, const size_t nData) noexcept
 {  
+  //merge sort is meant for large arrays => check this for speed
+  if (is_sorted(data, nData))
+    return;
+
   if (nData <= MERGE_THRESH) 
     bubble_sort(data, nData);
   else {
@@ -472,6 +478,10 @@ inline void shift_bubble_sort_key_value_keymoves(T1* key, T2* value, const size_
 template<typename T1, typename T2>
 inline void merge_sort_key_value(T1* key, T2* value, const size_t nData) noexcept
 {
+  //merge sort is meant for large arrays => check this for speed
+  if (is_sorted(key, nData))
+    return;
+  
   if (nData <= MERGE_THRESH)
     bubble_sort_key_value(key, value, nData);
   else {
@@ -632,8 +642,12 @@ void aux_index_merge_sort(const T* data, ST* indices, const ST nData) noexcept
   //     }
   //   }
   // }
-  if (nData <= MERGE_THRESH) {
 
+  //merge sort is meant for large arrays => check this for speed
+  if (is_sorted(data, nData))
+    return;
+
+  if (nData <= MERGE_THRESH) {
     aux_index_quick_sort(data,indices,nData);
   }
   else {
@@ -724,7 +738,12 @@ void aux_index_merge_sort_4split(const T* data, ST* indices, const ST nData) noe
     uint nData1to3 = nData/4;
     uint nData4 = nData-3*nData1to3;
 
+    const ST k_limit[4] = {nData1to3,nData1to3,nData1to3,nData4};
+
     //TODO: use unified_move_assign and a single array
+    //ST* aux_indices = new ST[nData];
+    //Makros::unified_move_assign(aux_indices, indices, nData);
+    //Storage1D<ST*> data[4] = {aux_indices,aux_indices+nData1to3,aux_indices+2*nData1to3,aux_indices3*nData1to3};
 
     Storage1D<ST> index[4];
 
@@ -748,9 +767,7 @@ void aux_index_merge_sort_4split(const T* data, ST* indices, const ST nData) noe
 
     aux_index_merge_sort(data,index[3].direct_access(),nData4);
 
-
     ST k_idx[4] = {0,0,0,0};
-    ST k_limit[4] = {nData1to3,nData1to3,nData1to3,nData4};
 
     uint k=0;
     while (k < nData) {

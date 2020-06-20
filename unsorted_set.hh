@@ -244,8 +244,9 @@ inline typename std::vector<T>::const_iterator set_find(const std::vector<T>& ve
 template<>
 inline std::vector<uint>::const_iterator set_find(const std::vector<uint>& vec, const uint val) noexcept 
 {
-  const uint pos = Routines::find_unique_uint(vec.data(), val, vec.size());
-  if (pos >= vec.size())
+  const size_t size = vec.size();
+  const uint pos = Routines::find_unique_uint(vec.data(), val, size);
+  if (pos >= size)
     return vec.end();
   else
     return (vec.begin() + pos);
@@ -405,7 +406,7 @@ bool UnsortedSetExploitSort<T>::contains(PassType val) const noexcept
 //returns true if val is new
 template<typename T>
 bool UnsortedSetExploitSort<T>::insert(PassType val) noexcept
-{
+{  
   const size_t size = Base::data_.size();
   bool is_new = false;
   if (!is_sorted_) {
@@ -413,9 +414,9 @@ bool UnsortedSetExploitSort<T>::insert(PassType val) noexcept
     is_new = !set_contains(Base::data_, val);
   }
   else 
-    is_new = (Routines::binsearch(Base::data_.data(), val, size) != MAX_UINT);
+    is_new = (Routines::binsearch(Base::data_.data(), val, size) >= size);
   
-  if (!is_new) {
+  if (is_new) {
     if (is_sorted_ && size > 0 && val < Base::data_.back())
       is_sorted_ = false;
     Base::data_.push_back(val);
@@ -435,7 +436,7 @@ bool UnsortedSetExploitSort<T>::move_insert(T&& val) noexcept
   else 
     is_new = (Routines::binsearch(Base::data_.data(), val, size) != MAX_UINT);
   
-  if (!is_new) {
+  if (is_new) {
     if (is_sorted_ && size > 0 && val < Base::data_.back())
       is_sorted_ = false;
     Base::data_.push_back(val);
@@ -495,7 +496,7 @@ bool UnsortedSetExploitSort<T>::erase(PassType val) noexcept
   }
   else {
     pos = Routines::binsearch(Base::data_.data(), val, Base::data_.size());
-    if (pos == MAX_UINT)
+    if (pos >= size)
       return false;
   }
   
@@ -528,7 +529,7 @@ bool UnsortedSetExploitSort<T>::replace(PassType out, PassType in) noexcept
     pos = Routines::binsearch(Base::data_.data(), out, size);
   }
     
-  if (pos == MAX_UINT) {
+  if (pos >= size) {
     if (is_sorted_ && size > 0 && in < Base::data_.back())
       is_sorted_ = false;
     Base::data_.push_back(in);
@@ -574,8 +575,9 @@ bool UnsortedSetExploitSort<T>::move_replace(PassType out, T&& in) noexcept
 template<typename T>
 std::ostream& operator<<(std::ostream& os, const UnsortedSetExploitSort<T>& set)
 {
-  std::vector<T> data;
-  get_sorted_data(data);
+  //output should not change the set state -> do it this way
+  std::vector<T> data = set.unsorted_data();
+  std::sort(data.begin(),data.end());
   const size_t size = data.size();
 
   os << "{ ";
