@@ -132,6 +132,7 @@ enum RegularityType {SquaredDiffReg,AbsDiffReg,TVReg};
 
 /**** helpful routines ****/
 
+
 namespace Makros {
 
   //making log, exp, pow and abs a template is convenient when you want to call the proper function inside your own template

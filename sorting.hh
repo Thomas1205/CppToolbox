@@ -9,49 +9,62 @@
 #define MERGE_THRESH 256
 #endif
 
-//#define USE_ROUTINES
+#define QUICK_THRESH 8
+
+static_assert(MERGE_THRESH >= 2);
+static_assert(QUICK_THRESH >= 2);
 
 #include "storage1D.hh"
 #include "routines.hh"
 
-#include <algorithm>
+//#include <cassert>
+#include <algorithm> //for std::sort
+#include <functional> //for std::less
 
 //c++-11 provides this in <algorithm>
-template<typename T>
-bool is_sorted(const T* data, const size_t nData) noexcept;
+template<typename T, typename CmpOp = std::less<T> >
+inline bool is_sorted(const T* data, const size_t nData) noexcept;
+
+template<typename T, typename CmpOp = std::less<T> >
+inline bool is_reverse_sorted(const T* data, const size_t nData) noexcept;
 
 template<typename T>
-bool is_reverse_sorted(const T* data, const size_t nData) noexcept;
+inline bool is_unique_sorted(const T* data, const size_t nData) noexcept;
 
 template<typename T>
-bool is_unique_sorted(const T* data, const size_t nData) noexcept;
+inline bool is_unique_reverse_sorted(const T* data, const size_t nData) noexcept;
 
-template<typename T>
-bool is_unique_reverse_sorted(const T* data, const size_t nData) noexcept;
+template<typename T, typename ST, typename CmpOp = std::less<T> >
+bool is_index_sorted(const T* data, ST* indices, const ST nData) noexcept;
 
 /***** plain sorting ****/
 
-template<typename T, typename Swap = SwapOp<T> >
+template<typename T, typename Swap = SwapOp<T>, typename CmpOp = std::less<T> >
 inline void bubble_sort(T* data, const size_t nData) noexcept;
 
-template<typename T, typename Swap = SwapOp<T> >
+template<typename T, typename Swap = SwapOp<T>, typename CmpOp = std::less<T> >
 inline void batch_bubble_sort(T* data, const size_t nData) noexcept;
 
-template<typename T, typename Swap = SwapOp<T> >
+template<typename T, typename Swap = SwapOp<T>, typename CmpOp = std::less<T> >
 inline void bubble_sort_prepro(T* data, const size_t nData) noexcept;
 
-template<typename T> //upshift can use c++ moves, no swap involved
+template<typename T, typename CmpOp = std::less<T> > //upshift can use c++ moves, no swap involved
 inline void shift_bubble_sort(T* data, const size_t nData) noexcept;
 
-template<typename T> //upshift can use c++ moves, no swap involved
+template<typename T, typename CmpOp = std::less<T> > //upshift can use c++ moves, no swap involved
 inline void shift_bubble_sort_withmoves(T* data, const size_t nData) noexcept;
 
-template<typename T>
+//recursive, won't be inline!
+template<typename T, typename Swap = SwapOp<T>, typename CmpOp = std::less<T> > //upshift can use c++ moves, no swap involved
+void quick_sort(T* data, const size_t nData) noexcept;
+
+//recursive, won't be inline!
+template<typename T, typename Swap = SwapOp<T>, typename CmpOp = std::less<T>>
 void merge_sort(T* data, const size_t nData) noexcept;
 
 //interface to std::sort
-template<typename T>
-void std_sort(T* data, const size_t nData) noexcept;
+template<typename T, typename CmpOp = std::less<T> >
+inline void std_sort(T* data, const size_t nData) noexcept;
 
 /***** key-value sort *****/
 
@@ -70,44 +83,51 @@ inline void shift_bubble_sort_key_value(T1* key, T2* value, const size_t nData) 
 template<typename T1, typename T2> //upshift can use c++ moves, no swap involved
 inline void shift_bubble_sort_key_value_keymoves(T1* key, T2* value, const size_t nData) noexcept;
 
-template<typename T1, typename T2>
-inline void merge_sort_key_value(T1* key, T2* value, const size_t nData) noexcept;
+//recursive, won't be inline!
+template<typename T1, typename T2, typename ValSwap = SwapOp<T2> >
+void merge_sort_key_value(T1* key, T2* value, const size_t nData) noexcept;
 
 /***** index sorting *****/
 
-template<typename T, typename ST>
+template<typename T, typename ST, typename CmpOp = std::less<T> >
 inline void index_bubble_sort(const T* data, ST* indices, ST nData) noexcept;
 
-template<typename T, typename ST>
+template<typename T, typename ST, typename CmpOp = std::less<T> >
 inline void index_batch_bubble_sort(const T* data, ST* indices, ST nData) noexcept;
 
-template<typename T, typename ST>
+//recursive, won't be inline!
+template<typename T, typename ST, typename CmpOp = std::less<T> >
 void index_merge_sort(const T* data, ST* indices, const ST nData) noexcept;
 
-template<typename T, typename ST>
+//recursive, won't be inline!
+template<typename T, typename ST, typename CmpOp = std::less<T> >
 void index_quick_sort(const T* data, ST* indices, const ST nData) noexcept;
 
 
 /************ implementation  *************/
 
-template<typename T>
-bool is_sorted(const T* data, const size_t nData) noexcept
+template<typename T, typename CmpOp>
+inline bool is_sorted(const T* data, const size_t nData) noexcept
 {
+  static CmpOp less;
+  
   //can we use AVX comparisons here for uint, int, float and double? 
   
   for (size_t i=1; i < nData; i++) {
-    if (data[i] < data[i-1])
+    if (less(data[i],data[i-1]))
       return false;
   }
 
   return true;
 }
 
-template<typename T>
-bool is_reverse_sorted(const T* data, const size_t nData) noexcept
+template<typename T, typename CmpOp>
+inline bool is_reverse_sorted(const T* data, const size_t nData) noexcept
 {
+  static CmpOp less;
+
   for (size_t i=1; i < nData; i++) {
-    if (data[i-1] < data[i])
+    if (less(data[i-1],data[i]))
       return false;
   }
 
@@ -116,7 +136,7 @@ bool is_reverse_sorted(const T* data, const size_t nData) noexcept
 
 template<typename T>
 bool is_unique_sorted(const T* data, const size_t nData) noexcept
-{
+{  
   for (size_t i=1; i < nData; i++) {
     if (data[i] <= data[i-1])
       return false;
@@ -126,7 +146,7 @@ bool is_unique_sorted(const T* data, const size_t nData) noexcept
 }
 
 template<typename T>
-bool is_unique_reverse_sorted(const T* data, const size_t nData) noexcept
+inline bool is_unique_reverse_sorted(const T* data, const size_t nData) noexcept
 {
   for (size_t i=1; i < nData; i++) {
     if (data[i-1] <= data[i])
@@ -138,10 +158,11 @@ bool is_unique_reverse_sorted(const T* data, const size_t nData) noexcept
 
 /**** plain ***/
 
-template<typename T, typename Swap>
+template<typename T, typename Swap, typename CmpOp>
 inline void bubble_sort(T* data, const size_t nData) noexcept
 {
   const static Swap swapobj;
+  const static CmpOp less;
   
   size_t last_flip = nData;
 
@@ -151,7 +172,7 @@ inline void bubble_sort(T* data, const size_t nData) noexcept
 
     for (size_t l=1; l < last_flip; l++) {
 
-      if (data[l] < data[l-1]) {
+      if (less(data[l],data[l-1])) {
         swapobj(data[l],data[l-1]);
         flip = l;
       }
@@ -161,9 +182,11 @@ inline void bubble_sort(T* data, const size_t nData) noexcept
   }
 }
 
-template<typename T, typename Swap>
+template<typename T, typename Swap, typename CmpOp>
 inline void batch_bubble_sort(T* data, const size_t nData) noexcept
 { 
+  const static CmpOp less;
+
   size_t last_flip = nData;
 
   while (last_flip > 1) {
@@ -178,14 +201,14 @@ inline void batch_bubble_sort(T* data, const size_t nData) noexcept
 
     for (size_t l=1; l < last_flip; l++) {
 
-      if (data[l] < data[l-1]) {
+      if (less(data[l],data[l-1])) {
 
         //std::cerr << "found pair at " << l << std::endl;
 
         size_t end = l+1;
         for (; end < last_flip; end++) {
 
-          if (!(data[end] < data[end-1]))
+          if (!(less(data[end],data[end-1])))
             break;
         }
 
@@ -209,29 +232,32 @@ inline void batch_bubble_sort(T* data, const size_t nData) noexcept
   }
 }
 
-template<typename T, typename Swap>
+template<typename T, typename Swap, typename CmpOp>
 inline void bubble_sort_prepro(T* data, const size_t nData) noexcept
 {
   const static Swap swapobj;
+  const static CmpOp less;
 
   const size_t thresh = 5;
 
   if (nData > thresh) {
     //try to ameliorate some bad cases
     for (uint i = nData-1; i >= thresh-1; i--) {
-      if ( data[i] < data[0] )
+      if ( less(data[i],data[0]) )
         swapobj(data[i],data[0]);
     }
   }
 }
 
-template<typename T> //upshift can use c++ moves, no swap involved
+template<typename T, typename CmpOp> //upshift can use c++ moves, no swap involved
 inline void shift_bubble_sort(T* data, const size_t nData) noexcept
 {
+  const static CmpOp less;
+  
   for (size_t l=1; l < nData; l++) {
     const T curdat = data[l];
     size_t inspos = l;
-    while (inspos > 0 && curdat < data[inspos-1])
+    while (inspos > 0 && less(curdat,data[inspos-1]))
       inspos--;
 
     if (inspos != l) {
@@ -243,13 +269,15 @@ inline void shift_bubble_sort(T* data, const size_t nData) noexcept
   }
 }
 
-template<typename T> //upshift can use c++ moves, no swap involved
+template<typename T, typename CmpOp> //upshift can use c++ moves, no swap involved
 inline void shift_bubble_sort_withmoves(T* data, const size_t nData) noexcept
 {
+  const static CmpOp less;
+  
   for (size_t l=1; l < nData; l++) {
     const T& curdat = data[l];
     size_t inspos = l;
-    while (inspos > 0 && curdat < data[inspos-1])
+    while (inspos > 0 && less(curdat,data[inspos-1]))
       inspos--;
 
     if (inspos != l) {
@@ -262,16 +290,76 @@ inline void shift_bubble_sort_withmoves(T* data, const size_t nData) noexcept
   }
 }
 
-template<typename T>
+//recursive, won't be inline!
+template<typename T, typename Swap, typename CmpOp> //upshift can use c++ moves, no swap involved
+void quick_sort(T* data, const size_t nData) noexcept
+{
+  const static Swap swapobj;
+  const static CmpOp less;
+
+  if (nData <= 1)
+    return;
+  if (nData == 2) {
+    if (data[1] < data[0])
+      swapobj(data[0],data[1]);
+  }
+  else if (nData <= QUICK_THRESH)
+    bubble_sort<T,Swap,CmpOp>(data,nData);
+  else {
+
+  //std::cerr << "quick_sort(" << nData << ")" << std::endl;
+
+    using KeyRefType = typename std::conditional<std::is_fundamental<T>::value || std::is_pointer<T>::value, const T, const T&>::type;
+
+    KeyRefType pivot = data[nData-1];
+
+    size_t i=0;
+    size_t j=nData-2; //not the perfect type (in view of ST)
+
+    while (true) {
+
+      while(i < int(nData-1) && !(less(pivot,data[i])) ) // data[i] <= pivot)
+        i++;
+
+      while(j > i && !(less(data[j],pivot)) ) // data[j] >= pivot)
+        j--;
+
+      if (i >= j)
+        break;
+
+      std::swap(data[i],data[j]);
+      i++;
+      j--;
+    }
+
+    if (i != nData-1)
+      swapobj(data[i],data[nData-1]);
+  
+    //recursive calls
+    if (i > 1) { //no need to sort a single entry
+      quick_sort<T,Swap,CmpOp>(data,i);
+    }
+    if (i < nData-2) {
+      quick_sort<T,Swap,CmpOp>(data+i+1,nData-i-1);
+    }
+  }
+  
+  //bool issorted = is_sorted<T,CmpOp>(data, nData);
+  //assert(issorted);
+}
+
+template<typename T, typename SwapOp, typename CmpOp>
 void merge_sort(T* data, const size_t nData) noexcept
 {  
   //merge sort is meant for large arrays => check this for speed
-  if (is_sorted(data, nData))
+  if (is_sorted<T,CmpOp>(data, nData))
     return;
 
   if (nData <= MERGE_THRESH) 
-    bubble_sort(data, nData);
+    bubble_sort<T,SwapOp,CmpOp>(data, nData);
   else {
+ 
+    const static CmpOp less;
  
     using RefType = typename std::conditional<std::is_fundamental<T>::value || std::is_pointer<T>::value, const T, const T&>::type;
 
@@ -285,8 +373,8 @@ void merge_sort(T* data, const size_t nData) noexcept
     //Makros::unified_move_assign(aux_data, data, half);
     //Makros::unified_move_assign(aux_data+half, data+half, nData2);
 
-    merge_sort(aux_data,half);
-    merge_sort(aux_data+half,nData2);
+    merge_sort<T,SwapOp,CmpOp>(aux_data,half);
+    merge_sort<T,SwapOp,CmpOp>(aux_data+half,nData2);
     
     //now merge the lists
     const T* data1 = aux_data;
@@ -296,13 +384,12 @@ void merge_sort(T* data, const size_t nData) noexcept
     size_t k2=0;
     size_t k=0;
 
-    //while(k1 < half && k2 < nData2) {
     while (true) {
 
       RefType d1 = data1[k1];
       RefType d2 = data2[k2];
             
-      if (d1 <= d2) {
+      if (!less(d2,d1)) {
         data[k] = std::move(d1);
         k1++;
         if (k1 >= half)
@@ -328,10 +415,10 @@ void merge_sort(T* data, const size_t nData) noexcept
 }
 
 //interface to std::sort
-template<typename T>
-void std_sort(T* data, const size_t nData) noexcept
+template<typename T, typename CmpOp>
+inline void std_sort(T* data, const size_t nData) noexcept
 {
-  std::sort(data, data+nData);
+  std::sort<T,CmpOp>(data, data+nData);
 }
 
 /**** key-value ****/
@@ -475,15 +562,16 @@ inline void shift_bubble_sort_key_value_keymoves(T1* key, T2* value, const size_
   }  
 }
 
-template<typename T1, typename T2>
-inline void merge_sort_key_value(T1* key, T2* value, const size_t nData) noexcept
+//recursive, won't be inline!
+template<typename T1, typename T2, typename ValSwap>
+void merge_sort_key_value(T1* key, T2* value, const size_t nData) noexcept
 {
   //merge sort is meant for large arrays => check this for speed
   if (is_sorted(key, nData))
     return;
   
   if (nData <= MERGE_THRESH)
-    bubble_sort_key_value(key, value, nData);
+    bubble_sort_key_value<T1,T2,ValSwap>(key, value, nData);
   else {
 
     using KeyRefType = typename std::conditional<std::is_fundamental<T1>::value || std::is_pointer<T1>::value, const T1, const T1&>::type;
@@ -554,40 +642,68 @@ inline void merge_sort_key_value(T1* key, T2* value, const size_t nData) noexcep
 
 /**** index ****/
 
-template<typename T, typename ST>
+template<typename T, typename ST, typename CmpOp>
+bool is_index_sorted(const T* data, ST* indices, const ST nData) noexcept
+{
+  const static CmpOp less;
+  
+  for (ST i = 1; i < nData; i++) {
+    
+    if (less(data[indices[i]],data[indices[i-1]]))
+      return false;
+  }
+  
+  return true;
+}
+
+template<typename T, typename ST, typename CmpOp = std::less<T> >
+inline void aux_index_bubble_sort(const T* data, ST* indices, const ST nData) noexcept;
+
+template<typename T, typename ST, typename CmpOp>
 inline void index_bubble_sort(const T* data, ST* indices, const ST nData) noexcept
 {
   for (uint i=0; i < nData; i++)
     indices[i] = i;
 
-  uint last_flip = nData;
+  aux_index_bubble_sort<T,ST,CmpOp>(data, indices, nData);
+  
+#ifndef NDEBUG    
+  bool is_sorted = is_index_sorted<T,ST,CmpOp>(data, indices, nData);
+  assert(is_sorted);
+#endif  
+}
+
+template<typename T, typename ST, typename CmpOp>
+inline void aux_index_bubble_sort(const T* data, ST* indices, const ST nData) noexcept
+{
+  const static CmpOp less;
+
+  ST last_flip = nData;
 
   while (last_flip > 1) {
 
-    uint flip = 0;
+    ST flip = 0;
 
     for (uint l=1; l < last_flip; l++) {
 
-      if (data[indices[l]] > data[indices[l-1]]) {
+      if (less(data[indices[l]],data[indices[l-1]])) {
         std::swap(indices[l],indices[l-1]);
         flip = l;
       }
     }
+    
+    last_flip = flip;
   }
-
-  // for (uint k=0; k < nData-1; k++) {
-  // std::cerr << "k: " << k << "/" << nData << std::endl;
-
-  // for (uint l=0; l < nData-1-k; l++) {
-  // if (data[indices[l]] > data[indices[l+1]])
-  // std::swap(indices[l],indices[l+1]);
-  // }
-  // }
 }
 
-template<typename T, typename ST>
+template<typename T, typename ST, typename CmpOp>
 inline void index_batch_bubble_sort(const T* data, ST* indices, ST nData) noexcept
 {
+  const static CmpOp less;
+
+  for (uint i=0; i < nData; i++)
+    indices[i] = i;
+
   size_t last_flip = nData;
 
   while (last_flip > 1) {
@@ -596,12 +712,12 @@ inline void index_batch_bubble_sort(const T* data, ST* indices, ST nData) noexce
 
     for (size_t l=1; l < last_flip; l++) {
 
-      if (data[indices[l]] < data[indices[l-1]]) {
+      if (less(data[indices[l]],data[indices[l-1]])) {
 
         size_t end = l+1;
         for (; end < last_flip; end++) {
 
-          if (!(data[indices[end]] < data[indices[end-1]]))
+          if (!(less(data[indices[end]],data[indices[end-1]])))
             break;
         }
 
@@ -614,12 +730,19 @@ inline void index_batch_bubble_sort(const T* data, ST* indices, ST nData) noexce
 
     last_flip = flip;
   }
+
+#ifndef NDEBUG    
+  bool is_sorted = is_index_sorted<T,ST,CmpOp>(data, indices, nData);
+  assert(is_sorted);
+#endif  
 }
 
-template<typename T, typename ST>
+//recursive, won't be inline!
+template<typename T, typename ST, typename CmpOp = std::less<T> >
 void aux_index_quick_sort(const T* data, ST* indices, const ST nData) noexcept;
 
-template<typename T, typename ST>
+//recursive, won't be inline!
+template<typename T, typename ST, typename CmpOp>
 void aux_index_merge_sort(const T* data, ST* indices, const ST nData) noexcept
 {
   //std::cerr << "nData: "<< nData << std::endl;
@@ -648,9 +771,11 @@ void aux_index_merge_sort(const T* data, ST* indices, const ST nData) noexcept
     return;
 
   if (nData <= MERGE_THRESH) {
-    aux_index_quick_sort(data,indices,nData);
+    aux_index_quick_sort<T,ST,CmpOp>(data,indices,nData);
   }
   else {
+
+    const static CmpOp less;
 
     const ST half = nData / 2;
     const ST nData2 = nData-half;
@@ -661,13 +786,11 @@ void aux_index_merge_sort(const T* data, ST* indices, const ST nData) noexcept
 
     //Makros::unified_move_assign(aux_indices, indices, half);
 
-    aux_index_merge_sort(data,aux_indices,half);
-    //aux_index_quick_sort(data,aux_indices,half);
+    aux_index_merge_sort<T,ST,CmpOp>(data,aux_indices,half);
 
     //Makros::unified_move_assign(aux_indices+half, indices+half, nData2);
 
-    aux_index_merge_sort(data,aux_indices+half,nData2);
-    //aux_index_quick_sort(data,aux_indices+half,nData2);
+    aux_index_merge_sort<T,ST,CmpOp>(data,aux_indices+half,nData2);
 
     const ST* index1 = aux_indices;
     const ST* index2 = aux_indices+half;
@@ -681,7 +804,7 @@ void aux_index_merge_sort(const T* data, ST* indices, const ST nData) noexcept
 
       const ST idx1 = index1[k1];
       const ST idx2 = index2[k2];
-      if (data[idx1] <= data[idx2]) {
+      if (!(less(data[idx2],data[idx1]))) {
         indices[k] = idx1;
         k1++;
         if (k1 >= half)
@@ -706,34 +829,19 @@ void aux_index_merge_sort(const T* data, ST* indices, const ST nData) noexcept
   }
 }
 
+//recursive, won't be inline!
 //this is still fixed to memcpy
-template<typename T, typename ST>
+template<typename T, typename ST, typename CmpOp>
 void aux_index_merge_sort_4split(const T* data, ST* indices, const ST nData) noexcept
 {
   //std::cerr << "nData: "<< nData << std::endl;
 
-  if (nData <= 8 /*8*/) {
-
-    //bubble sort
-    for (uint k=0; k < nData-1; k++) {
-
-      //std::cerr << "k: " << k << std::endl;
-
-      for (uint l=0; l < nData-1-k; l++) {
-        //std::cerr << "l: " << l << std::endl;
-
-        //std::cerr << "index1: " << indices[l] << std::endl;
-        //std::cerr << "index2: " << indices[l+1] << std::endl;
-
-        if (data[indices[l]] > data[indices[l+1]])
-          std::swap(indices[l],indices[l+1]);
-      }
-    }
-  }
-  else if (nData <= 32) {
-    aux_index_merge_sort(data,indices,nData);
+  if (nData <= 32) {
+    aux_index_quick_sort<T,ST,CmpOp>(data,indices,nData);
   }
   else {
+
+    const static CmpOp less;
 
     uint nData1to3 = nData/4;
     uint nData4 = nData-3*nData1to3;
@@ -750,22 +858,22 @@ void aux_index_merge_sort_4split(const T* data, ST* indices, const ST nData) noe
     index[0].resize(nData1to3);
     memcpy(index[0].direct_access(),indices,nData1to3*sizeof(ST));
 
-    aux_index_merge_sort(data,index[0].direct_access(),nData1to3);
+    aux_index_merge_sort<T,ST,CmpOp>(data,index[0].direct_access(),nData1to3);
 
     index[1].resize(nData1to3);
     memcpy(index[1].direct_access(),indices+nData1to3,nData1to3*sizeof(ST));
 
-    aux_index_merge_sort(data,index[1].direct_access(),nData1to3);
+    aux_index_merge_sort<T,ST,CmpOp>(data,index[1].direct_access(),nData1to3);
 
     index[2].resize(nData1to3);
     memcpy(index[2].direct_access(),indices+2*nData1to3,nData1to3*sizeof(ST));
 
-    aux_index_merge_sort(data,index[2].direct_access(),nData1to3);
+    aux_index_merge_sort<T,ST,CmpOp>(data,index[2].direct_access(),nData1to3);
 
     index[3].resize(nData4);
     memcpy(index[3].direct_access(),indices+3*nData1to3,nData4*sizeof(ST));
 
-    aux_index_merge_sort(data,index[3].direct_access(),nData4);
+    aux_index_merge_sort<T,ST,CmpOp>(data,index[3].direct_access(),nData4);
 
     ST k_idx[4] = {0,0,0,0};
 
@@ -785,7 +893,7 @@ void aux_index_merge_sort_4split(const T* data, ST* indices, const ST nData) noe
 
           const T cur_val = data[real_idx];
 
-          if (arg_best == MAX_UINT || cur_val < best) {
+          if (arg_best == MAX_UINT || less(cur_val,best)) {
             best = cur_val;
             arg_best=kk;
             idx = real_idx;
@@ -800,7 +908,8 @@ void aux_index_merge_sort_4split(const T* data, ST* indices, const ST nData) noe
   }
 }
 
-template<typename T, typename ST>
+//recursive, won't be inline!
+template<typename T, typename ST, typename CmpOp>
 void index_merge_sort(const T* data, ST* indices, const ST nData) noexcept
 {
   //std::cerr << "sorting " << nData << " entries" << std::endl;
@@ -808,40 +917,35 @@ void index_merge_sort(const T* data, ST* indices, const ST nData) noexcept
   for (uint i=0; i < nData; i++)
     indices[i] = i;
 
-  aux_index_merge_sort(data,indices,nData);
+  aux_index_merge_sort<T,ST,CmpOp>(data,indices,nData);
+  
+#ifndef NDEBUG    
+  bool is_sorted = is_index_sorted<T,ST,CmpOp>(data, indices, nData);
+  assert(is_sorted);
+#endif  
 }
 
 
-template<typename T, typename ST>
+//recursive, won't be inline!
+template<typename T, typename ST, typename CmpOp>
 void aux_index_quick_sort(const T* data, ST* indices, const ST nData) noexcept
 {
-
   //std::cerr << "nData: " << nData << std::endl;
 
-  if (nData <= 8 /*8*/) {
-
-    //bubble sort
-    for (uint k=0; k < nData-1; k++) {
-
-      //std::cerr << "k: " << k << std::endl;
-
-      for (uint l=0; l < nData-1-k; l++) {
-        //std::cerr << "l: " << l << std::endl;
-
-        //std::cerr << "index1: " << indices[l] << std::endl;
-        //std::cerr << "index2: " << indices[l+1] << std::endl;
-
-        if (data[indices[l]] > data[indices[l+1]])
-          std::swap(indices[l],indices[l+1]);
-      }
-    }
+  if (nData <= QUICK_THRESH) 
+  {
+    aux_index_bubble_sort<T,ST,CmpOp>(data, indices, nData);
   }
   else {
 
-    const T pivot = data[indices[nData-1]];
+    using KeyRefType = typename std::conditional<std::is_fundamental<T>::value || std::is_pointer<T>::value, const T, const T&>::type;
 
-    int i=0;
-    int j=nData-2; //not the perfect type (in view of ST)
+    const static CmpOp less;
+
+    KeyRefType pivot = data[indices[nData-1]];
+
+    ST i=0;
+    ST j=nData-2; 
 
     // if (nData <= 75) {
     //   std::cerr << "sequence: ";
@@ -852,10 +956,10 @@ void aux_index_quick_sort(const T* data, ST* indices, const ST nData) noexcept
 
     while (true) {
 
-      while(i < int(nData-1) && data[indices[i]] <= pivot)
+      while(i < (nData-1) && !(less(pivot,data[indices[i]])) ) // data[indices[i]] <= pivot)
         i++;
 
-      while(j >= 0 && data[indices[j]] >= pivot)
+      while(j > i && !(less(data[indices[j]],pivot)) ) // data[indices[j]] >= pivot)
         j--;
 
       if (i >= j)
@@ -866,7 +970,6 @@ void aux_index_quick_sort(const T* data, ST* indices, const ST nData) noexcept
       j--;
     }
 
-    //if (pivot < data[indices[i]])
     if (i != nData-1)
       std::swap(indices[i],indices[nData-1]);
 
@@ -882,20 +985,19 @@ void aux_index_quick_sort(const T* data, ST* indices, const ST nData) noexcept
     //std::cerr << "i: " << i << ", j: " << j << std::endl;
 
     //recursive calls
-    const int n1 = i-1;
-    const int n2 = nData-i-1;
 
-    if (n1 > 1) { //no need to sort a single entry
-      aux_index_quick_sort(data,indices,ST(n1));
+    if (i > 1) { //no need to sort a single entry
+      aux_index_quick_sort<T,ST,CmpOp>(data,indices,i);
     }
-    if (n2 > 1) {
-      aux_index_quick_sort(data,indices+i+1,ST(n2));
+    if (i < nData-2) {
+      aux_index_quick_sort<T,ST,CmpOp>(data,indices+i+1,nData-i-1);
     }
   }
 
 }
 
-template<typename T, typename ST>
+//recursive, won't be inline!
+template<typename T, typename ST, typename CmpOp>
 void index_quick_sort(const T* data, ST* indices, const ST nData) noexcept
 {
   //std::cerr << "sorting " << nData << " entries" << std::endl;
@@ -903,7 +1005,12 @@ void index_quick_sort(const T* data, ST* indices, const ST nData) noexcept
   for (uint i=0; i < nData; i++)
     indices[i] = i;
 
-  aux_index_quick_sort(data,indices,nData);
+  aux_index_quick_sort<T,ST,CmpOp>(data,indices,nData);
+
+#ifndef NDEBUG    
+  bool is_sorted = is_index_sorted<T,ST,CmpOp>(data, indices, nData);
+  assert(is_sorted);
+#endif  
 }
 
 

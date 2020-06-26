@@ -26,6 +26,9 @@ std::ostream& operator<<(std::ostream& os, const std::map<TK,TV,H>& m);
 template<typename T1, typename T2>
 std::ostream& operator<<(std::ostream& os, const std::pair<T1,T2>& p);
 
+template<typename T>
+void print_array(std::ostream& os, const T* data, size_t nData);
+
 
 /*************** implementation ****************/
 
@@ -96,8 +99,17 @@ std::ostream& operator<<(std::ostream& os, const std::pair<T1,T2>& p)
   return os;
 }
 
-
-
+template<typename T>
+void print_array(std::ostream& os, const T* data, size_t nData)
+{
+  os << "[ ";
+  for (size_t i = 0; i < nData; i++) {
+    os << data[i];
+    if (i+1 != nData)
+      os << ", ";
+  }
+  os << " ]";  
+}
 
 
 #endif
