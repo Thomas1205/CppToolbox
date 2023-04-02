@@ -56,8 +56,7 @@ bool operator!=(const VarDimStorage<T>& v1, const VarDimStorage<T>& v2) noexcept
 /*********** implementation *******/
 
 
-template<typename T> 
-VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim) : StorageBase<T>(), dim_(dim)
+template<typename T> VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim) : StorageBase<T>(), dim_(dim)
 {
   Base::size_ = (dim.size() == 0) ? 0 : 1;
 
@@ -67,8 +66,7 @@ VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim) : StorageBase
   Base::data_ = new T[Base::size_];
 }
 
-template<typename T> 
-VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim, T fill) : StorageBase<T>(), dim_(dim)
+template<typename T> VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim, T fill) : StorageBase<T>(), dim_(dim)
 {
   Base::size_ = (dim.size() == 0) ? 0 : 1;
 
@@ -80,8 +78,7 @@ VarDimStorage<T>::VarDimStorage(const Math1D::Vector<size_t>& dim, T fill) : Sto
   std::fill_n(Base::data_,Base::data_+Base::size_,fill);
 }
 
-template<typename T> 
-VarDimStorage<T>::VarDimStorage(const VarDimStorage& toCopy)
+template<typename T> VarDimStorage<T>::VarDimStorage(const VarDimStorage& toCopy)
 {
   Base::size_ = toCopy.size();
   dim_ = toCopy.dim_;
@@ -93,18 +90,16 @@ VarDimStorage<T>::VarDimStorage(const VarDimStorage& toCopy)
 }
 
 //move constructor
-template<typename T> 
-VarDimStorage<T>::VarDimStorage(VarDimStorage&& toTake)
+template<typename T> VarDimStorage<T>::VarDimStorage(VarDimStorage&& toTake)
 {
   Base::data_ = toTake.data_;
   Base::size_ = toTake.size_;
   dim_ = std::move(toTake.dim_);
-  
+
   toTake.data_ = 0;
 }
 
-template<typename T> 
-VarDimStorage<T>::~VarDimStorage()
+template<typename T> VarDimStorage<T>::~VarDimStorage()
 {
 }
 
@@ -118,7 +113,7 @@ VarDimStorage<T>& VarDimStorage<T>::operator=(const VarDimStorage& toCopy) noexc
   Makros::unified_assign(Base::data_, toCopy.direct_access(), Base::size_);
   //for (uint k=0; k < Base::size_; k++)
   //  Base::data_[k] = toCopy.data(k);
-  
+
   return *this;
 }
 

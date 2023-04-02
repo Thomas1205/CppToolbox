@@ -34,16 +34,18 @@ namespace Math1D {
     Vector(const std::initializer_list<T>& init);
 
     //copy constructor
-    Vector(const Vector<T,ST>& toCopy) = default;
-    
+    Vector(const Vector<T,ST>& toCopy);
+
     //move constructor
-    Vector(Vector<T,ST>&& toTake) = default;
+    Vector(Vector<T,ST>&& toTake);
 
     ~Vector();
 
-    Vector<T,ST>& operator=(const Vector<T,ST>& toCopy) = default;
-    
-    Vector<T,ST>& operator=(Vector<T,ST>&& toTake) = default;
+    Vector<T,ST>& operator=(const Vector<T,ST>& toCopy);
+
+    Vector<T,ST>& operator=(Vector<T,ST>&& toTake);
+
+    Vector<T,ST>& operator=(const std::initializer_list<T>& init);
 
     //redefining the operator[] methods because for basic types we can indicate 16-byte alignment
     inline const T& operator[](ST i) const noexcept;
@@ -105,7 +107,7 @@ namespace Math1D {
     void operator*=(const T constant) noexcept;
 
     void elem_mul(const Vector<T,ST>& v) noexcept;
-    
+
     void elem_div(const Vector<T,ST>& v) noexcept;
 
     virtual const std::string& name() const;
@@ -236,25 +238,53 @@ namespace Math1D {
   template<typename T,typename ST>
   /*static*/ const std::string Vector<T,ST>::vector_name_ = "unnamed vector";
 
-  template<typename T,typename ST> 
-  Vector<T,ST>::Vector() : Storage1D<T,ST>() {}
+  template<typename T,typename ST> Vector<T,ST>::Vector() : Storage1D<T,ST>() {}
 
-  template<typename T,typename ST> 
-  Vector<T,ST>::Vector(ST size) : Storage1D<T,ST>(size) {}
+  template<typename T,typename ST> Vector<T,ST>::Vector(ST size) : Storage1D<T,ST>(size) {}
 
-  template<typename T,typename ST> 
-  Vector<T,ST>::Vector(ST size, const T default_value) : Storage1D<T,ST>(size)
+  template<typename T,typename ST> Vector<T,ST>::Vector(ST size, const T default_value) : Storage1D<T,ST>(size)
   {
     set_constant(default_value);
   }
 
-  template<typename T,typename ST> 
-  Vector<T,ST>::Vector(const std::initializer_list<T>& init) : Storage1D<T,ST>(init)
+  template<typename T,typename ST> Vector<T,ST>::Vector(const std::initializer_list<T>& init) : Storage1D<T,ST>(init)
   {
   }
 
-  template<typename T,typename ST> 
-  Vector<T,ST>::~Vector() {}
+  //copy constructor
+  template<typename T,typename ST> Vector<T,ST>::Vector(const Vector<T,ST>& toCopy) : Storage1D<T,ST>(toCopy) {}
+
+  //move constructor
+  template<typename T,typename ST> Vector<T,ST>::Vector(Vector<T,ST>&& toTake) : Storage1D<T,ST>(toTake) {}
+
+  template<typename T,typename ST>
+  Vector<T,ST>& Vector<T,ST>::operator=(Vector<T,ST>&& toTake)
+  {
+    StorageBase<T,ST>::operator=(toTake);
+    return *this;
+  }
+
+  template<typename T,typename ST>
+  Vector<T,ST>& Vector<T,ST>::operator=(const Vector<T,ST>& toCopy)
+  {
+    StorageBase<T,ST>::operator=(toCopy);
+    return *this;
+  }
+
+  template<typename T,typename ST>
+  Vector<T,ST>& Vector<T,ST>::operator=(const std::initializer_list<T>& init)
+  {
+    const ST size = init.size();
+    if (size != Base::size_) {
+      delete[] Base::data_;
+      Base::data_ = new T[size];
+      Base::size_ = size;
+    }
+    std::copy(init.begin(),init.end(),Base::data_);
+    return *this;
+  }
+
+  template<typename T,typename ST> Vector<T,ST>::~Vector() {}
 
   template<typename T,typename ST>
   inline T Vector<T,ST>::sum() const noexcept
@@ -274,7 +304,7 @@ namespace Math1D {
 
     // return result;
   }
-  
+
   template<typename T,typename ST>
   inline T Vector<T,ST>::sum_abs() const noexcept
   {
@@ -284,8 +314,8 @@ namespace Math1D {
     assertAligned16(data);
 
     T result = (T) 0;
-    for (ST i=0; i < size; i++) 
-       result += Makros::abs<T>(data[i]);
+    for (ST i=0; i < size; i++)
+      result += Makros::abs<T>(data[i]);
 
     return result;
   }
@@ -421,7 +451,7 @@ namespace Math1D {
   inline void Vector<T,ST>::ensure_min(T lower_limit) noexcept
   {
     const ST size = Base::size_;
-    const T_A16* data = Base::data_;
+    T_A16* data = Base::data_;
 
     for (ST i=0; i < size; i++)
       data[i] = std::max(lower_limit,data[i]);
@@ -649,12 +679,12 @@ namespace Math1D {
     const ST size = Base::size_;
     T_A16* data = Base::data_;
     const T_A16* vdata = v.direct_access();
-    
+
     assert(size == v.size());
     for (ST i = 0; i < size; i++)
       data[i] *= vdata[i];
   }
-    
+
   template<typename T,typename ST>
   void Vector<T,ST>::elem_div(const Vector<T,ST>& v) noexcept
   {

@@ -57,11 +57,11 @@ template<typename T>
 inline void sorted_vec_insert(std::vector<T>& vec, const T toInsert) noexcept;
 
 //binary search, returns MAX_UINT if key is not found, otherwise the position in the vector
-template<typename T>
-size_t binsearch(const std::vector<T>& vec, const T key) noexcept;
+template<typename T, typename Less = std::less<T>, typename Equal = std::equal_to<T>, typename Vec = std::vector<T> >
+size_t binsearch(const Vec& vec, const T key) noexcept;
 
-template<typename T>
-size_t binsearch_insertpos(const std::vector<T>& vec, const T key) noexcept;
+template<typename T, typename Less = std::less<T>, typename Equal = std::equal_to<T>, typename Vec = std::vector<T> >
+size_t binsearch_insertpos(const Vec& vec, const T key) noexcept;
 
 //binary search in a vector with (key,value) pairs, sorted by key-values w.r.t. the operator <
 //returns MAX_UINT if key is not found, otherwise the position in the vector
@@ -288,7 +288,7 @@ inline void vec_replacepos_maintainsort(std::vector<T>& vec, const size_t replac
   }
   else {
     vec[replace_pos] = toInsert;
-  }  
+  }
 }
 
 template<typename T>
@@ -318,29 +318,31 @@ bool ComparePairBySecond<T1,T2>::operator()(const std::pair<T1,T2>& p1, const st
 }
 
 //binary search, returns MAX_UINT if key is not found, otherwise the position in the vector
-template<typename T>
-size_t binsearch(const std::vector<T>& vec, const T key) noexcept
+template<typename T, typename Less = std::less<T>, typename Equal = std::equal_to<T>, typename Vec = std::vector<T> >
+size_t binsearch(const Vec& vec, const T key) noexcept
 {
   const size_t size = vec.size();
-  if (size == 0 || key < vec[0] || key > vec[size-1])
+  static const Less less;
+  static const Equal equal;
+  if (size == 0 || less(key,vec[0]) || less(vec[size-1],key))
     return MAX_UINT;
 
   size_t lower = 0;
   size_t upper = size-1;
-  if (vec[lower] == key)
+  if (equal(vec[lower],key))
     return lower;
-  if (vec[upper] == key)
+  if (equal(vec[upper],key))
     return upper;
 
   while (lower+1 < upper) {
-    assert(vec[lower] < key);
-    assert(vec[upper] > key);
+    assert(less(vec[lower],key));
+    assert(less(key,vec[upper]));
 
     const size_t middle = (lower+upper) >> 1;  // (lower+upper)/2;
-    assert(middle > lower && middle < upper);
-    if (vec[middle] == key)
+    assert(less(lower,middle) && less(middle,upper));
+    if (equal(vec[middle],key))
       return middle;
-    else if (vec[middle] < key)
+    else if (less(vec[middle],key))
       lower = middle;
     else
       upper = middle;
@@ -349,30 +351,32 @@ size_t binsearch(const std::vector<T>& vec, const T key) noexcept
   return MAX_UINT;
 }
 
-template<typename T>
-size_t binsearch_insertpos(const std::vector<T>& vec, const T key) noexcept
+template<typename T, typename Less = std::less<T>, typename Equal = std::equal_to<T>, typename Vec = std::vector<T> >
+size_t binsearch_insertpos(const Vec& vec, const T key) noexcept
 {
   const size_t size = vec.size();
-  if (size == 0 || key <= vec[0])
+  static const Less less;
+  static const Equal equal; 
+  if (size == 0 || !less(vec[0],key))
     return 0;
 
-  if (key > vec[size-1])
+  if (less(vec[size-1],key))
     return size;
 
   size_t lower = 0;
   size_t upper = size-1;
-  if (vec[upper] == key)
+  if (equal(vec[upper],key))
     return upper;
 
   while (lower+1 < upper) {
-    assert(vec[lower] < key);
-    assert(vec[upper] > key);
+    assert(less(vec[lower],key));
+    assert(less(key,vec[upper]));
 
     const size_t middle = (lower+upper) >> 1;  // (lower+upper)/2;
     assert(middle > lower && middle < upper);
-    if (vec[middle] == key)
+    if (equal(vec[middle],key))
       return middle;
-    else if (vec[middle] < key)
+    else if (less(vec[middle],key))
       lower = middle;
     else
       upper = middle;

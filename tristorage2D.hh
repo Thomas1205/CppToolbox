@@ -50,7 +50,7 @@ public:
   inline T& operator()(ST x, ST y) noexcept;
 
   void operator=(const TriStorage2D<T,ST>& toCopy) noexcept;
-  
+
   TriStorage2D<T,ST>& operator=(TriStorage2D<T,ST>&& toTake) = default;
 
   inline T* row_ptr(ST y) noexcept;
@@ -149,29 +149,24 @@ template<typename T, typename ST>
 /*static*/ const std::string TriStorage2D<T,ST>::tristor2D_name_ = "unnamed TriStorage2D";
 
 //constructors
-template<typename T, typename ST> 
-TriStorage2D<T,ST>::TriStorage2D() : StorageBase<T,ST>(), dim_(0) {}
+template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D() : StorageBase<T,ST>(), dim_(0) {}
 
-template<typename T, typename ST> 
-TriStorage2D<T,ST>::TriStorage2D(ST dim) : StorageBase<T,ST>(dim*(dim+1) / 2), dim_(dim)
+template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D(ST dim) : StorageBase<T,ST>(dim*(dim+1) / 2), dim_(dim)
 {
 }
 
-template<typename T, typename ST> 
-TriStorage2D<T,ST>::TriStorage2D(ST dim, T default_value) : StorageBase<T,ST>(dim*(dim+1) / 2, default_value), dim_(dim)
+template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D(ST dim, T default_value) : StorageBase<T,ST>(dim*(dim+1) / 2, default_value), dim_(dim)
 {
 }
 
 //copy constructor
-template<typename T, typename ST> 
-TriStorage2D<T,ST>::TriStorage2D(const TriStorage2D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy)
+template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D(const TriStorage2D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy)
 {
   dim_ = toCopy.dim();
 }
 
 //move constructor
-template<typename T, typename ST> 
-TriStorage2D<T,ST>::TriStorage2D(const TriStorage2D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
+template<typename T, typename ST> TriStorage2D<T,ST>::TriStorage2D(const TriStorage2D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
 {
   dim_ = toTake.dim_;
 }

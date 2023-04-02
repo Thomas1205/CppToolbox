@@ -11,8 +11,8 @@
 #define INIT_CAPACITY 4
 #endif
 
-inline size_t increased_size(const size_t reserved_size) 
-{  
+inline size_t increased_size(const size_t reserved_size)
+{
   return size_t(1.2 * reserved_size) + 4;
 }
 
@@ -36,17 +36,23 @@ public:
 
   //copy constructor
   FlexibleStorage1D(const FlexibleStorage1D<T,ST>& toCopy);
-  
+
   //move constructor
   FlexibleStorage1D(FlexibleStorage1D<T,ST>&& toTake);
 
   ~FlexibleStorage1D();
 
   //for compatibility with std::vector, e.g. for use in templates
-  T* data() noexcept { return Base::direct_access(); }
+  T* data() noexcept
+  {
+    return Base::direct_access();
+  }
 
   //for compatibility with std::vector, e.g. for use in templates
-  const T* data() const noexcept { return Base::direct_access(); }
+  const T* data() const noexcept
+  {
+    return Base::direct_access();
+  }
 
   inline T& operator[](ST i) const noexcept;
 
@@ -62,9 +68,9 @@ public:
   void shrink(ST size) noexcept;
 
   inline void shrink_by(ST reduction) noexcept;
-  
+
   inline void grow_by_dirty(ST increase) noexcept;
-  
+
   //append a default of T, i.e. T()
   inline T& increase() noexcept;
 
@@ -82,7 +88,7 @@ public:
   inline T& back() noexcept;
 
   ST append(PassType val) noexcept;
-    
+
   ST move_append(T&& val) noexcept;
 
   //shortcut when you are sure the allocated memory suffices
@@ -96,7 +102,7 @@ public:
   void append(FlexibleStorage1D<T,ST>& toAppend) noexcept;
 
   void erase(ST pos) noexcept;
-  
+
   void erase_several(ST pos, ST nToErase) noexcept;
 
   void insert(ST pos, T val) noexcept;
@@ -155,43 +161,38 @@ protected:
 template<typename T, typename ST>
 /*static*/ const std::string FlexibleStorage1D<T,ST>::flex_stor1D_name_ = "unnamed flexible 1Dstorage";
 
-template<typename T, typename ST> 
-FlexibleStorage1D<T,ST>::FlexibleStorage1D() : StorageBase<T,ST>(0), reserved_size_(INIT_CAPACITY)
+template<typename T, typename ST> FlexibleStorage1D<T,ST>::FlexibleStorage1D() : StorageBase<T,ST>(0), reserved_size_(INIT_CAPACITY)
 {
 #if INIT_CAPACITY > 0
   Base::data_ = new T[reserved_size_];
-#endif  
+#endif
 }
 
-template<typename T, typename ST> 
-FlexibleStorage1D<T,ST>::FlexibleStorage1D(ST reserved_size) : StorageBase<T,ST>(0), reserved_size_(reserved_size)
+template<typename T, typename ST> FlexibleStorage1D<T,ST>::FlexibleStorage1D(ST reserved_size) : StorageBase<T,ST>(0), reserved_size_(reserved_size)
 {
   Base::data_ = new T[reserved_size_];
 }
 
-template<typename T, typename ST> 
-FlexibleStorage1D<T,ST>::FlexibleStorage1D(ST reserved_size, ST fill_size, T val) : StorageBase<T,ST>(0), reserved_size_(reserved_size)
+template<typename T, typename ST> FlexibleStorage1D<T,ST>::FlexibleStorage1D(ST reserved_size, ST fill_size, T val) : StorageBase<T,ST>(0), reserved_size_(reserved_size)
 {
   assert(fill_size <= reserved_size_);
-  
+
   Base::data_ = new T[reserved_size_];
   Base::size_ = fill_size;
   std::fill_n(Base::data_,fill_size,val);
 }
 
-template<typename T, typename ST> 
-FlexibleStorage1D<T,ST>::FlexibleStorage1D(const std::initializer_list<T>& init, ST extra_reserve) : StorageBase<T,ST>(0)
+template<typename T, typename ST> FlexibleStorage1D<T,ST>::FlexibleStorage1D(const std::initializer_list<T>& init, ST extra_reserve) : StorageBase<T,ST>(0)
 {
   reserved_size_ = init.size() + extra_reserve;
   Base::size_ = init.size();
   Base::data_ = new T[reserved_size_];
-  
+
   std::copy(init.begin(),init.end(),Base::data_);
 }
 
 //copy constructor
-template<typename T, typename ST> 
-FlexibleStorage1D<T,ST>::FlexibleStorage1D(const FlexibleStorage1D<T,ST>& toCopy)
+template<typename T, typename ST> FlexibleStorage1D<T,ST>::FlexibleStorage1D(const FlexibleStorage1D<T,ST>& toCopy)
 {
   Base::size_ = toCopy.size();
   reserved_size_ = toCopy.reserved_size();
@@ -204,8 +205,7 @@ FlexibleStorage1D<T,ST>::FlexibleStorage1D(const FlexibleStorage1D<T,ST>& toCopy
 }
 
 //move constructor
-template<typename T, typename ST> 
-FlexibleStorage1D<T,ST>::FlexibleStorage1D(FlexibleStorage1D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
+template<typename T, typename ST> FlexibleStorage1D<T,ST>::FlexibleStorage1D(FlexibleStorage1D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
 {
   reserved_size_ = toTake.reserved_size_;
 }
@@ -239,22 +239,22 @@ FlexibleStorage1D<T,ST>& FlexibleStorage1D<T,ST>::operator=(const FlexibleStorag
   return *this;
 }
 
-template<typename T, typename ST> 
+template<typename T, typename ST>
 FlexibleStorage1D<T,ST>& FlexibleStorage1D<T,ST>::operator=(FlexibleStorage1D<T,ST>&& toTake) noexcept
 {
   delete[] Base::data_;
   Base::data_ = toTake.data_;
   toTake.data_ = 0;
-  
+
   Base::size_ = toTake.size_;
   reserved_size_ = toTake.reserved_size_;
-  
+
   return *this;
 }
 
-template<typename T, typename ST> 
-FlexibleStorage1D<T,ST>::~FlexibleStorage1D()
+template<typename T, typename ST> FlexibleStorage1D<T,ST>::~FlexibleStorage1D()
 {
+  //data_ is deleted by StorageBase
 }
 
 template<typename T, typename ST>
@@ -332,7 +332,7 @@ ST FlexibleStorage1D<T,ST>::move_append(T&& val) noexcept
 
   Base::size_++;
 
-  return k;  
+  return k;
 }
 
 //shortcut when you are sure the allocated memory suffices
@@ -392,7 +392,7 @@ void FlexibleStorage1D<T,ST>::append(FlexibleStorage1D<T,ST>& toAppend) noexcept
   }
 
   Makros::unified_assign(Base::data_ + Base::size_, toAppend.direct_access(), toAppend.size());
-  Base::size_ += toAppend.size();  
+  Base::size_ += toAppend.size();
   //for (ST k=0; k < toAppend.size(); k++) {
   //  Base::data_[Base::size_] = toAppend[k];
   //  Base::size_++;
@@ -435,7 +435,7 @@ template<typename T, typename ST>
 void FlexibleStorage1D<T,ST>::fit_exactly() noexcept
 {
   if (reserved_size_ != Base::size_) {
-    
+
     T* new_data = new T[Base::size_];
     Makros::unified_move_assign(new_data, Base::data_, Base::size_);
 
@@ -463,7 +463,7 @@ template<typename T, typename ST>
 inline void FlexibleStorage1D<T,ST>::grow_by_dirty(ST increase) noexcept
 {
   const ST size = Base::size_ + increase;
- 
+
   if (size > reserved_size_ || size < (reserved_size_ / 3) ) {
 
     reserved_size_ = size;
@@ -477,21 +477,20 @@ inline void FlexibleStorage1D<T,ST>::grow_by_dirty(ST increase) noexcept
     Base::data_ = new_data;
   }
 
-  Base::size_ = size; 
+  Base::size_ = size;
 }
 
 template<typename T, typename ST>
 inline T& FlexibleStorage1D<T,ST>::increase() noexcept
 {
-  if (Base::size_ == reserved_size_) 
-  {
+  if (Base::size_ == reserved_size_) {
     reserved_size_ = increased_size(reserved_size_);
     T* new_data = new T[reserved_size_];
 
-    Makros::unified_move_assign(new_data, Base::data_, Base::size_);    
-    
+    Makros::unified_move_assign(new_data, Base::data_, Base::size_);
+
     delete[] Base::data_;
-    Base::data_ = new_data;    
+    Base::data_ = new_data;
   }
 
   Base::data_[Base::size_] = T();  //basic types are uninitialized
@@ -517,7 +516,7 @@ void FlexibleStorage1D<T,ST>::reserve(ST size) noexcept
 template<typename T, typename ST>
 void FlexibleStorage1D<T,ST>::clear(bool free) noexcept
 {
-  Base::size_ = 0; 
+  Base::size_ = 0;
   if (free) {
     reserved_size_ = 0;
     delete[] Base::data_;
@@ -545,8 +544,7 @@ inline T& FlexibleStorage1D<T,ST>::operator[](ST i) const noexcept
 template<typename T, typename ST>
 void FlexibleStorage1D<T,ST>::erase(ST pos) noexcept
 {
-  if (pos < Base::size_)
-  {
+  if (pos < Base::size_) {
     Routines::downshift_array(Base::data_, pos, Base::size_, 1);
     shrink_by(1);
   }
@@ -555,19 +553,17 @@ void FlexibleStorage1D<T,ST>::erase(ST pos) noexcept
 template<typename T, typename ST>
 void FlexibleStorage1D<T,ST>::erase_several(ST pos, ST nToErase) noexcept
 {
-  if (pos < Base::size_) 
-  {
+  if (pos < Base::size_) {
     nToErase = std::min(nToErase, Base::size_ - pos);
     Routines::downshift_array(Base::data_, pos, Base::size_, nToErase);
-    shrink_by(nToErase);    
+    shrink_by(nToErase);
   }
 }
 
 template<typename T, typename ST>
 void FlexibleStorage1D<T,ST>::insert(ST pos, T val) noexcept
 {
-  if (pos <= Base::size_)
-  {
+  if (pos <= Base::size_) {
     grow_by_dirty(1);
     Routines::upshift_array(Base::data_, pos, Base::size_, 1);
     Base::data_[pos] = val;
@@ -577,8 +573,7 @@ void FlexibleStorage1D<T,ST>::insert(ST pos, T val) noexcept
 template<typename T, typename ST>
 void FlexibleStorage1D<T,ST>::insert_several(ST pos, T* vals, ST nData) noexcept
 {
-  if (pos <= Base::size_)
-  {
+  if (pos <= Base::size_) {
     grow_by_dirty(nData);
     Routines::upshift_array(Base::data_, pos, Base::size_+nData-1, nData);
     Makros::unified_assign(Base::data_+pos, vals, nData);
@@ -626,27 +621,22 @@ bool operator!=(const FlexibleStorage1D<T,ST>& v1, const FlexibleStorage1D<T,ST>
 
 /***********************************/
 
-template<typename T, typename ST> 
-NamedFlexibleStorage1D<T,ST>::NamedFlexibleStorage1D() : name_("unfs1d") {}
+template<typename T, typename ST> NamedFlexibleStorage1D<T,ST>::NamedFlexibleStorage1D() : name_("unfs1d") {}
 
-template<typename T, typename ST> 
-NamedFlexibleStorage1D<T,ST>::NamedFlexibleStorage1D(const std::string& name) : name_(name)
+template<typename T, typename ST> NamedFlexibleStorage1D<T,ST>::NamedFlexibleStorage1D(const std::string& name) : name_(name)
 {
 }
 
-template<typename T, typename ST> 
-NamedFlexibleStorage1D<T,ST>::NamedFlexibleStorage1D(ST reserved_size, const std::string& name) :
+template<typename T, typename ST> NamedFlexibleStorage1D<T,ST>::NamedFlexibleStorage1D(ST reserved_size, const std::string& name) :
   FlexibleStorage1D<T,ST>(reserved_size), name_(name) {}
 
 //Note: the name is NOT copied
-template<typename T, typename ST> 
-NamedFlexibleStorage1D<T,ST>::NamedFlexibleStorage1D(const NamedFlexibleStorage1D<T,ST>& toCopy) :
+template<typename T, typename ST> NamedFlexibleStorage1D<T,ST>::NamedFlexibleStorage1D(const NamedFlexibleStorage1D<T,ST>& toCopy) :
   FlexibleStorage1D<T,ST>(toCopy), name_("unfs1d")
 {
 }
 
-template<typename T, typename ST> 
-NamedFlexibleStorage1D<T,ST>::NamedFlexibleStorage1D(const FlexibleStorage1D<T,ST>& toCopy) :
+template<typename T, typename ST> NamedFlexibleStorage1D<T,ST>::NamedFlexibleStorage1D(const FlexibleStorage1D<T,ST>& toCopy) :
   FlexibleStorage1D<T,ST>(toCopy), name_("unfs1d")
 {
 }

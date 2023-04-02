@@ -30,7 +30,7 @@ public:
 
   //copy constructor
   Storage2D(const Storage2D<T,ST>& toCopy);
-  
+
   //move constructor
   Storage2D(Storage2D<T,ST>&& toTake);
 
@@ -189,35 +189,29 @@ template<typename T, typename ST>
 /*static*/ const std::string Storage2D<T,ST>::stor2D_name_ = "unnamed 2Dstorage";
 
 //constructors
-template<typename T, typename ST> 
-Storage2D<T,ST>::Storage2D() : StorageBase<T,ST>(), xDim_(0), yDim_(0) {}
+template<typename T, typename ST> Storage2D<T,ST>::Storage2D() : StorageBase<T,ST>(), xDim_(0), yDim_(0) {}
 
-template<typename T, typename ST> 
-Storage2D<T,ST>::Storage2D(ST xDim, ST yDim) : StorageBase<T,ST>(xDim*yDim), xDim_(xDim), yDim_(yDim)
+template<typename T, typename ST> Storage2D<T,ST>::Storage2D(ST xDim, ST yDim) : StorageBase<T,ST>(xDim*yDim), xDim_(xDim), yDim_(yDim)
 {
 }
 
-template<typename T, typename ST> 
-Storage2D<T,ST>::Storage2D(ST xDim, ST yDim, const T default_value)
+template<typename T, typename ST> Storage2D<T,ST>::Storage2D(ST xDim, ST yDim, const T default_value)
   : StorageBase<T,ST>(xDim*yDim, default_value), xDim_(xDim), yDim_(yDim)
 {
 }
 
-template<typename T, typename ST> 
-Storage2D<T,ST>::Storage2D(const std::pair<ST,ST> dims)
+template<typename T, typename ST> Storage2D<T,ST>::Storage2D(const std::pair<ST,ST> dims)
   : StorageBase<T,ST>(dims.first*dims.second), xDim_(dims.first), yDim_(dims.second)
 {
 }
 
-template<typename T, typename ST> 
-Storage2D<T,ST>::Storage2D(const std::pair<ST,ST> dims, T default_value)
+template<typename T, typename ST> Storage2D<T,ST>::Storage2D(const std::pair<ST,ST> dims, T default_value)
   : StorageBase<T,ST>(dims.first*dims.second, default_value), xDim_(dims.first), yDim_(dims.second)
 {
 }
 
 //copy constructor
-template<typename T, typename ST> 
-Storage2D<T,ST>::Storage2D(const Storage2D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy.xDim()*toCopy.yDim())
+template<typename T, typename ST> Storage2D<T,ST>::Storage2D(const Storage2D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy.xDim()*toCopy.yDim())
 {
   xDim_ = toCopy.xDim();
   yDim_ = toCopy.yDim();
@@ -230,8 +224,7 @@ Storage2D<T,ST>::Storage2D(const Storage2D<T,ST>& toCopy) : StorageBase<T,ST>(to
 }
 
 //move constructor
-template<typename T, typename ST> 
-Storage2D<T,ST>::Storage2D(Storage2D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
+template<typename T, typename ST> Storage2D<T,ST>::Storage2D(Storage2D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
 {
   xDim_ = toTake.xDim_;
   yDim_ = toTake.yDim_;
@@ -368,7 +361,7 @@ Storage2D<T,ST>& Storage2D<T,ST>::operator=(Storage2D<T,ST>&& toTake) noexcept
 {
   delete[] Base::data_;
   Base::data_ = toTake.data_;
-  toTake.data_ = 0;  
+  toTake.data_ = 0;
 
   xDim_ = toTake.xDim();
   yDim_ = toTake.yDim();
@@ -520,7 +513,7 @@ bool operator==(const Storage2D<T,ST>& v1, const Storage2D<T,ST>& v2)
       if (v1.direct_access(i) != v2.direct_access(i))
         return false;
     }
-  }    
+  }
 
   return true;
 }

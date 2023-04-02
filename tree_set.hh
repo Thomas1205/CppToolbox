@@ -24,16 +24,16 @@ public:
   {
     data_ = s.data_;
   }
-  
+
   TreeSet(TreeSet<T>&& s)
   {
     data_ = s.data_;
   }
-  
-  TreeSet(const std::initializer_list<T>& init) 
+
+  TreeSet(const std::initializer_list<T>& init)
   {
     data_.reserve(init.size()+1);
-    data_.push_back(T()); //so far we do not use the first element    
+    data_.push_back(T()); //so far we do not use the first element
     for (typename std::initializer_list<T>::const_iterator it = init.begin(); it != init.end(); it++)
       insert(*it);
   }
@@ -45,7 +45,7 @@ public:
   size_t capacity() const;
 
   bool contains(PassType val) const;
-  
+
   size_t element_num(PassType val) const;
 
   T min() const;

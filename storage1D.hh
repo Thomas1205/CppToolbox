@@ -32,7 +32,7 @@ public:
 
   //copy constructor
   Storage1D(const Storage1D<T,ST>& toCopy);
-  
+
   //move constructor
   Storage1D(Storage1D<T,ST>&& toTake);
 
@@ -44,9 +44,11 @@ public:
 
   inline T& operator[](ST i) noexcept;
 
-  Storage1D<T,ST>& operator=(const Storage1D<T,ST>& toCopy) = default;
+  Storage1D<T,ST>& operator=(const Storage1D<T,ST>& toCopy);
 
-  Storage1D<T,ST>& operator=(Storage1D<T,ST>&& toTake) = default;
+  Storage1D<T,ST>& operator=(Storage1D<T,ST>&& toTake);
+
+  Storage1D<T,ST>& operator=(const std::initializer_list<T>& init);
 
   T back() const noexcept;
 
@@ -60,7 +62,7 @@ public:
   template<class swap_op = SwapOp<T>>
   void resize_swap(ST newsize, swap_op op) noexcept;
 
-  //maintains the values of exisitng positions, new ones are filled with <code> fill_value </code>  
+  //maintains the values of exisitng positions, new ones are filled with <code> fill_value </code>
   void resize(ST new_size, PassType fill_value) noexcept;
 
   //all elements are undefined after this operation
@@ -88,7 +90,7 @@ public:
   NamedStorage1D(ST size, T default_value, std::string name);
 
   NamedStorage1D(const NamedStorage1D<T,ST>& toCopy);
-  
+
   NamedStorage1D(NamedStorage1D<T,ST>&& toTake);
 
   ~NamedStorage1D() = default;
@@ -184,34 +186,55 @@ namespace Makros {
 template<typename T,typename ST>
 /*static*/ const std::string Storage1D<T,ST>::stor1D_name_ = "unnamed 1Dstorage";
 
-template<typename T,typename ST> 
-Storage1D<T,ST>::Storage1D() : StorageBase<T,ST>() {}
+template<typename T,typename ST> Storage1D<T,ST>::Storage1D() : StorageBase<T,ST>() {}
 
-template<typename T,typename ST> 
-Storage1D<T,ST>::Storage1D(ST size) : StorageBase<T,ST>(size)
+template<typename T,typename ST> Storage1D<T,ST>::Storage1D(ST size) : StorageBase<T,ST>(size)
 {
 }
 
-template<typename T,typename ST> 
-Storage1D<T,ST>::Storage1D(ST size, Storage1D<T,ST>::PassType default_value) : StorageBase<T,ST>(size, default_value)
+template<typename T,typename ST> Storage1D<T,ST>::Storage1D(ST size, Storage1D<T,ST>::PassType default_value) : StorageBase<T,ST>(size, default_value)
 {
 }
 
-template<typename T,typename ST> 
-Storage1D<T,ST>::Storage1D(const std::initializer_list<T>& init) : StorageBase<T,ST>(init)
-{ 
+template<typename T,typename ST> Storage1D<T,ST>::Storage1D(const std::initializer_list<T>& init) : StorageBase<T,ST>(init)
+{
 }
 
 //copy constructor
-template<typename T,typename ST> 
-Storage1D<T,ST>::Storage1D(const Storage1D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy)
+template<typename T,typename ST> Storage1D<T,ST>::Storage1D(const Storage1D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy)
 {
 }
 
 //move constructor
-template<typename T,typename ST> 
-Storage1D<T,ST>::Storage1D(Storage1D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
+template<typename T,typename ST> Storage1D<T,ST>::Storage1D(Storage1D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
 {
+}
+
+template<typename T,typename ST>
+Storage1D<T,ST>& Storage1D<T,ST>::operator=(Storage1D<T,ST>&& toTake)
+{
+  StorageBase<T,ST>::operator=(toTake);
+  return *this;
+}
+
+template<typename T,typename ST>
+Storage1D<T,ST>& Storage1D<T,ST>::operator=(const Storage1D<T,ST>& toCopy)
+{
+  StorageBase<T,ST>::operator=(toCopy);
+  return *this;
+}
+
+template<typename T,typename ST>
+Storage1D<T,ST>& Storage1D<T,ST>::operator=(const std::initializer_list<T>& init)
+{
+  const ST size = init.size();
+  if (size != Base::size_) {
+    delete[] Base::data_;
+    Base::data_ = new T[size];
+    Base::size_ = size;
+  }
+  std::copy(init.begin(),init.end(),Base::data_);
+  return *this;
 }
 
 template<typename T,typename ST>
@@ -390,23 +413,17 @@ void Storage1D<T,ST>::swap(Storage1D<T,ST>& toSwap) noexcept
 
 /******** implementation of NamedStorage1D ***************/
 
-template<typename T,typename ST> 
-NamedStorage1D<T,ST>::NamedStorage1D() : Storage1D<T,ST>(), name_("yyy") {}
+template<typename T,typename ST> NamedStorage1D<T,ST>::NamedStorage1D() : Storage1D<T,ST>(), name_("yyy") {}
 
-template<typename T,typename ST> 
-NamedStorage1D<T,ST>::NamedStorage1D(std::string name) : Storage1D<T,ST>(), name_(name) {}
+template<typename T,typename ST> NamedStorage1D<T,ST>::NamedStorage1D(std::string name) : Storage1D<T,ST>(), name_(name) {}
 
-template<typename T,typename ST> 
-NamedStorage1D<T,ST>::NamedStorage1D(ST size, std::string name) : Storage1D<T,ST>(size), name_(name) {}
+template<typename T,typename ST> NamedStorage1D<T,ST>::NamedStorage1D(ST size, std::string name) : Storage1D<T,ST>(size), name_(name) {}
 
-template<typename T,typename ST> 
-NamedStorage1D<T,ST>::NamedStorage1D(ST size, T default_value, std::string name) : Storage1D<T,ST>(size,default_value), name_(name) {}
+template<typename T,typename ST> NamedStorage1D<T,ST>::NamedStorage1D(ST size, T default_value, std::string name) : Storage1D<T,ST>(size,default_value), name_(name) {}
 
-template<typename T,typename ST> 
-NamedStorage1D<T,ST>::NamedStorage1D(const NamedStorage1D<T,ST>& toCopy) : Storage1D<T,ST>(toCopy), name_("yyy") {}
-  
-template<typename T,typename ST> 
-NamedStorage1D<T,ST>::NamedStorage1D(NamedStorage1D<T,ST>&& toTake) : Storage1D<T,ST>(toTake), name_("yyy") {}
+template<typename T,typename ST> NamedStorage1D<T,ST>::NamedStorage1D(const NamedStorage1D<T,ST>& toCopy) : Storage1D<T,ST>(toCopy), name_("yyy") {}
+
+template<typename T,typename ST> NamedStorage1D<T,ST>::NamedStorage1D(NamedStorage1D<T,ST>&& toTake) : Storage1D<T,ST>(toTake), name_("yyy") {}
 
 template<typename T,typename ST>
 /*virtual*/ const std::string& NamedStorage1D<T,ST>::name() const
@@ -457,7 +474,7 @@ template<typename T,typename ST>
 inline bool operator==(const Storage1D<T,ST>& v1, const Storage1D<T,ST>& v2)
 {
   if (v1.size() != v2.size())
-    return false;  
+    return false;
 
   if (std::is_trivially_copyable<T>::value) {
     return Routines::equals(v1.direct_access(), v2.direct_access(), v1.size());

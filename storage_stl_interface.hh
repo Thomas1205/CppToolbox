@@ -123,7 +123,7 @@ void assign(std::vector<std::pair<K,T>,ST>& target, const std::map<K,T>& source)
 
   for (typename std::map<K,T>::const_iterator it = source.cbegin(); it != source.cend(); ++it) {
     target.push_back(*it);
-  } 
+  }
 }
 
 template<typename T, typename ST, typename K, typename H>
@@ -134,7 +134,7 @@ void assign(std::vector<std::pair<K,T>,ST>& target, const std::unordered_map<K,T
 
   for (typename std::unordered_map<K,T,H>::const_iterator it = source.cbegin(); it != source.cend(); ++it) {
     target.push_back(*it);
-  }   
+  }
 }
 
 template<typename T, typename ST>
@@ -201,7 +201,7 @@ void assign(std::vector<K>& target1, std::vector<T>& target2, const std::unorder
   for (typename std::unordered_map<K,T,H>::const_iterator it = source.cbegin(); it != source.cend(); ++it) {
     target1.push_back(it->first);
     target2.push_back(it->second);
-  }  
+  }
 }
 
 template<typename T1, typename T2, typename ST>

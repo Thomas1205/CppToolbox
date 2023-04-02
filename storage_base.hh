@@ -40,7 +40,7 @@ public:
   inline T& ref_attr_restrict direct_access(ST i) noexcept;
 
   inline const T& ref_attr_restrict direct_access(ST i) const noexcept;
-  
+
   inline const T* end_ptr() const noexcept;
 
   inline void set_constant(const T constant) noexcept;
@@ -50,7 +50,7 @@ public:
 protected:
 
   StorageBase(const std::initializer_list<T>& init);
-  
+
   StorageBase<T,ST>& operator=(const StorageBase<T,ST>& toCopy) noexcept;
 
   StorageBase<T,ST>& operator=(StorageBase<T,ST>&& toTake) noexcept;
@@ -63,55 +63,49 @@ protected:
 
 /*************************** implementation ****************************/
 
-template<typename T, typename ST> 
-StorageBase<T,ST>::StorageBase() : data_(0), size_(0)
+template<typename T, typename ST> StorageBase<T,ST>::StorageBase() : data_(0), size_(0)
 {
 }
 
-template<typename T, typename ST> 
-StorageBase<T,ST>::StorageBase(ST size) : size_(size)
+template<typename T, typename ST> StorageBase<T,ST>::StorageBase(ST size) : size_(size)
 {
   data_ = new T[size];
 }
 
-template<typename T, typename ST> 
-StorageBase<T,ST>::StorageBase(ST size, const T default_value) : size_(size)
+template<typename T, typename ST> StorageBase<T,ST>::StorageBase(ST size, const T default_value) : size_(size)
 {
   data_ = new T[size];
   std::fill_n(data_,size_,default_value);
 }
 
-template<typename T, typename ST> 
-StorageBase<T,ST>::StorageBase(const std::initializer_list<T>& init)
+template<typename T, typename ST> StorageBase<T,ST>::StorageBase(const std::initializer_list<T>& init)
 {
   size_ = init.size();
+  data_ = new T[size_];
   std::copy(init.begin(),init.end(),data_);
 }
 
 //copy constructor
-template<typename T, typename ST> 
-StorageBase<T,ST>::StorageBase(const StorageBase<T,ST>& toCopy) 
+template<typename T, typename ST> StorageBase<T,ST>::StorageBase(const StorageBase<T,ST>& toCopy)
 {
   size_ = toCopy.size();
   data_ = new T[size_];
-  
+
   Makros::unified_assign(data_, toCopy.direct_access(), size_);
 }
 
 //move constructor
-template<typename T, typename ST> 
-StorageBase<T,ST>::StorageBase(StorageBase<T,ST>&& toTake) : data_(toTake.data_), size_(toTake.size_) 
+template<typename T, typename ST> StorageBase<T,ST>::StorageBase(StorageBase<T,ST>&& toTake) : data_(toTake.data_), size_(toTake.size_)
 {
   toTake.data_ = 0;
 }
 
-template<typename T, typename ST> 
-StorageBase<T,ST>::~StorageBase()
+template<typename T, typename ST> StorageBase<T,ST>::~StorageBase()
 {
   delete[] data_;
 }
 
-template<typename T, typename ST> 
+template<typename T, typename ST>
 StorageBase<T,ST>& StorageBase<T,ST>::operator=(const StorageBase<T,ST>& toCopy) noexcept
 {
   if (size_ != toCopy.size_) {
@@ -127,7 +121,7 @@ StorageBase<T,ST>& StorageBase<T,ST>::operator=(const StorageBase<T,ST>& toCopy)
   return *this;
 }
 
-template<typename T, typename ST> 
+template<typename T, typename ST>
 StorageBase<T,ST>& StorageBase<T,ST>::operator=(StorageBase<T,ST>&& toTake) noexcept
 {
   delete[] data_;
@@ -177,7 +171,7 @@ inline const T& ref_attr_restrict StorageBase<T,ST>::direct_access(ST i) const n
 template<typename T, typename ST>
 const T* StorageBase<T,ST>::end_ptr() const noexcept
 {
-  return data_ + size_; 
+  return data_ + size_;
 }
 
 template<typename T, typename ST>
@@ -191,7 +185,7 @@ inline bool StorageBase<T,ST>::is_constant() const noexcept
 {
   if (size_ <= 1)
     return true;
-  
+
   const T val = data_[0];
   for (ST i = 1; i < size_; i++) {
     if (val != data_[i])

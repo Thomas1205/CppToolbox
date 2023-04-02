@@ -43,9 +43,9 @@ public:
 
   //copy constructor
   Storage3D(const Storage3D<T,ST>& toCopy);
-  
+
   //move constructor
-  Storage3D(Storage3D<T,ST>&& toTake);  
+  Storage3D(Storage3D<T,ST>&& toTake);
 
   explicit Storage3D(ST xDim, ST yDim, ST zDim);
 
@@ -133,7 +133,7 @@ public:
   NamedStorage3D(ST xDim, ST yDim, ST zDim, std::string name);
 
   NamedStorage3D(ST xDim, ST yDim, ST zDim, T default_value, std::string name);
-  
+
   ~NamedStorage3D() = default;
 
   virtual const std::string& name() const;
@@ -209,11 +209,9 @@ namespace Makros {
 template<typename T, typename ST>
 /*static*/ const std::string Storage3D<T,ST>::stor3D_name_ = "unnamed Storage3D";
 
-template<typename T, typename ST> 
-Storage3D<T,ST>::Storage3D() : StorageBase<T,ST>(), xDim_(0), yDim_(0), zDim_(0) {}
+template<typename T, typename ST> Storage3D<T,ST>::Storage3D() : StorageBase<T,ST>(), xDim_(0), yDim_(0), zDim_(0) {}
 
-template<typename T, typename ST> 
-Storage3D<T,ST>::Storage3D(const Storage3D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy.xDim()*toCopy.yDim()*toCopy.zDim())
+template<typename T, typename ST> Storage3D<T,ST>::Storage3D(const Storage3D<T,ST>& toCopy) : StorageBase<T,ST>(toCopy.xDim()*toCopy.yDim()*toCopy.zDim())
 {
   xDim_ = toCopy.xDim();
   yDim_ = toCopy.yDim();
@@ -226,31 +224,26 @@ Storage3D<T,ST>::Storage3D(const Storage3D<T,ST>& toCopy) : StorageBase<T,ST>(to
 }
 
 //move constructor
-template<typename T, typename ST> 
-Storage3D<T,ST>::Storage3D(Storage3D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
+template<typename T, typename ST> Storage3D<T,ST>::Storage3D(Storage3D<T,ST>&& toTake) : StorageBase<T,ST>(toTake)
 {
   xDim_ = toTake.xDim();
   yDim_ = toTake.yDim();
-  zDim_ = toTake.zDim();  
+  zDim_ = toTake.zDim();
 }
 
-template<typename T, typename ST> 
-Storage3D<T,ST>::Storage3D(ST xDim, ST yDim, ST zDim) : StorageBase<T,ST>(xDim*yDim*zDim), xDim_(xDim), yDim_(yDim), zDim_(zDim)
+template<typename T, typename ST> Storage3D<T,ST>::Storage3D(ST xDim, ST yDim, ST zDim) : StorageBase<T,ST>(xDim*yDim*zDim), xDim_(xDim), yDim_(yDim), zDim_(zDim)
 {
 }
 
-template<typename T, typename ST> 
-Storage3D<T,ST>::Storage3D(const Dim3D<ST> dims)
+template<typename T, typename ST> Storage3D<T,ST>::Storage3D(const Dim3D<ST> dims)
   : StorageBase<T,ST>(dims.xDim_*dims.yDim_*dims.zDim_), xDim_(dims.xDim_), yDim_(dims.yDim_), zDim_(dims.zDim_) {}
 
-template<typename T, typename ST> 
-Storage3D<T,ST>::Storage3D(ST xDim, ST yDim, ST zDim, const T default_value)
+template<typename T, typename ST> Storage3D<T,ST>::Storage3D(ST xDim, ST yDim, ST zDim, const T default_value)
   : StorageBase<T,ST>(xDim*yDim*zDim,default_value), xDim_(xDim), yDim_(yDim), zDim_(zDim)
 {
 }
 
-template<typename T, typename ST> 
-Storage3D<T,ST>::Storage3D(const Dim3D<ST> dims, const T default_value)
+template<typename T, typename ST> Storage3D<T,ST>::Storage3D(const Dim3D<ST> dims, const T default_value)
   : StorageBase<T,ST>(dims.xDim_*dims.yDim_*dims.zDim_,default_value), xDim_(dims.xDim_), yDim_(dims.yDim_), zDim_(dims.zDim_) {}
 
 template<typename T, typename ST>
@@ -424,13 +417,13 @@ Storage3D<T,ST>& Storage3D<T,ST>::operator=(Storage3D<T,ST>&& toTake) noexcept
 {
   delete[] Base::data_;
   Base::data_ = toTake.data_;
-  toTake.data_ = 0;  
+  toTake.data_ = 0;
 
   xDim_ = toTake.xDim();
   yDim_ = toTake.yDim();
   zDim_ = toTake.zDim();
 
-  Base::size_ = toTake.size();  
+  Base::size_ = toTake.size();
   return *this;
 }
 

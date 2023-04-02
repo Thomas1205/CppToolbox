@@ -7,7 +7,7 @@
 #include "routines.hh"
 #include "unsorted_set.hh"
 
-template<typename T>
+template<typename T, typename Less = std::less<T>, typename Equal = std::equal_to<T> >
 class SortedSet : public SetBase<T> {
 public:
 
@@ -16,11 +16,15 @@ public:
 
   SortedSet() {}
 
-  SortedSet(const SortedSet<T>& toCopy) : SetBase<T>(toCopy) {}
-  
-  SortedSet(SortedSet<T>&& toTake) : SetBase<T>(toTake) {}
-  
+  SortedSet(const SortedSet<T,Less,Equal>& toCopy) : SetBase<T>(toCopy) {}
+
+  SortedSet(SortedSet<T,Less,Equal>&& toTake) : SetBase<T>(toTake) {}
+
   SortedSet(const std::initializer_list<T>& init);
+
+  void operator=(const SortedSet<T,Less,Equal>& toCopy);
+
+  void operator=(SortedSet<T,Less,Equal>&& toTake);
 
   //for compatibility with the other sets, e.g. use in templates (data are always sorted)
   const std::vector<T>& unsorted_data() const noexcept
@@ -33,67 +37,79 @@ public:
     return Base::data_;
   }
 
-  bool contains(PassType val) const noexcept;
+  bool contains(const PassType val) const noexcept;
 
   //returns true if val is new
-  bool insert(PassType val) noexcept;
+  bool insert(const PassType val) noexcept;
 
   //returns true if val is new
   bool move_insert(T&& val) noexcept;
 
-  void insert_new(PassType val) noexcept;
+  void insert_new(const PassType val) noexcept;
 
   void move_insert_new(T&& val) noexcept;
-  
-  void insert_largest(PassType val) noexcept;
+
+  void insert_largest(const PassType val) noexcept;
 
   void move_insert_largest(T&& val) noexcept;
 
   //returns true if val was in the tree
-  bool erase(PassType val) noexcept;
+  bool erase(const PassType val) noexcept;
 
   //returns true if out was in the tree
-  bool replace(PassType out, PassType in) noexcept;
+  bool replace(const PassType out, const PassType in) noexcept;
 
   //returns true if out was in the tree
-  bool move_replace(PassType out, T&& in) noexcept;
+  bool move_replace(const PassType out, T&& in) noexcept;
 };
 
-template<typename T>
-std::ostream& operator<<(std::ostream& os, const SortedSet<T>& set);
+template<typename T, typename Less, typename Equal>
+std::ostream& operator<<(std::ostream& os, const SortedSet<T,Less,Equal>& set);
 
-template<typename T>
-bool operator==(const SortedSet<T>& set1, const SortedSet<T>& set2) noexcept;
+template<typename T, typename Less, typename Equal>
+bool operator==(const SortedSet<T,Less,Equal>& set1, const SortedSet<T,Less,Equal>& set2) noexcept;
 
 /********************** implementation ************************/
 
-template<typename T> 
-SortedSet<T>::SortedSet(const std::initializer_list<T>& init)
+template<typename T, typename Less, typename Equal> SortedSet<T,Less,Equal>::SortedSet(const std::initializer_list<T>& init)
 {
   Base::data_.reserve(init.size());
   for (typename std::initializer_list<T>::const_iterator it = init.begin(); it != init.end(); it++)
-    insert(*it); 
+    insert(*it);
 }
 
-template<typename T>
-bool SortedSet<T>::contains(PassType val) const noexcept
+template<typename T, typename Less, typename Equal>
+void SortedSet<T,Less,Equal>::operator=(const SortedSet<T,Less,Equal>& toCopy)
 {
-  return (binsearch(Base::data_, val) < Base::data_.size());
+  Base::data_ = toCopy.data_;
+}
+
+template<typename T, typename Less, typename Equal>
+void SortedSet<T,Less,Equal>::operator=(SortedSet<T,Less,Equal>&& toTake)
+{
+  Base::data_.swap(toTake.data_);
+}
+
+template<typename T, typename Less, typename Equal>
+bool SortedSet<T,Less,Equal>::contains(const PassType val) const noexcept
+{
+  return (Routines::binsearch<T,Less,Equal>(Base::data_.data(), val, Base::data_.size()) < Base::data_.size());
 }
 
 //returns true if val is new
-template<typename T>
-bool SortedSet<T>::insert(PassType val) noexcept
+template<typename T, typename Less, typename Equal>
+bool SortedSet<T,Less,Equal>::insert(const PassType val) noexcept
 {
   //std::cerr << "insert" << std::endl;
   const size_t size = Base::data_.size();
-  const size_t inspos = binsearch_insertpos(Base::data_, val);
+  const size_t inspos = Routines::binsearch_insertpos<T,Less,Equal,size_t>(Base::data_.data(), val, Base::data_.size());
   if (inspos >= size) {
     Base::data_.push_back(val);
     return true;
   }
 
-  if (Base::data_[inspos] == val)
+  const static Equal equal;
+  if (equal(Base::data_[inspos],val))
     return false;
 
   Base::data_.push_back(T());
@@ -107,18 +123,19 @@ bool SortedSet<T>::insert(PassType val) noexcept
 }
 
 //returns true if val is new
-template<typename T>
-bool SortedSet<T>::move_insert(T&& val) noexcept
+template<typename T, typename Less, typename Equal>
+bool SortedSet<T,Less,Equal>::move_insert(T&& val) noexcept
 {
   //std::cerr << "insert" << std::endl;
   const size_t size = Base::data_.size();
-  const size_t inspos = binsearch_insertpos(Base::data_, val);
+  const size_t inspos = binsearch_insertpos<T,Less,Equal>(Base::data_, val);
   if (inspos >= size) {
     Base::data_.push_back(val);
     return true;
   }
 
-  if (Base::data_[inspos] == val)
+  const static Equal equal;
+  if (equal(Base::data_[inspos],val))
     return false;
 
   Base::data_.push_back(T());
@@ -132,13 +149,14 @@ bool SortedSet<T>::move_insert(T&& val) noexcept
 }
 
 //returns true if val is new
-template<typename T>
-void SortedSet<T>::insert_new(PassType val) noexcept
+template<typename T, typename Less, typename Equal>
+void SortedSet<T,Less,Equal>::insert_new(const PassType val) noexcept
 {
   //std::cerr << "insert" << std::endl;
   const size_t size = Base::data_.size();
-  const size_t inspos = binsearch_insertpos(Base::data_, val);
-  assert(inspos >= size || Base::data_[inspos] != val);
+  const size_t inspos = binsearch_insertpos<T,Less>(Base::data_, val);
+  const static Equal equal;
+  assert(inspos >= size || !equal(Base::data_[inspos],val));
   if (inspos >= size) {
     Base::data_.push_back(val);
   }
@@ -153,13 +171,14 @@ void SortedSet<T>::insert_new(PassType val) noexcept
 }
 
 //returns true if val is new
-template<typename T>
-void SortedSet<T>::move_insert_new(T&& val) noexcept
+template<typename T, typename Less, typename Equal>
+void SortedSet<T,Less,Equal>::move_insert_new(T&& val) noexcept
 {
   //std::cerr << "insert" << std::endl;
   const size_t size = Base::data_.size();
-  const size_t inspos = binsearch_insertpos(Base::data_, val);
-  assert(inspos >= size || Base::data_[inspos] != val);
+  const size_t inspos = binsearch_insertpos<T,Less>(Base::data_, val);
+  const static Equal equal;
+  assert(inspos >= size || !equal(Base::data_[inspos],val));
   if (inspos >= size) {
     Base::data_.push_back(val);
   }
@@ -173,27 +192,30 @@ void SortedSet<T>::move_insert_new(T&& val) noexcept
   Base::data_[inspos] = val;
 }
 
-template<typename T>
-void SortedSet<T>::insert_largest(PassType val) noexcept
+template<typename T, typename Less, typename Equal>
+void SortedSet<T,Less,Equal>::insert_largest(const PassType val) noexcept
 {
-  assert(Base::data_.size() == 0 || Base::data_.back() < val);
+  const static Less less;
+  assert(Base::data_.size() == 0 || less(Base::data_.back(),val));
   Base::data_.push_back(val);
 }
 
-template<typename T>
-void SortedSet<T>::move_insert_largest(T&& val) noexcept
+template<typename T, typename Less, typename Equal>
+void SortedSet<T,Less,Equal>::move_insert_largest(T&& val) noexcept
 {
-  assert(Base::data_.size() == 0 || Base::data_.back() < val);
+  const static Less less;
+
+  assert(Base::data_.size() == 0 || less(Base::data_.back(),val));
   Base::data_.push_back(val);
 }
 
 //returns true if val was in the tree
-template<typename T>
-bool SortedSet<T>::erase(PassType val) noexcept
+template<typename T, typename Less, typename Equal>
+bool SortedSet<T,Less,Equal>::erase(const PassType val) noexcept
 {
   //std::cerr << "erase " << val << " from " << data_ << std::endl;
   const size_t size = Base::data_.size();
-  const size_t pos = binsearch(Base::data_, val);
+  const size_t pos = binsearch<T,Less,Equal>(Base::data_, val);
   if (pos >= size)
     return false;
 
@@ -206,12 +228,10 @@ bool SortedSet<T>::erase(PassType val) noexcept
 }
 
 //returns true if out was in the tree
-template<typename T>
-bool SortedSet<T>::replace(PassType out, PassType in) noexcept
+template<typename T, typename Less, typename Equal>
+bool SortedSet<T,Less,Equal>::replace(const PassType out, const PassType in) noexcept
 {
   assert(!contains(in));
-
-  //std::cerr << "replace " << out << " by " << in << std::endl;
 
 #if 0
   bool b = erase(out);
@@ -219,7 +239,8 @@ bool SortedSet<T>::replace(PassType out, PassType in) noexcept
   return b;
 #else
   const size_t size = Base::data_.size();
-  const size_t pos = binsearch(Base::data_, out);
+  const size_t pos = binsearch<T,Less,Equal>(Base::data_, out);
+  const static Less less;
   if (pos < size) {
 
     if (pos > 0 && in < Base::data_[pos-1]) {
@@ -227,23 +248,21 @@ bool SortedSet<T>::replace(PassType out, PassType in) noexcept
       while (npos > 0 && in < Base::data_[npos-1])
         npos--;
 
-      //std::cerr << "A. npos: " << npos << std::endl;
-
-      Routines::upshift_array(Base::data_.data(), npos, pos, 1);
-      //for (size_t k = pos; k > npos; k--)
-      //  Base::data_[k] = Base::data_[k-1];
+      //TODO: call shift function - untested
+      //Routines::upshift_array(Base::data_.data(), npos, pos, 1);
+      for (size_t k = pos; k > npos; k--)
+        Base::data_[k] = Base::data_[k-1];
       Base::data_[npos] = in;
     }
-    else if (pos+1 < size && Base::data_[pos+1] < in) {
+    else if (pos+1 < size && less(Base::data_[pos+1],in)) {
       size_t npos = pos+1;
-      while (npos+1 < size && Base::data_[npos+1] < in)
+      while (npos+1 < size && less(Base::data_[npos+1],in))
         npos++;
 
-      //std::cerr << "B. npos: " << npos << std::endl;
-
-      Routines::downshift_array(Base::data_.data(), pos, 1, npos+1);      
-      //for (size_t k = pos; k < npos; k++)
-      //  Base::data_[k] = Base::data_[k+1];
+      //TODO: call shift function -- untested
+      //Routines::downshift_array(Base::data_.data(), pos, 1, npos+1);
+      for (size_t k = pos; k < npos; k++)
+        Base::data_[k] = Base::data_[k+1];
       Base::data_[npos] = in;
     }
     else
@@ -260,8 +279,8 @@ bool SortedSet<T>::replace(PassType out, PassType in) noexcept
 }
 
 //returns true if out was in the tree
-template<typename T>
-bool SortedSet<T>::move_replace(PassType out, T&& in) noexcept
+template<typename T, typename Less, typename Equal>
+bool SortedSet<T,Less,Equal>::move_replace(const PassType out, T&& in) noexcept
 {
   assert(!contains(in));
 
@@ -271,27 +290,28 @@ bool SortedSet<T>::move_replace(PassType out, T&& in) noexcept
   return b;
 #else
   const size_t size = Base::data_.size();
-  const size_t pos = binsearch(Base::data_, out);
+  const size_t pos = binsearch<T,Less,Equal>(Base::data_, out);
+  const static Less less;
   if (pos < size) {
 
     if (pos > 0 && in < Base::data_[pos-1]) {
       size_t npos = pos-1;
-      while (npos > 0 && in < Base::data_[npos-1])
+      while (npos > 0 && less(in,Base::data_[npos-1]))
         npos--;
 
-      Routines::upshift_array(Base::data_.data(), npos, pos, 1);
-      //for (size_t k = pos; k > npos; k--)
-      //  Base::data_[k] = Base::data_[k-1];
+      //TODO: call shift function
+      for (size_t k = pos; k > npos; k--)
+        Base::data_[k] = Base::data_[k-1];
       Base::data_[npos] = in;
     }
-    else if (pos+1 < size && Base::data_[pos+1] < in) {
+    else if (pos+1 < size && less(Base::data_[pos+1],in)) {
       size_t npos = pos+1;
-      while (npos+1 < size && Base::data_[npos+1] < in)
+      while (npos+1 < size && less(Base::data_[npos+1],in))
         npos++;
 
-      Routines::downshift_array(Base::data_.data(), pos, 1, npos+1);      
-      //for (size_t k = pos; k < npos; k++)
-      //  Base::data_[k] = Base::data_[k+1];
+      //TODO: call shift function
+      for (size_t k = pos; k < npos; k++)
+        Base::data_[k] = Base::data_[k+1];
       Base::data_[npos] = in;
     }
     else
@@ -307,8 +327,8 @@ bool SortedSet<T>::move_replace(PassType out, T&& in) noexcept
 #endif
 }
 
-template<typename T>
-std::ostream& operator<<(std::ostream& os, const SortedSet<T>& set)
+template<typename T, typename Less, typename Equal>
+std::ostream& operator<<(std::ostream& os, const SortedSet<T,Less,Equal>& set)
 {
   const std::vector<T>& data = set.sorted_data();
   const size_t size = data.size();
@@ -324,8 +344,8 @@ std::ostream& operator<<(std::ostream& os, const SortedSet<T>& set)
   return os;
 }
 
-template<typename T>
-bool operator==(const SortedSet<T>& set1, const SortedSet<T>& set2) noexcept
+template<typename T, typename Less, typename Equal>
+bool operator==(const SortedSet<T,Less,Equal>& set1, const SortedSet<T,Less,Equal>& set2) noexcept
 {
   return (set1.sorted_data() == set2.sorted_data());
 }
