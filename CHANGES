@@ -13,6 +13,7 @@ In contrast, moving to C++-14 or C++-17 will not give a major jump (as far as I 
 - extended and improved the various sets
 - corrected and improved sorting
 - added maps: with plain keys and with hashing
+- added Less and Equal objects for sorting, sets and maps
 
 /***** changes for version 1.15 (February 17 2020) ******/
 
