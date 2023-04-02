@@ -114,6 +114,7 @@ using T_A16 = T ALIGNED16;
 #define EPS_FLOAT  std::numeric_limits<float>::epsilon()
 #define MAX_INT std::numeric_limits<int>::max()
 #define MAX_UINT std::numeric_limits<uint>::max()
+#define MAX_SIZE_T std::numeric_limits<size_t>::max()
 #define MIN_LONG std::numeric_limits<long long>::min()
 #define MAX_LONG std::numeric_limits<long long>::max()
 #define MAX_ULONG std::numeric_limits<unsigned long long>::max()
@@ -131,7 +132,6 @@ enum RegularityType {SquaredDiffReg,AbsDiffReg,TVReg};
 
 
 /**** helpful routines ****/
-
 
 namespace Makros {
 
@@ -304,22 +304,22 @@ namespace Makros {
     size_t i = 0;
 #if USE_SSE >= 5
     for (; i + 31 < nBytes; i += 32) {
-      
-      asm __volatile__ ("vmovdqu %[d], %%ymm9 \n\t" 
-                        "vmovdqu %%ymm9, %[s] \n\t" 
+
+      asm __volatile__ ("vmovdqu %[d], %%ymm9 \n\t"
+                        "vmovdqu %%ymm9, %[s] \n\t"
                         : [d] "=m" (dest[i]) : [s] "m" (source[i]) : "ymm9", "memory");
     }
-#endif    
+#endif
     for (; i + 15 < nBytes; i += 16) {
 
-      asm __volatile__ ("movdqa %[d], %%xmm9 \n\t" 
-                        "movdqa %%xmm9, %[s] \n\t" 
-                        : [d] "=m" (dest[i]) : [s] "m" (source[i]) : "xmm9", "memory");    
+      asm __volatile__ ("movdqa %[d], %%xmm9 \n\t"
+                        "movdqa %%xmm9, %[s] \n\t"
+                        : [d] "=m" (dest[i]) : [s] "m" (source[i]) : "xmm9", "memory");
     }
-    
+
     for (; i < nBytes; i++)
-      dest[i] = source[i]; 
-#endif    
+      dest[i] = source[i];
+#endif
   }
 
   template<typename T>
@@ -559,7 +559,8 @@ inline uint convert<uint>(const std::string s)
 
 //C++20 has bit_cast in <bit>
 template<typename T1, typename T2>
-T2 reinterpret(const T1 arg)  noexcept {
+T2 reinterpret(const T1 arg)  noexcept
+{
   assert(sizeof(T1) == sizeof(T2));
   return *reinterpret_cast<T2*>(&arg);
 }
@@ -653,7 +654,7 @@ inline void prefetchnta(const T* ptr) noexcept
 //NOTE: x86-64 also has prefetchw and prefetchwt1 (load and signal intent to write). And clflush writes a cache line back to mem, freeing the space in the cache
 
 namespace Makros {
-  
+
   template<typename T1, typename T2>
   class first_lower {
   public:
