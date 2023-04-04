@@ -295,8 +295,8 @@ template<typename Key, typename Value, typename KVec, typename VVec, typename Le
 bool UnsortedMapExploitSort<Key,Value,KVec,VVec,Less,Equal>::contains(const KeyPassType key) const noexcept
 {
   const size_t size = Base::key_.size();
-  std::cerr << "*********UnsortedMapExploitSort<Key,Value,KVec,VVec,Less,Equal>::contains" << std::endl;
-  std::cerr << "is sorted: " << is_sorted_ << std::endl;
+  //std::cerr << "*********UnsortedMapExploitSort<Key,Value,KVec,VVec,Less,Equal>::contains" << std::endl;
+  //std::cerr << "is sorted: " << is_sorted_ << std::endl;
   if (is_sorted_)
     return (Routines::binsearch(Base::key_.data(), key, size) < size);
   else
