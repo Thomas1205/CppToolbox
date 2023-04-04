@@ -18,6 +18,8 @@ public:
 
   HashMapBase(HashMapBase&& toTake) : hash_value_(std::move(toTake.hash_value_)), key_(std::move(toTake.key_)), value_(std::move(toTake.value_)) {}
 
+  ~HashMapBase() {}
+
   void swap(HashMapBase& toSwap)
   {
     hash_value_.swap(toSwap.hash_value_);
@@ -285,6 +287,8 @@ public:
 
   UnsortedHashMap(UnsortedHashMap<Key,Value,HashFunc,HT,ST>&& toTake) : HashMapBase<Key,Value,HashFunc>(toTake) {}
 
+  ~UnsortedHashMap() {}
+
   Value& operator[](KeyPassType key);
 
   //Value& operator[](Key&& key);
@@ -313,6 +317,8 @@ public:
   UnsortedHashMapExploitSort(const UnsortedHashMapExploitSort<Key,Value,HashFunc,HT,ST>& toCopy) : HashMapBase<Key,Value,HashFunc>(toCopy) {}
 
   UnsortedHashMapExploitSort(UnsortedHashMapExploitSort<Key,Value,HashFunc,HT,ST>&& toTake) : HashMapBase<Key,Value,HashFunc>(toTake) {}
+
+  ~UnsortedHashMapExploitSort() {}
 
   Value& operator[](KeyPassType key);
 
@@ -354,6 +360,8 @@ public:
   SortedHashMap(const SortedHashMap<Key,Value,HashFunc,HT,ST>& toCopy) : HashMapBase<Key,Value,HashFunc,HT>(toCopy) {}
 
   SortedHashMap(SortedHashMap<Key,Value,HashFunc,HT,ST>&& toTake) : HashMapBase<Key,Value,HashFunc,HT>(toTake) {}
+
+  ~SortedHashMap() {}
 
   Value& operator[](KeyPassType key);
 

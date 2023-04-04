@@ -874,7 +874,8 @@ namespace Routines {
   template<typename T, typename Equal>
   inline uint find_unique(const T* data, const T key, const uint nData) noexcept
   {
-    if (sizeof(T) == 4) {
+	//NOTE: we get a problem with compound types that consume more data than they fill. The extra bytes cannot be compared
+    if (sizeof(T) == 4 && !std::is_compound<T>::value) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
       return find_unique_uint((const uint*) data, reinterpret<const T, const uint>(key), nData);
     }
@@ -965,7 +966,8 @@ namespace Routines {
   template<typename T, typename Equal>
   inline uint find_first(const T* data, const T key, const uint nData) noexcept
   {
-    if (sizeof(T) == 4) {
+	//NOTE: we get a problem with compound types that consume extra bytes. The extra bytes cannot be compared
+    if (sizeof(T) == 4 && !std::is_compound<T>::value) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
       return find_first_uint((const uint*) data, reinterpret<const T, const uint>(key), nData);
     }
@@ -1074,22 +1076,28 @@ namespace Routines {
   template<typename T>
   inline bool contains(const T* data, const T key, const size_t nData) noexcept
   {
+	//NOTE: we get a problem here with compound types. a struct with a uint and a ushort is assigned size 8, but the extra two bytes are not
+	//       comparable.
+	//std::cerr << "************** Routines::contains" << std::endl;
+	//std::cerr << "sizeof(T): " << sizeof(T) << std::endl;
     if (sizeof(T) == 1) {
       return contains_uchar((const uchar*) data, reinterpret<const T, const uchar>(key), nData);
     }
-    else if (sizeof(T) == 2) {
+    else if (sizeof(T) == 2 && !std::is_compound<T>::value) {
       return contains_ushort((const ushort*) data, reinterpret<const T, const ushort>(key), nData);
     }
-    else if (sizeof(T) == 4) {
+    else if (sizeof(T) == 4 && !std::is_compound<T>::value) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
       return contains_uint((const uint*) data, reinterpret<const T, const uint>(key), nData);
     }
-    else if (sizeof(T) == 8) {
+    else if (sizeof(T) == 8 && !std::is_compound<T>::value) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
       return contains_uint64((const UInt64*) data, reinterpret<const T, const UInt64>(key), nData);
     }
-    else
+    else {
+	  //std::cerr << "-----calling std::find" << std::endl;
       return (std::find(data, data + nData, key) != data + nData);
+	}
   }
 
   inline bool contains_uchar(const uchar* data, const uchar key, const size_t nData) noexcept
@@ -1326,17 +1334,18 @@ namespace Routines {
   template<typename T>
   inline bool equals(const T* data1, const T* data2, const size_t nData) noexcept
   {
+	//NOTE: we get a problem with compound types that use more bytes than they fill: The extra bytes cannot be compared
     if (sizeof(T) == 1) {
       return equals_uchar((uchar*) data1, (uchar*) data2, nData);
     }
-    else if (sizeof(T) == 2) {
+    else if (sizeof(T) == 2 && !std::is_compound<T>::value) {
       return equals_ushort((ushort*) data1, (ushort*) data2, nData);
     }
-    else if (sizeof(T) == 4) {
+    else if (sizeof(T) == 4 && !std::is_compound<T>::value) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
       return equals_uint((uint*) data1, (uint*) data2, nData);
     }
-    else if (sizeof(T) == 8) {
+    else if (sizeof(T) == 8 && !std::is_compound<T>::value) {
       //NOTE: this will do bit-based equality comparisons even for floating point types (i.e. non-standard treatment of inf and nan)!
       return equals_uint64((UInt64*) data1, (UInt64*) data2, nData);
     }

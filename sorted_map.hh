@@ -27,6 +27,8 @@ public:
 
   SortedMap(SortedMap<Key, Value>&& toTake) : MapBase<Key,Value,KVec,VVec>(toTake) {}
 
+  ~SortedMap() {}
+
   size_t keypos(const KeyPassType key) const noexcept;
 
   bool contains(const KeyPassType key) const noexcept;

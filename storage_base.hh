@@ -95,12 +95,14 @@ template<typename T, typename ST> StorageBase<T,ST>::StorageBase(const StorageBa
 }
 
 //move constructor
-template<typename T, typename ST> StorageBase<T,ST>::StorageBase(StorageBase<T,ST>&& toTake) : data_(toTake.data_), size_(toTake.size_)
+template<typename T, typename ST> 
+StorageBase<T,ST>::StorageBase(StorageBase<T,ST>&& toTake) : data_(toTake.data_), size_(toTake.size_)
 {
   toTake.data_ = 0;
 }
 
-template<typename T, typename ST> StorageBase<T,ST>::~StorageBase()
+template<typename T, typename ST> 
+StorageBase<T,ST>::~StorageBase()
 {
   delete[] data_;
 }

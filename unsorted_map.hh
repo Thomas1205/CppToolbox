@@ -22,6 +22,8 @@ public:
 
   MapBase(MapBase<Key, Value>&& toTake) : key_(std::move(toTake.key_)), value_(std::move(toTake.value_)) {}
 
+  ~MapBase() {}
+
   size_t size() const noexcept
   {
     return key_.size();
@@ -94,6 +96,8 @@ public:
 
   UnsortedMap(UnsortedMap<Key, Value, KVec, VVec, Equal>&& toTake) : MapBase<Key,Value,KVec,VVec>(toTake) {}
 
+  ~UnsortedMap() {}
+
   size_t keypos(KeyPassType key) const noexcept;
 
   bool contains(const KeyPassType key) const noexcept;
@@ -126,6 +130,8 @@ public:
   UnsortedMapExploitSort(const UnsortedMapExploitSort<Key, Value, KVec, VVec, Less, Equal>& toCopy) : MapBase<Key,Value,KVec,VVec>(toCopy) {}
 
   UnsortedMapExploitSort(UnsortedMapExploitSort<Key, Value, KVec, VVec, Less, Equal>&& toTake) : MapBase<Key,Value,KVec,VVec>(toTake) {}
+
+  ~UnsortedMapExploitSort() {}
 
   void swap(UnsortedMapExploitSort<Key, Value, KVec, VVec, Less, Equal>& toSwap) noexcept
   {
@@ -289,6 +295,8 @@ template<typename Key, typename Value, typename KVec, typename VVec, typename Le
 bool UnsortedMapExploitSort<Key,Value,KVec,VVec,Less,Equal>::contains(const KeyPassType key) const noexcept
 {
   const size_t size = Base::key_.size();
+  std::cerr << "*********UnsortedMapExploitSort<Key,Value,KVec,VVec,Less,Equal>::contains" << std::endl;
+  std::cerr << "is sorted: " << is_sorted_ << std::endl;
   if (is_sorted_)
     return (Routines::binsearch(Base::key_.data(), key, size) < size);
   else
