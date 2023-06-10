@@ -2,7 +2,7 @@
 Following the 1.15 release, C++ toolbox has moved to C++-11. This brings many template exploitations, plus move constructors. 
 In contrast, moving to C++-14 or C++-17 will not give a major jump (as far as I can presently see).
 
-/***** changes after the last release ******/
+/***** changes for version 1.2 (June 10 2023) ******/
 
 - moved to C++-11:
   - made some template specializations obsolete by using constexpr
