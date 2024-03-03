@@ -154,7 +154,7 @@ void SortedSet<T,Less,Equal>::insert_new(const PassType val) noexcept
 {
   //std::cerr << "insert" << std::endl;
   const size_t size = Base::data_.size();
-  const size_t inspos = binsearch_insertpos<T,Less>(Base::data_, val);
+  const size_t inspos = binsearch_insertpos<T,Less,Equal>(Base::data_, val);
   const static Equal equal;
   assert(inspos >= size || !equal(Base::data_[inspos],val));
   if (inspos >= size) {
@@ -176,7 +176,7 @@ void SortedSet<T,Less,Equal>::move_insert_new(T&& val) noexcept
 {
   //std::cerr << "insert" << std::endl;
   const size_t size = Base::data_.size();
-  const size_t inspos = binsearch_insertpos<T,Less>(Base::data_, val);
+  const size_t inspos = binsearch_insertpos<T,Less,Equal>(Base::data_, val);
   const static Equal equal;
   assert(inspos >= size || !equal(Base::data_[inspos],val));
   if (inspos >= size) {
