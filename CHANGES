@@ -6,6 +6,8 @@ In contrast, moving to C++-14 or C++-17 will not give a major jump (as far as I 
 
 - implemented selection/tree and heap sort
 - fixed a bug for insertion sort: template arguments weren't passed to binsearch
+- refined sorted and unsorted maps
+- added PlainStorage1D and PlainVector without virtual functions (to save memory)
 
 /***** changes for version 1.2 (June 10 2023) ******/
 
