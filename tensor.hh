@@ -34,7 +34,7 @@ namespace Math3D {
 
     //copy constructor
     Tensor(const Tensor<T,ST>& toCopy) = default;
-    
+
     //move constructor
     Tensor(Tensor<T,ST>&& toTake) = default;
 
@@ -75,6 +75,8 @@ namespace Math3D {
 
     T min() const noexcept;
 
+    inline void ensure_min(T lower_limit) noexcept;
+
     inline T min(ST x, ST y) const noexcept;
 
     inline T min_x(ST y, ST z) const noexcept;
@@ -100,7 +102,7 @@ namespace Math3D {
     double max_vector_norm() const noexcept;
 
     void operator=(const Tensor<T,ST>& toCopy) noexcept;
-    
+
     Tensor<T,ST>& operator=(Tensor<T,ST>&& toTake) = default;
 
     void operator+=(const Tensor<T,ST>& toAdd) noexcept;
@@ -110,7 +112,7 @@ namespace Math3D {
     void operator*=(const T scalar) noexcept;
 
     void elem_mul(const Tensor<T,ST>& v) noexcept;
-    
+
     void elem_div(const Tensor<T,ST>& v) noexcept;
 
     //returns if the operation was successful
@@ -225,24 +227,19 @@ namespace Math3D {
   template<typename T, typename ST>
   /*static*/ const std::string Tensor<T,ST>::tensor_name_ = "unnamed tensor";
 
-  template<typename T, typename ST> 
-  Tensor<T,ST>::Tensor() : Storage3D<T,ST>() {}
+  template<typename T, typename ST> Tensor<T,ST>::Tensor() : Storage3D<T,ST>() {}
 
-  template<typename T, typename ST> 
-  Tensor<T,ST>::Tensor(ST xDim, ST yDim, ST zDim) : Storage3D<T,ST>(xDim,yDim,zDim) {}
+  template<typename T, typename ST> Tensor<T,ST>::Tensor(ST xDim, ST yDim, ST zDim) : Storage3D<T,ST>(xDim,yDim,zDim) {}
 
-  template<typename T, typename ST> 
-  Tensor<T,ST>::Tensor(const Dim3D<ST> dims) : Storage3D<T,ST>(dims) {}
+  template<typename T, typename ST> Tensor<T,ST>::Tensor(const Dim3D<ST> dims) : Storage3D<T,ST>(dims) {}
 
   template<typename T, typename ST> Tensor<T,ST>::
   Tensor(ST xDim, ST yDim, ST zDim, const T default_value) :
     Storage3D<T,ST>(xDim,yDim,zDim,default_value) {}
 
-  template<typename T, typename ST> 
-  Tensor<T,ST>::Tensor(const Dim3D<ST> dims, T default_value) : Storage3D<T,ST>(dims, default_value) {}
+  template<typename T, typename ST> Tensor<T,ST>::Tensor(const Dim3D<ST> dims, T default_value) : Storage3D<T,ST>(dims, default_value) {}
 
-  template<typename T, typename ST> 
-  Tensor<T,ST>::~Tensor() {}
+  template<typename T, typename ST> Tensor<T,ST>::~Tensor() {}
 
   template<typename T, typename ST>
   /*virtual*/ const std::string& Tensor<T,ST>::name() const
@@ -311,7 +308,7 @@ namespace Math3D {
   template<typename T, typename ST>
   void Tensor<T,ST>::operator=(const Tensor<T,ST>& toCopy) noexcept
   {
-    Base::operator=(toCopy); 
+    Base::operator=(toCopy);
   }
 
   template<typename T, typename ST>
@@ -495,6 +492,16 @@ namespace Math3D {
   inline T Tensor<T,ST>::min_z(ST x, ST y) const noexcept
   {
     return min(x,y);
+  }
+
+  template<typename T, typename ST>
+  inline void Tensor<T,ST>::ensure_min(T lower_limit) noexcept
+  {
+    const ST size = Base::size_;
+    T_A16* data = Base::data_;
+
+    for (ST i=0; i < size; i++)
+      data[i] = std::max(lower_limit,data[i]);
   }
 
   template<typename T, typename ST>
@@ -692,7 +699,7 @@ namespace Math3D {
     for (ST i = 0; i < Base::size_; i++)
       Base::data_[i] *= v.direct_access(i);
   }
-    
+
   template<typename T, typename ST>
   void Tensor<T,ST>::elem_div(const Tensor<T,ST>& v) noexcept
   {
@@ -753,22 +760,17 @@ namespace Math3D {
 
   /*** implementation of NamedTensor ***/
 
-  template<typename T, typename ST> 
-  NamedTensor<T,ST>::NamedTensor() : Tensor<T,ST>(), name_("yyy") {}
+  template<typename T, typename ST> NamedTensor<T,ST>::NamedTensor() : Tensor<T,ST>(), name_("yyy") {}
 
-  template<typename T, typename ST> 
-  NamedTensor<T,ST>::NamedTensor(std::string name) : Tensor<T,ST>(), name_(name) {}
+  template<typename T, typename ST> NamedTensor<T,ST>::NamedTensor(std::string name) : Tensor<T,ST>(), name_(name) {}
 
-  template<typename T, typename ST> 
-  NamedTensor<T,ST>::NamedTensor(ST xDim, ST yDim, ST zDim, std::string name) :
+  template<typename T, typename ST> NamedTensor<T,ST>::NamedTensor(ST xDim, ST yDim, ST zDim, std::string name) :
     Tensor<T,ST>(xDim,yDim,zDim), name_(name) {}
 
-  template<typename T, typename ST> 
-  NamedTensor<T,ST>::NamedTensor(ST xDim, ST yDim, ST zDim, T default_value, std::string name) :
+  template<typename T, typename ST> NamedTensor<T,ST>::NamedTensor(ST xDim, ST yDim, ST zDim, T default_value, std::string name) :
     Tensor<T,ST>(xDim,yDim,zDim,default_value), name_(name) {}
 
-  template<typename T, typename ST> 
-  NamedTensor<T,ST>::~NamedTensor() {}
+  template<typename T, typename ST> NamedTensor<T,ST>::~NamedTensor() {}
 
   template<typename T, typename ST>
   /*virtual*/ const std::string& NamedTensor<T,ST>::name() const

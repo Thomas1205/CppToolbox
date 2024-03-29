@@ -37,7 +37,7 @@ namespace Math2D {
     explicit TriMatrix(ST dim, const T default_value);
 
     TriMatrix(const TriMatrix<T,ST>& toCopy) = default;
-    
+
     TriMatrix(TriMatrix<T,ST>&& toTake) = default;
 
     /*---- destructor ----*/
@@ -78,7 +78,7 @@ namespace Math2D {
   template <typename T, typename ST=size_t>
   class NamedTriMatrix : public TriMatrix<T,ST> {
   public:
-  
+
     NamedTriMatrix();
 
     NamedTriMatrix(std::string name);
@@ -120,7 +120,7 @@ namespace Math2D {
     explicit TriangularMatrix(ST dim, const T default_value, bool lower_triangular);
 
     TriangularMatrix(const TriangularMatrix<T,ST>& toCopy) = default;
-    
+
     TriangularMatrix(TriangularMatrix<T,ST>&& toTake) = default;
 
     /*---- destructor ----*/
@@ -157,7 +157,7 @@ namespace Math2D {
     void operator-=(const TriangularMatrix<T,ST>& toSub) noexcept;
 
     void elem_mul(const TriangularMatrix<T,ST>& v) noexcept;
-    
+
     void elem_div(const TriangularMatrix<T,ST>& v) noexcept;
 
   protected:
@@ -200,7 +200,7 @@ namespace Math2D {
     explicit TriangularMatrixAsymAccess(ST dim, const T default_value, bool lower_triangular);
 
     TriangularMatrixAsymAccess(const TriangularMatrixAsymAccess<T,ST>& toCopy) = default;
-    
+
     TriangularMatrixAsymAccess(TriangularMatrixAsymAccess<T,ST>&& toTake) = default;
 
     /*---- destructor ----*/
@@ -238,7 +238,7 @@ namespace Math2D {
     explicit SymmetricMatrix(ST dim, const T default_value);
 
     SymmetricMatrix(const SymmetricMatrix<T,ST>& toCopy) = default;
-    
+
     SymmetricMatrix(SymmetricMatrix<T,ST>&& toTake) = default;
 
     /*---- destructor ----*/
@@ -261,7 +261,7 @@ namespace Math2D {
     void operator-=(const SymmetricMatrix<T,ST>& toSub) noexcept;
 
     void elem_mul(const SymmetricMatrix<T,ST>& v) noexcept;
-    
+
     void elem_div(const SymmetricMatrix<T,ST>& v) noexcept;
 
   protected:
@@ -397,17 +397,13 @@ namespace Math2D {
   template<typename T, typename ST>
   /*static*/ const std::string TriMatrix<T,ST>::trimatrix_name_ = "unnamed trimatrix";
 
-  template<typename T, typename ST> 
-  TriMatrix<T,ST>::TriMatrix() : TriStorage2D<T,ST>() {}
+  template<typename T, typename ST> TriMatrix<T,ST>::TriMatrix() : TriStorage2D<T,ST>() {}
 
-  template<typename T, typename ST> 
-  TriMatrix<T,ST>::TriMatrix(ST dim) : TriStorage2D<T,ST>(dim)  {}
+  template<typename T, typename ST> TriMatrix<T,ST>::TriMatrix(ST dim) : TriStorage2D<T,ST>(dim)  {}
 
-  template<typename T, typename ST> 
-  TriMatrix<T,ST>::TriMatrix(ST dim, const T default_value) : TriStorage2D<T,ST>(dim, default_value) {}
+  template<typename T, typename ST> TriMatrix<T,ST>::TriMatrix(ST dim, const T default_value) : TriStorage2D<T,ST>(dim, default_value) {}
 
-  template<typename T, typename ST> 
-  TriMatrix<T,ST>::~TriMatrix() {}
+  template<typename T, typename ST> TriMatrix<T,ST>::~TriMatrix() {}
 
   template<typename T, typename ST>
   /*virtual*/ const std::string& TriMatrix<T,ST>::name() const
@@ -580,17 +576,13 @@ namespace Math2D {
 
   /****** implementation of NamedTriMatrix and related stand-alone operators ******/
 
-  template<typename T, typename ST> 
-  NamedTriMatrix<T,ST>::NamedTriMatrix() {}
+  template<typename T, typename ST> NamedTriMatrix<T,ST>::NamedTriMatrix() {}
 
-  template<typename T, typename ST> 
-  NamedTriMatrix<T,ST>::NamedTriMatrix(std::string name) : name_(name) {}
+  template<typename T, typename ST> NamedTriMatrix<T,ST>::NamedTriMatrix(std::string name) : name_(name) {}
 
-  template<typename T, typename ST> 
-  NamedTriMatrix<T,ST>::NamedTriMatrix(ST dim, std::string name) : TriMatrix<T,ST>(dim), name_(name) {}
+  template<typename T, typename ST> NamedTriMatrix<T,ST>::NamedTriMatrix(ST dim, std::string name) : TriMatrix<T,ST>(dim), name_(name) {}
 
-  template<typename T, typename ST> 
-  NamedTriMatrix<T,ST>::NamedTriMatrix(ST dim, T default_value, std::string name) : TriMatrix<T,ST>(dim,default_value), name_(name) {}
+  template<typename T, typename ST> NamedTriMatrix<T,ST>::NamedTriMatrix(ST dim, T default_value, std::string name) : TriMatrix<T,ST>(dim,default_value), name_(name) {}
 
   template<typename T, typename ST>
   inline void NamedTriMatrix<T,ST>::operator=(const TriMatrix<T,ST>& toCopy)
@@ -858,13 +850,13 @@ namespace Math2D {
     for (ST i = 0; i < Base::size_; i++)
       Base::data_[i] *= v.direct_access(i);
   }
-    
+
   template<typename T, typename ST>
   void TriangularMatrix<T,ST>::elem_div(const TriangularMatrix<T,ST>& v) noexcept
   {
     assert(Base::size_ == v.size());
     for (ST i = 0; i < Base::size_; i++)
-      Base::data_[i] /= v.direct_access(i);    
+      Base::data_[i] /= v.direct_access(i);
   }
 
   template<typename T, typename ST>
@@ -979,17 +971,13 @@ namespace Math2D {
   template<typename T, typename ST>
   /*static*/ const std::string SymmetricMatrix<T,ST>::symmetric_matrix_name_ = "unnamed symmetric matrix";
 
-  template<typename T, typename ST> 
-  SymmetricMatrix<T,ST>::SymmetricMatrix() : TriMatrix<T,ST>() {}
+  template<typename T, typename ST> SymmetricMatrix<T,ST>::SymmetricMatrix() : TriMatrix<T,ST>() {}
 
-  template<typename T, typename ST> 
-  SymmetricMatrix<T,ST>::SymmetricMatrix(ST dim) : TriMatrix<T,ST>(dim)  {}
+  template<typename T, typename ST> SymmetricMatrix<T,ST>::SymmetricMatrix(ST dim) : TriMatrix<T,ST>(dim)  {}
 
-  template<typename T, typename ST> 
-  SymmetricMatrix<T,ST>::SymmetricMatrix(ST dim, T default_value) : TriMatrix<T,ST>(dim, default_value) {}
+  template<typename T, typename ST> SymmetricMatrix<T,ST>::SymmetricMatrix(ST dim, T default_value) : TriMatrix<T,ST>(dim, default_value) {}
 
-  template<typename T, typename ST> 
-  SymmetricMatrix<T,ST>::~SymmetricMatrix() {}
+  template<typename T, typename ST> SymmetricMatrix<T,ST>::~SymmetricMatrix() {}
 
   template<typename T, typename ST>
   /*virtual*/ const std::string& SymmetricMatrix<T,ST>::name() const
@@ -1044,13 +1032,13 @@ namespace Math2D {
     for (ST i = 0; i < Base::size_; i++)
       Base::data_[i] *= v.direct_access(i);
   }
-    
+
   template<typename T, typename ST>
   void SymmetricMatrix<T,ST>::elem_div(const SymmetricMatrix<T,ST>& v) noexcept
   {
     assert(Base::size_ == v.size());
     for (ST i = 0; i < Base::size_; i++)
-      Base::data_[i] /= v.direct_access(i);    
+      Base::data_[i] /= v.direct_access(i);
   }
 
   //streaming

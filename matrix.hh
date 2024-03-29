@@ -24,7 +24,7 @@ namespace Math2D {
     typedef T T_A16 ALIGNED16;
 
     /*---- constructors -----*/
-    explicit Matrix();
+    explicit Matrix() noexcept;
 
     explicit Matrix(ST xDim, ST yDim);
 
@@ -38,7 +38,7 @@ namespace Math2D {
     Matrix(const Matrix<T,ST>& toCopy) = default;
 
     //move constructor
-    Matrix(Matrix<T,ST>&& toTake) = default;
+    Matrix(Matrix<T,ST>&& toTake) noexcept = default;
 
     /*---- destructor ----*/
     ~Matrix();
@@ -95,7 +95,7 @@ namespace Math2D {
     void operator*=(const T scalar) noexcept;
 
     void elem_mul(const Matrix<T,ST>& v) noexcept;
-    
+
     void elem_div(const Matrix<T,ST>& v) noexcept;
 
     //returns if the operation was successful
@@ -229,20 +229,15 @@ namespace Math2D {
   template<typename T, typename ST>
   /*static*/ const std::string Matrix<T,ST>::matrix_name_ = "unnamed matrix";
 
-  template<typename T, typename ST> 
-  Matrix<T,ST>::Matrix() : Storage2D<T,ST>() {}
+  template<typename T, typename ST> Matrix<T,ST>::Matrix() noexcept : Storage2D<T,ST>() {}
 
-  template<typename T, typename ST> 
-  Matrix<T,ST>::Matrix(ST xDim, ST yDim) : Storage2D<T,ST>(xDim, yDim)  {}
+  template<typename T, typename ST> Matrix<T,ST>::Matrix(ST xDim, ST yDim) : Storage2D<T,ST>(xDim, yDim)  {}
 
-  template<typename T, typename ST> 
-  Matrix<T,ST>::Matrix(ST xDim, ST yDim, const T default_value) : Storage2D<T,ST>(xDim, yDim, default_value) {}
+  template<typename T, typename ST> Matrix<T,ST>::Matrix(ST xDim, ST yDim, const T default_value) : Storage2D<T,ST>(xDim, yDim, default_value) {}
 
-  template<typename T, typename ST> 
-  Matrix<T,ST>::Matrix(const std::pair<ST,ST> dims) : Storage2D<T,ST>(dims)  {}
+  template<typename T, typename ST> Matrix<T,ST>::Matrix(const std::pair<ST,ST> dims) : Storage2D<T,ST>(dims)  {}
 
-  template<typename T, typename ST> 
-  Matrix<T,ST>::Matrix(const std::pair<ST,ST> dims, T default_value) : Storage2D<T,ST>(dims, default_value) {}
+  template<typename T, typename ST> Matrix<T,ST>::Matrix(const std::pair<ST,ST> dims, T default_value) : Storage2D<T,ST>(dims, default_value) {}
 
   template<typename T,typename ST>
   void Matrix<T,ST>::set_zeros() noexcept
@@ -363,7 +358,7 @@ namespace Math2D {
   inline void Matrix<T,ST>::ensure_min(T lower_limit) noexcept
   {
     const ST size = Base::size_;
-    const T_A16* data = Base::data_;
+    T_A16* data = Base::data_;
 
     for (ST i=0; i < size; i++)
       data[i] = std::max(lower_limit,data[i]);
@@ -406,7 +401,7 @@ namespace Math2D {
   {
     const ST size = Base::size_;
     const T_A16* data = Base::data_;
-    
+
     double result = 0.0;
     for (ST i=0; i < size; i++) {
       result += Makros::abs<T>(data[i]);
@@ -561,12 +556,12 @@ namespace Math2D {
     const ST size = Base::size_;
     T_A16* data = Base::data_;
     const T_A16* vdata = v.direct_access();
-    
+
     assert(Base::xDim_ == v.xDim() && Base::yDim_ == v.yDim());
     for (ST i = 0; i < size; i++)
       data[i] *= vdata[i];
   }
-    
+
   template<typename T, typename ST>
   void Matrix<T,ST>::elem_div(const Matrix<T,ST>& v) noexcept
   {
@@ -620,30 +615,23 @@ namespace Math2D {
 
   /***************** implementation of Named Matrix ***********************/
 
-  template<typename T, typename ST> 
-  NamedMatrix<T,ST>::NamedMatrix() : Matrix<T,ST>(), name_("zzz") {}
+  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix() : Matrix<T,ST>(), name_("zzz") {}
 
-  template<typename T, typename ST> 
-  NamedMatrix<T,ST>::NamedMatrix(std::string name) : Matrix<T,ST>(), name_(name) {}
+  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix(std::string name) : Matrix<T,ST>(), name_(name) {}
 
-  template<typename T, typename ST> 
-  NamedMatrix<T,ST>::NamedMatrix(ST xDim, ST yDim, std::string name)
+  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix(ST xDim, ST yDim, std::string name)
     : Matrix<T,ST>(xDim, yDim), name_(name) {}
 
-  template<typename T, typename ST> 
-  NamedMatrix<T,ST>::NamedMatrix(ST xDim, ST yDim, T default_value, std::string name)
+  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix(ST xDim, ST yDim, T default_value, std::string name)
     : Matrix<T,ST>(xDim,yDim,default_value), name_(name) {}
 
-  template<typename T, typename ST> 
-  NamedMatrix<T,ST>::NamedMatrix(const std::pair<ST,ST> dims, std::string name)
+  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix(const std::pair<ST,ST> dims, std::string name)
     : Matrix<T,ST>(dims), name_(name) {}
 
-  template<typename T, typename ST> 
-  NamedMatrix<T,ST>::NamedMatrix(const std::pair<ST,ST> dims, T default_value, std::string name)
+  template<typename T, typename ST> NamedMatrix<T,ST>::NamedMatrix(const std::pair<ST,ST> dims, T default_value, std::string name)
     : Matrix<T,ST>(dims,default_value), name_(name) {}
 
-  template<typename T, typename ST> 
-  NamedMatrix<T,ST>::~NamedMatrix() {}
+  template<typename T, typename ST> NamedMatrix<T,ST>::~NamedMatrix() {}
 
   template<typename T, typename ST>
   inline void NamedMatrix<T,ST>::operator=(const Matrix<T,ST>& toCopy)
