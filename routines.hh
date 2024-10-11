@@ -431,7 +431,7 @@ namespace Routines {
     nontrivial_reverse_double_array((double*) data, nData);
   }
 
-  template<typename T, typename Swap = SwapOp<T> >
+  template<typename T, typename Swap>
   inline void reverse(T* data, const size_t nData) noexcept
   {
     if (nData >= 2)

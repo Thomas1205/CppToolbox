@@ -458,9 +458,9 @@ bool UnsortedSetExploitSort<T,Less,Equal>::insert(const PassType val) noexcept
     is_new = !set_contains(Base::data_, val);
   }
   else
-    is_new = (binsearch<T,Less,Equal>(Base::data_, val) != MAX_UINT);
+    is_new = (binsearch<T,Less,Equal>(Base::data_, val) == MAX_UINT);
 
-  if (!is_new) {
+  if (is_new) {
     if (is_sorted_ && size > 0 && less(val,Base::data_.back()))
       is_sorted_ = false;
     Base::data_.push_back(val);
@@ -479,9 +479,9 @@ bool UnsortedSetExploitSort<T,Less,Equal>::move_insert(T&& val) noexcept
     is_new = !set_contains(Base::data_, val);
   }
   else
-    is_new = (binsearch<T,Less,Equal>(Base::data_, val) != MAX_UINT);
+    is_new = (binsearch<T,Less,Equal>(Base::data_, val) == MAX_UINT);
 
-  if (!is_new) {
+  if (is_new) {
     if (is_sorted_ && size > 0 && less(val,Base::data_.back()))
       is_sorted_ = false;
     Base::data_.push_back(val);
@@ -622,8 +622,8 @@ bool UnsortedSetExploitSort<T,Less,Equal>::move_replace(const PassType out, T&& 
 template<typename T, typename Less, typename Equal>
 std::ostream& operator<<(std::ostream& os, const UnsortedSetExploitSort<T,Less,Equal>& set)
 {
-  std::vector<T> data;
-  get_sorted_data(data);
+  Storage1D<T> data;
+  set.get_sorted_data(data);
   const size_t size = data.size();
 
   os << "{ ";

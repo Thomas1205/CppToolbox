@@ -86,6 +86,10 @@ inline void print_trace (void) {}
 //because c++ is missing this keyword: (C++-11 has final and override)
 #define abstract
 
+//used as a keyword to indicate the a pointer is visible in unified memory 
+// currently this means that it was allocated by either cudaMalloc() (for device pointers) or cudaMallocHost() (for host pointers)
+#define unimem
+
 /******************** Data Macros *****************************/
 //NOTE: since C++-11, using is preferred over typedef
 using uint = unsigned int;
@@ -131,6 +135,12 @@ using T_A16 = T ALIGNED16;
 #endif
 #ifndef INFL
 #define INFL expl(MAX_UINT)
+#endif
+
+#ifdef WITH_CUDA
+#define CUDA_ATTRS __device__ __host__
+#else
+#define CUDA_ATTRS
 #endif
 
 
